@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Meadow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://w.soundcloud.com/player/api.js"></script>
+<style>
+  :root {
+    --sky-top: #f7e8c9;
+    --sky-bottom: #f0d4a8;
+    --grass-near: #6a9a4f;
+    --grass-far: #8fb86a;
+    --ink: #2d2417;
+    --cream: #faf3e3;
+    --rose: #d97757;
+    --moss: #4a6b3a;
+
+    /* Shape tokens — pill is reused for buttons, selects, tabs, inputs */
+    --radius-pill: 999px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Fraunces', serif;
+    color: var(--ink);
+    overflow: hidden;
+  }
+
+  body {
+    background: radial-gradient(ellipse at 30% 20%, #f4d8a8 0%, #e8b87a 60%, #c89968 100%);
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 1px, transparent 2px),
+      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.1) 1px, transparent 2px);
+    background-size: 200px 200px, 300px 300px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .signature {
+    position: fixed;
+    bottom: 20px;
+    left: 28px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink);
+    opacity: 0.4;
+    z-index: 2;
+  }
+  .signature::before { content: "✦ "; color: var(--rose); }
+
+  .hint {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(45, 36, 23, 0.85);
+    color: var(--cream);
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    z-index: 100;
+    animation: fadeOut 1s ease 5s forwards;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+
+  /* ===== Apple-style widget ===== */
+  .widget {
+    position: fixed;
+    top: 60px;
+    right: 40px;
+    width: 320px;
+    background: var(--cream);
+    border-radius: 32px;
+    box-shadow:
+      0 30px 60px -15px rgba(0,0,0,0.35),
+      0 12px 24px -8px rgba(0,0,0,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      0 0 0 0.5px rgba(0,0,0,0.04);
+    z-index: 10;
+    overflow: hidden;
+    user-select: none;
+    transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .widget.dragging { cursor: grabbing; }
+
+  /* ===== Scene (top half) ===== */
+  .scene {
+    position: relative;
+    height: 110px;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 55%, var(--grass-far) 55%, var(--grass-far) 100%);
+    cursor: grab;
+  }
+  .scene:active { cursor: grabbing; }
+
+  .sun {
+    position: absolute;
+    top: 14px;
+    right: 24px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff5d1 30%, #ffdc8a 100%);
+    box-shadow: 0 0 24px rgba(255, 220, 138, 0.6);
+  }
+
+  .cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    filter: blur(0.5px);
+  }
+  .cloud-1 { top: 18px; left: 16px; width: 42px; height: 10px; animation: drift 40s linear infinite; }
+  .cloud-2 { top: 32px; left: 100px; width: 34px; height: 8px; animation: drift 55s linear infinite reverse; }
+
+  @keyframes drift {
+    from { transform: translateX(-50px); }
+    to { transform: translateX(380px); }
+  }
+
+  /* Collapse button — bottom-left of scene; hides the action-bar below */
+  .collapse-btn {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    width: 22px;
+    height: 22px;
+    background: rgba(45, 36, 23, 0.4);
+    backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cream);
+    z-index: 10;
+    transition: background 0.2s;
+  }
+  .collapse-btn:hover { background: rgba(45, 36, 23, 0.6); }
+  .collapse-btn svg { transition: transform 0.3s ease; }
+  .widget.collapsed .collapse-btn svg { transform: rotate(180deg); }
+
+  .pip-btn {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    width: 22px;
+    height: 22px;
+    background: rgba(45, 36, 23, 0.4);
+    backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cream);
+    z-index: 10;
+    transition: background 0.2s;
+  }
+  .pip-btn:hover { background: rgba(45, 36, 23, 0.6); }
+  .pip-btn.active { background: var(--rose); }
+
+  /* Custom tooltips for icon-only buttons — shown on hover/focus, hidden otherwise */
+  .collapse-btn[data-tooltip]:hover::after,
+  .pip-btn[data-tooltip]:hover::after,
+  .collapse-btn[data-tooltip]:focus-visible::after,
+  .pip-btn[data-tooltip]:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    z-index: 200;
+    pointer-events: none;
+    animation: tooltipFadeIn 0.15s ease 0.25s both;
+  }
+  @keyframes tooltipFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ===== Scrolling meadow ===== */
+  .meadow-scroll {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 50px;
+    width: 200%; /* double width for seamless scroll */
+    display: flex;
+  }
+
+  .meadow-scroll.scrolling {
+    animation: scrollLeft 20s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes scrollLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .meadow-half {
+    position: relative;
+    width: 50%;
+    height: 100%;
+    flex-shrink: 0;
+  }
+
+  .grass-blade {
+    position: absolute;
+    bottom: 0;
+    width: 2.5px;
+    background: var(--grass-near);
+    transform-origin: bottom center;
+    animation: sway 3s ease-in-out infinite;
+  }
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+
+  .flower {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    animation: sway 4s ease-in-out infinite;
+  }
+
+  /* Cat fixed in center, only animates legs/body */
+  .cat-walker {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 42px;
+    z-index: 5;
+  }
+
+  /* Walking animation — only when scrolling class is active */
+  .scrolling ~ .cat-walker .cat-body { animation: catBounce 0.5s ease-in-out infinite; transform-origin: bottom center; }
+  .scrolling ~ .cat-walker .leg-fl,
+  .scrolling ~ .cat-walker .leg-bl { animation: legSwingA 0.5s ease-in-out infinite; transform-origin: top center; }
+  .scrolling ~ .cat-walker .leg-fr,
+  .scrolling ~ .cat-walker .leg-br { animation: legSwingB 0.5s ease-in-out infinite; transform-origin: top center; }
+  .scrolling ~ .cat-walker .tail { animation: tailWag 0.7s ease-in-out infinite; transform-origin: left center; }
+
+  /* Idle: sit pose — eyes closed, gentle breathing */
+  .cat-walker .cat-body { animation: catBreathe 3s ease-in-out infinite; transform-origin: bottom center; }
+  .cat-walker .tail { animation: tailIdle 4s ease-in-out infinite; transform-origin: left center; }
+
+  @keyframes catBreathe {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.03); }
+  }
+  @keyframes tailIdle {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-8deg); }
+  }
+
+  @keyframes catBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
+  @keyframes legSwingA { 0%, 100% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } }
+  @keyframes legSwingB { 0%, 100% { transform: rotate(15deg); } 50% { transform: rotate(-15deg); } }
+  @keyframes tailWag { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(15deg); } }
+
+  /* ===== Shared text styles ===== */
+  .mode-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--moss);
+  }
+
+  /* ===== Buttons (used by action bar) ===== */
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 9px 14px;
+    border: none;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--cream);
+    flex: 1;
+  }
+  .btn-primary:hover { background: var(--moss); }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { cursor: default; opacity: 0.45; }
+  .btn-primary:disabled:hover { background: var(--ink); }   /* don't darken on hover when disabled */
+  .widget.running .btn-primary:disabled:hover { background: var(--rose); }
+
+  .widget.counting .btn-primary {
+    background: var(--rose);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    letter-spacing: 0;
+    text-transform: none;
+    animation: countPulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes countPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.85; }
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid rgba(45, 36, 23, 0.18);
+  }
+  .btn-secondary:hover { background: rgba(45, 36, 23, 0.06); }
+
+  /* ===== Preset dropdown (used by action bar) ===== */
+  .preset-select-wrap {
+    position: relative;
+  }
+
+  .preset-select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    padding: 7px 28px 7px 12px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--ink);
+    background: rgba(45, 36, 23, 0.06);
+    border: none;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    outline: none;
+  }
+  .preset-select:hover { background: rgba(45, 36, 23, 0.1); }
+
+  .preset-select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid var(--ink);
+    border-bottom: 1.5px solid var(--ink);
+    transform: translateY(-75%) rotate(45deg);
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  /* ===== Music tabs + input (used by action bar) ===== */
+  .source-tabs {
+    display: flex;
+    gap: 2px;
+    background: rgba(45, 36, 23, 0.08);
+    border-radius: var(--radius-pill);
+    padding: 2px;
+  }
+
+  .source-tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    opacity: 0.55;
+  }
+
+  /* Segmented control — active tab is filled ink + cream text (unmistakable) */
+  .source-tab.active {
+    background: var(--ink);
+    color: var(--cream);
+    opacity: 1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  .url-input-row {
+    display: flex;
+    gap: 5px;
+  }
+
+  .url-input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid rgba(45, 36, 23, 0.18);
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    background: var(--cream);
+    color: var(--ink);
+    outline: none;
+  }
+  .url-input:focus { border-color: var(--rose); }
+  .url-input::placeholder { opacity: 0.4; }
+
+  .widget.running .mode-label {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ===================================================================
+     FULLSCREEN MODE — when widget is in a regular browser tab
+     ===================================================================
+     Cat scene becomes immersive (70% of screen),
+     timer + controls form a horizontal action bar at the bottom.
+  */
+  body.fullscreen-mode .signature,
+  body.fullscreen-mode .hint {
+    display: none;
+  }
+
+  body.fullscreen-mode {
+    overflow: hidden;
+  }
+
+  body.fullscreen-mode .widget {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    transition: none;
+  }
+
+  /* Scene takes most of the screen but can shrink to give the action-bar enough room.
+     Gradient stops use vh (viewport-anchored) so the horizon stays at 42vh regardless of
+     scene's actual rendered height — keeps horizon stable when collapsing/expanding. */
+  body.fullscreen-mode .scene {
+    flex: 1 1 70vh;       /* prefer 70vh, may shrink if action-bar needs more space */
+    min-height: 50vh;     /* never smaller than half the screen */
+    cursor: default;
+    background: linear-gradient(180deg,
+      #f7e8c9 0vh,
+      #f4dcb0 21vh,
+      #f0d4a8 42vh,
+      var(--grass-far) 42vh,
+      var(--grass-far) 100vh);
+  }
+
+  /* Sun bigger in fullscreen */
+  body.fullscreen-mode .sun {
+    top: 8vh;
+    right: 12vw;
+    width: 80px;
+    height: 80px;
+    box-shadow: 0 0 40px rgba(255, 220, 138, 0.55); /* smaller blur — cheaper GPU paint */
+  }
+
+  /* Clouds spread out and grow */
+  body.fullscreen-mode .cloud-1 {
+    top: 10vh; left: 8vw;
+    width: 110px; height: 22px;
+  }
+  body.fullscreen-mode .cloud-2 {
+    top: 18vh; left: 60vw;
+    width: 90px; height: 18px;
+  }
+
+  /* Meadow grass layer — pinned to horizon (top: 42vh) and extends to scene bottom.
+     Stays visually anchored regardless of scene height changes (collapse/expand). */
+  body.fullscreen-mode .meadow-scroll {
+    top: 42vh;
+    bottom: 0;
+    height: auto;
+    animation-duration: 30s; /* slower, calmer */
+  }
+
+  /* Fullscreen: taller, more substantial meadow (+200% length).
+     New keyframes preserve scaleY/translateY across the sway animation. */
+  body.fullscreen-mode .grass-blade {
+    width: 4px;
+    animation-name: sway-fs;
+  }
+  body.fullscreen-mode .flower {
+    width: 14px;
+    height: 14px;
+    animation-name: bob-fs;
+  }
+  @keyframes sway-fs {
+    0%, 100% { transform: scaleY(3) rotate(-3deg); }
+    50%      { transform: scaleY(3) rotate(3deg); }
+  }
+  @keyframes bob-fs {
+    0%, 100% { transform: translateY(-22px); }
+    50%      { transform: translateY(-30px); }
+  }
+
+  /* ===== Butterflies (fullscreen only) ===== */
+  .fullscreen-only { display: none; }
+  body.fullscreen-mode .fullscreen-only { display: block; }
+
+  .butterfly {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  body.fullscreen-mode .butterfly-1 {
+    top: 21vh;             /* viewport-anchored — was 30% of scene */
+    left: 0;
+    animation: butterflyFly1 40s ease-in-out infinite;
+  }
+
+  body.fullscreen-mode .butterfly-2 {
+    top: 35vh;             /* viewport-anchored — was 50% of scene */
+    left: 0;
+    animation: butterflyFly2 50s ease-in-out infinite;
+    animation-delay: -15s;
+  }
+
+  @keyframes butterflyFly1 {
+    0%   { transform: translate(5vw, 0) rotate(-5deg); }
+    20%  { transform: translate(25vw, -25px) rotate(10deg); }
+    40%  { transform: translate(45vw, 15px) rotate(-8deg); }
+    60%  { transform: translate(65vw, -30px) rotate(8deg); }
+    80%  { transform: translate(85vw, 10px) rotate(-5deg); }
+    100% { transform: translate(5vw, 0) rotate(-5deg); }
+  }
+
+  @keyframes butterflyFly2 {
+    0%   { transform: translate(75vw, 20px) rotate(8deg); }
+    25%  { transform: translate(55vw, -15px) rotate(-10deg); }
+    50%  { transform: translate(35vw, 25px) rotate(6deg); }
+    75%  { transform: translate(15vw, -10px) rotate(-8deg); }
+    100% { transform: translate(75vw, 20px) rotate(8deg); }
+  }
+
+  .bf-wing-l { animation: wingFlapL 0.5s ease-in-out infinite; transform-origin: 15px 15px; }
+  .bf-wing-r { animation: wingFlapR 0.5s ease-in-out infinite; transform-origin: 15px 15px; }
+
+  @keyframes wingFlapL {
+    0%, 100% { transform: scaleX(1); }
+    50%      { transform: scaleX(0.4); }
+  }
+  @keyframes wingFlapR {
+    0%, 100% { transform: scaleX(1); }
+    50%      { transform: scaleX(0.4); }
+  }
+
+  /* ===== Extra clouds (fullscreen only) ===== */
+  body.fullscreen-mode .cloud-3 {
+    top: 8vh; left: 30vw;
+    width: 90px; height: 18px;
+    animation: drift 65s linear infinite;
+  }
+  body.fullscreen-mode .cloud-4 {
+    top: 22vh; left: 65vw;
+    width: 70px; height: 14px;
+    animation: drift 80s linear infinite reverse;
+  }
+
+  /* ===== Bee swarm (fullscreen only) ===== */
+  body.fullscreen-mode .bee-swarm {
+    position: absolute;
+    top: 42vh;             /* viewport-anchored at horizon — was 60% of scene */
+    left: 15vw;
+    width: 70px;
+    height: 70px;
+    z-index: 4;
+    pointer-events: none;
+    animation: swarmDrift 50s ease-in-out infinite;
+  }
+
+  @keyframes swarmDrift {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(20vw, -20px); }
+    50%  { transform: translate(45vw, 15px); }
+    75%  { transform: translate(60vw, -10px); }
+    100% { transform: translate(0, 0); }
+  }
+
+  .bee {
+    position: absolute;
+    width: 12px;
+    height: 7px;
+  }
+
+  .bee-body {
+    width: 11px;
+    height: 7px;
+    border-radius: 50%;
+    background: repeating-linear-gradient(
+      90deg,
+      #2d2417 0px,
+      #2d2417 2px,
+      #f4d03f 2px,
+      #f4d03f 4px
+    );
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  .bee-body::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: 2px;
+    width: 6px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+    animation: beeWing 0.5s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  @keyframes beeWing {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(0.3); }
+  }
+
+  /* ===== Tree layer (fullscreen only) — viewport-anchored at horizon ===== */
+  body.fullscreen-mode .tree-layer {
+    position: absolute;
+    top: 22vh;             /* trees grow up from horizon (22vh + 20vh = 42vh bottom) */
+    bottom: auto;
+    left: 0;
+    right: 0;
+    height: 20vh;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .tree-scroll {
+    width: 200%;
+    height: 100%;
+    display: flex;
+  }
+
+  /* Trees scroll slower than meadow → parallax depth.
+     Only when running in focus (not during break, when scene should be still). */
+  body.fullscreen-mode .widget.running:not(.break) .tree-scroll {
+    animation: treeDrift 60s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes treeDrift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .tree-half {
+    position: relative;
+    width: 50%;
+    height: 100%;
+    flex-shrink: 0;
+  }
+
+  .tree {
+    position: absolute;
+    bottom: 0;
+  }
+
+  .tree-trunk {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #6b4423 0%, #4a2f18 100%);
+    border-radius: 2px;
+  }
+
+  .tree-crown {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50% 50% 45% 45%;
+    box-shadow: inset -8px -6px 0 rgba(0,0,0,0.12);
+  }
+
+  body.fullscreen-mode .cat-walker {
+    top: calc(52vh - 200px);   /* feet at viewport 52vh (10vh below horizon, in the meadow) */
+    bottom: auto;
+    width: 240px;
+    height: 200px;
+  }
+
+  body.fullscreen-mode .cat-walker svg {
+    width: 240px;
+    height: 200px;
+  }
+
+  /* Show detailed cat, hide simple cat */
+  .cat-detailed { display: none; }
+  body.fullscreen-mode .cat-simple { display: none; }
+  body.fullscreen-mode .cat-detailed { display: block; }
+
+  /* Bigger scene-corner buttons in fullscreen */
+  body.fullscreen-mode .collapse-btn {
+    bottom: 20px;
+    left: 20px;
+    width: 36px;
+    height: 36px;
+    z-index: 100;
+  }
+  body.fullscreen-mode .collapse-btn svg { width: 16px; height: 16px; }
+
+  body.fullscreen-mode .pip-btn {
+    top: 20px;
+    left: 20px;
+    width: 36px;
+    height: 36px;
+    z-index: 100;
+  }
+  body.fullscreen-mode .pip-btn svg { width: 18px; height: 18px; }
+
+  /* === Action bar — fullscreen layout: vertical stack (primary top, secondary bottom row) === */
+  body.fullscreen-mode .action-bar {
+    flex: 0 0 auto;       /* sized by its own content (no grow/shrink) */
+    background: var(--cream);
+    padding: 20px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    border-top: 1px dashed rgba(45, 36, 23, 0.15);
+  }
+
+  /* Primary block (timer + controls) — centered at pixel center */
+  .ab-primary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .ab-timer-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ab-mode-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+
+  /* Status dot on mode label — color reflects running/paused state */
+  .mode-label::before {
+    content: "●";
+    margin-right: 4px;
+    color: transparent;
+    transition: color 0.2s ease;
+  }
+  .widget.running .mode-label::before { color: var(--moss); }
+  .widget.paused  .mode-label::before { color: rgba(45, 36, 23, 0.45); }
+
+  /* Status text under controls — reinforces running/paused state */
+  .ab-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-align: center;
+    min-height: 14px;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+  }
+  .widget.running .ab-status { opacity: 0.85; color: var(--moss); }
+  .widget.paused  .ab-status { opacity: 0.7;  color: var(--ink); }
+
+  /* Paused: dim the timer to de-emphasize */
+  .widget.paused .ab-timer { color: rgba(45, 36, 23, 0.5); transition: color 0.2s ease; }
+
+  /* Running: primary button morphs to rose (calls attention to "pause" action) */
+  .widget.running .btn-primary { background: var(--rose); }
+  .widget.running .btn-primary:hover { background: #c46546; }
+
+  /* Inline icon inside button */
+  .btn-icon {
+    width: 9px;
+    height: 9px;
+    vertical-align: -1px;
+    margin-right: 6px;
+    display: inline-block;
+  }
+
+  .ab-timer {
+    font-family: 'Fraunces', serif;
+    font-size: 88px;
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Action bar center: controls — Start | Reset, equal width */
+  .ab-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+  .ab-btn {
+    flex: 0 0 140px;       /* equal width for Start and Reset */
+    padding: 14px 0;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* When counting down, primary button shows big number */
+  body.fullscreen-mode .widget.counting .btn-primary {
+    font-size: 22px;
+  }
+
+  /* Secondary row: session | divider | music | url — base style is vertical stack (used in PiP); fullscreen below makes it horizontal */
+  .ab-secondary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    position: relative; /* anchor for ab-lock-overlay */
+  }
+
+  /* Lock overlay — active in fullscreen during running OR countdown; blocks edits + tooltip */
+  .ab-lock-overlay { display: none; }
+  body.fullscreen-mode .widget.running .ab-lock-overlay,
+  body.fullscreen-mode .widget.counting .ab-lock-overlay {
+    display: block;
+    position: absolute;
+    inset: -8px -16px;       /* slight padding so hover area is forgiving */
+    z-index: 50;
+    cursor: not-allowed;
+    background: transparent;
+    border-radius: 12px;
+  }
+  /* Fade the actual controls to read as disabled */
+  body.fullscreen-mode .widget.running .ab-secondary > :not(.ab-lock-overlay),
+  body.fullscreen-mode .widget.counting .ab-secondary > :not(.ab-lock-overlay) {
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+  }
+  body.fullscreen-mode .widget.running .ab-lock-overlay:hover::after,
+  body.fullscreen-mode .widget.counting .ab-lock-overlay:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    max-width: 360px;
+    white-space: normal;
+    text-align: center;
+    z-index: 200;
+    pointer-events: none;
+    animation: tooltipFadeIn 0.15s ease 0.2s both;
+  }
+
+  /* Field groups (session, music) — label sits above control by default, inline in fullscreen */
+  .ab-session-block,
+  .ab-music-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ab-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0.85; /* WCAG AA — was 0.55, contrast ~3.7:1 */
+  }
+
+  /* Vertical divider between session and music groups — only visible in fullscreen */
+  .ab-divider { display: none; }
+
+  /* Fullscreen: secondary becomes a horizontal row, labels inline with their controls */
+  body.fullscreen-mode .ab-secondary {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    width: auto;
+  }
+  body.fullscreen-mode .ab-session-block,
+  body.fullscreen-mode .ab-music-block {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  body.fullscreen-mode .ab-divider {
+    display: block;
+    width: 1px;
+    height: 28px;
+    background: rgba(45, 36, 23, 0.18);
+  }
+  body.fullscreen-mode .ab-url-wrap { width: 260px; }
+  body.fullscreen-mode .ab-url-wrap .url-input {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: var(--radius-pill);
+  }
+  body.fullscreen-mode .preset-select {
+    padding: 10px 32px 10px 16px;
+    font-size: 13px;
+  }
+  /* Music toggle: match the dropdown / URL input height in fullscreen */
+  body.fullscreen-mode .source-tabs { padding: 4px; }
+  body.fullscreen-mode .source-tab {
+    padding: 8px 14px;
+    font-size: 9px;
+  }
+
+  .ab-music-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--moss);
+    opacity: 0.95; /* WCAG AA — was 0.7, contrast ~3.0:1 */
+    text-align: center;
+  }
+  .ab-music-status.playing {
+    color: var(--rose);
+    opacity: 1;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* ===================================================================
+     PIP MODE — same DOM, compact vertical layout
+     =================================================================== */
+  body.pip-mode .action-bar {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 18px 16px;
+    gap: 12px;
+    background: var(--cream);
+    border-top: 1px dashed rgba(45, 36, 23, 0.15);
+  }
+  body.pip-mode .ab-timer-block { text-align: center; align-items: center; }
+  body.pip-mode .ab-mode-row { justify-content: center; }
+  body.pip-mode .ab-timer { font-size: 56px; line-height: 1; }
+  body.pip-mode .ab-controls { gap: 6px; }
+  body.pip-mode .ab-btn { flex: 1 1 auto; padding: 9px 14px; font-size: 10px; }
+  /* Secondary stays vertical in PiP (base style); just tighten spacing */
+  body.pip-mode .ab-secondary { gap: 10px; }
+  body.pip-mode .ab-session-block { gap: 4px; }
+  body.pip-mode .ab-music-block {
+    border-top: 1px dashed rgba(45, 36, 23, 0.15);
+    padding-top: 10px;
+    gap: 6px;
+  }
+  body.pip-mode .ab-music-block .source-tabs { align-self: flex-end; }
+  body.pip-mode .preset-select-wrap,
+  body.pip-mode .ab-url-wrap { width: 100%; }
+  body.pip-mode .preset-select { padding: 7px 28px 7px 12px; font-size: 12px; }
+  body.pip-mode .url-input { padding: 7px 10px; }
+
+  /* ===================================================================
+     COLLAPSED — hide the action-bar, scene fills the widget
+     =================================================================== */
+  .widget.collapsed .action-bar { display: none; }
+
+  /* Collapsed fullscreen: scene grows to fill viewport so the green area extends to the bottom.
+     Horizon + foreground positions are already viewport-anchored (vh) so they stay put. */
+  body.fullscreen-mode .widget.collapsed .scene { height: 100vh; }
+
+  /* Collapsed PiP: scene fills the entire widget so the collapse-btn (anchored bottom: 12px) stays in view */
+  body.pip-mode .widget.collapsed { display: flex; flex-direction: column; }
+  body.pip-mode .widget.collapsed .scene { flex: 1; height: auto; }
+
+  /* ===================================================================
+     PERFORMANCE — pause animations when tab is hidden
+     =================================================================== */
+  body.animations-paused *,
+  body.animations-paused *::before,
+  body.animations-paused *::after {
+    animation-play-state: paused !important;
+  }
+
+  /* ===================================================================
+     TIME OF DAY MOODS
+     =================================================================== */
+
+  /* Smooth transitions for scene/sun when time changes */
+  .scene, .sun, .cloud { transition: background 1s ease, opacity 1s ease, filter 1s ease; }
+
+  /* --- MORNING (6-11): soft pastel sunrise --- */
+  body.time-morning.fullscreen-mode .scene {
+    background: linear-gradient(180deg,
+      #ffd8b0 0vh,
+      #ffe9c5 17vh,
+      #fff0d6 42vh,
+      var(--grass-far) 42vh,
+      var(--grass-far) 100vh);
+  }
+  body.time-morning.pip-mode .scene {
+    background: linear-gradient(180deg,
+      #ffd8b0 0%,
+      #ffe9c5 25%,
+      #fff0d6 60%,
+      var(--grass-far) 60%,
+      var(--grass-far) 100%);
+  }
+  body.time-morning .sun {
+    background: radial-gradient(circle, #fff5d1 30%, #ffc97a 100%);
+    box-shadow: 0 0 32px rgba(255, 190, 120, 0.65); /* smaller blur */
+  }
+  body.time-morning.fullscreen-mode .sun {
+    top: 22vh; /* sun rising — lower in sky */
+    right: 18vw;
+  }
+
+  /* --- AFTERNOON (11-16): current default — bright warm --- */
+  /* Uses default scene/sun colors, no overrides needed */
+
+  /* --- EVENING (16-19): sunset, orange-pink --- */
+  body.time-evening.fullscreen-mode .scene {
+    background: linear-gradient(180deg,
+      #f4a574 0vh,
+      #f0866b 21vh,
+      #e8a8a0 42vh,
+      var(--grass-far) 42vh,
+      #5a8a3f 100vh);
+  }
+  body.time-evening.pip-mode .scene {
+    background: linear-gradient(180deg,
+      #f4a574 0%,
+      #f0866b 30%,
+      #e8a8a0 60%,
+      var(--grass-far) 60%,
+      #5a8a3f 100%);
+  }
+  body.time-evening .sun {
+    background: radial-gradient(circle, #fff1c4 20%, #ff8d5c 90%);
+    box-shadow: 0 0 50px rgba(255, 141, 92, 0.75); /* smaller blur */
+  }
+  body.time-evening.fullscreen-mode .sun {
+    top: 35vh; /* sun setting — almost at horizon */
+    right: 15vw;
+    width: 100px;
+    height: 100px;
+  }
+  /* Horizon hides the lower half of the setting sun */
+  body.time-evening.fullscreen-mode .meadow-scroll {
+    background: linear-gradient(180deg, var(--grass-far) 0%, #5a8a3f 100%);
+  }
+  body.time-evening .cloud {
+    background: rgba(255, 200, 170, 0.85);
+  }
+
+  /* --- NIGHT (19-6): moon, stars, dark sky --- */
+  body.time-night.fullscreen-mode .scene {
+    background: linear-gradient(180deg,
+      #1a2540 0vh,
+      #2a3656 21vh,
+      #3d4a72 42vh,
+      #2d4a2a 42vh,
+      #1f3520 100vh);
+  }
+  body.time-night.pip-mode .scene {
+    background: linear-gradient(180deg,
+      #1a2540 0%,
+      #2a3656 30%,
+      #3d4a72 60%,
+      #2d4a2a 60%,
+      #1f3520 100%);
+  }
+  body.time-night .sun {
+    /* Sun becomes moon */
+    background: radial-gradient(circle at 35% 35%, #f8f4e3 30%, #e8e0c0 70%, #d4c9a0 100%);
+    box-shadow: 0 0 28px rgba(248, 244, 227, 0.45); /* smaller blur */
+  }
+  /* Moon craters using inset shadows */
+  body.time-night .sun::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow:
+      inset -6px -4px 12px rgba(0,0,0,0.15),
+      inset 8px 6px 0 rgba(255,255,255,0.1);
+  }
+  body.time-night .cloud {
+    background: rgba(180, 190, 220, 0.4);
+  }
+  /* Dim ecosystem elements at night — opacity is cheaper than filter:brightness */
+  body.time-night .butterfly,
+  body.time-night .bee-swarm {
+    opacity: 0.22;            /* slightly darker via lower opacity (replaces filter) */
+  }
+  body.time-night .tree-crown {
+    opacity: 0.55;            /* dims the crown to ~brightness(0.5) effect without filter cost */
+  }
+</style>
+</head>
+<body>
+
+<div class="hint">drag from the meadow ✦ collapse with the chevron</div>
+<div class="signature">a small meadow, for focused hours</div>
+
+<div class="widget" id="widget">
+  <div class="scene" id="scene">
+    <button class="collapse-btn" id="collapseBtn" data-tooltip="Hide menu" aria-label="Hide menu">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+        <path d="M2 4L5 7L8 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button class="pip-btn" id="pipBtn" data-tooltip="Picture-in-picture mode" aria-label="Picture-in-picture mode">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+        <rect x="1.5" y="2" width="9" height="7" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        <rect x="5.5" y="5" width="4" height="3" rx="0.5" fill="currentColor"/>
+      </svg>
+    </button>
+    <div class="sun"></div>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3 fullscreen-only"></div>
+    <div class="cloud cloud-4 fullscreen-only"></div>
+
+    <!-- Butterflies — fullscreen only -->
+    <div class="butterfly butterfly-1 fullscreen-only">
+      <svg viewBox="0 0 30 30" width="30" height="30">
+        <g class="butterfly-body">
+          <ellipse class="bf-wing-l" cx="10" cy="13" rx="7" ry="6" fill="#e89b7a" opacity="0.85"/>
+          <ellipse class="bf-wing-l" cx="11" cy="19" rx="5" ry="4" fill="#d97757" opacity="0.85"/>
+          <ellipse class="bf-wing-r" cx="20" cy="13" rx="7" ry="6" fill="#e89b7a" opacity="0.85"/>
+          <ellipse class="bf-wing-r" cx="19" cy="19" rx="5" ry="4" fill="#d97757" opacity="0.85"/>
+          <ellipse cx="15" cy="16" rx="0.8" ry="6" fill="#2d2417"/>
+          <circle cx="15" cy="10" r="1" fill="#2d2417"/>
+        </g>
+      </svg>
+    </div>
+    <div class="butterfly butterfly-2 fullscreen-only">
+      <svg viewBox="0 0 30 30" width="26" height="26">
+        <g class="butterfly-body">
+          <ellipse class="bf-wing-l" cx="10" cy="13" rx="7" ry="6" fill="#f4c2a1" opacity="0.85"/>
+          <ellipse class="bf-wing-l" cx="11" cy="19" rx="5" ry="4" fill="#e89b7a" opacity="0.85"/>
+          <ellipse class="bf-wing-r" cx="20" cy="13" rx="7" ry="6" fill="#f4c2a1" opacity="0.85"/>
+          <ellipse class="bf-wing-r" cx="19" cy="19" rx="5" ry="4" fill="#e89b7a" opacity="0.85"/>
+          <ellipse cx="15" cy="16" rx="0.8" ry="6" fill="#2d2417"/>
+          <circle cx="15" cy="10" r="1" fill="#2d2417"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bee swarm — fullscreen only -->
+    <div class="bee-swarm fullscreen-only" id="beeSwarm"></div>
+
+    <!-- Tree layer — behind grass, fullscreen only -->
+    <div class="tree-layer fullscreen-only">
+      <div class="tree-scroll" id="treeScroll">
+        <div class="tree-half" id="treeA"></div>
+        <div class="tree-half" id="treeB"></div>
+      </div>
+    </div>
+
+    <div class="meadow-scroll" id="meadowScroll">
+      <div class="meadow-half" id="meadowA"></div>
+      <div class="meadow-half" id="meadowB"></div>
+    </div>
+
+    <div class="cat-walker">
+      <!-- Compact cat for PiP/small widget -->
+      <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
+        <g class="cat-body">
+          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="#3a2a1f" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="#3a2a1f"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="#2a1d14"/>
+          <ellipse cx="28" cy="30" rx="16" ry="9" fill="#3a2a1f"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="#3a2a1f"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="#2a1d14"/>
+          <circle cx="44" cy="22" r="8" fill="#3a2a1f"/>
+          <path d="M 38 17 L 39 11 L 42 16 Z" fill="#3a2a1f"/>
+          <path d="M 46 16 L 49 11 L 50 17 Z" fill="#3a2a1f"/>
+          <path d="M 39 14 L 40 12 L 41 14 Z" fill="#d97757"/>
+          <path d="M 47 14 L 48 12 L 49 14 Z" fill="#d97757"/>
+          <circle cx="47" cy="22" r="1" fill="#faf3e3"/>
+          <circle cx="42" cy="22" r="1" fill="#faf3e3"/>
+          <path d="M 44 25 L 45 26 L 46 25" stroke="#faf3e3" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="24" x2="52" y2="23" stroke="#faf3e3" stroke-width="0.4"/>
+          <line x1="48" y1="25" x2="52" y2="25" stroke="#faf3e3" stroke-width="0.4"/>
+        </g>
+      </svg>
+
+      <!-- Detailed cat for fullscreen — bigger, more polish -->
+      <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
+        <defs>
+          <linearGradient id="catFur" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#4a3424"/>
+            <stop offset="100%" stop-color="#2a1d14"/>
+          </linearGradient>
+          <linearGradient id="catBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#6b4c33"/>
+            <stop offset="100%" stop-color="#4a3424"/>
+          </linearGradient>
+        </defs>
+
+        <g class="cat-body">
+          <!-- Shadow under cat -->
+          <ellipse cx="120" cy="180" rx="70" ry="6" fill="rgba(0,0,0,0.15)"/>
+
+          <!-- Tail (curls up, animates) -->
+          <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
+                stroke="url(#catFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
+          <path d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
+                stroke="#1a120a" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.3" class="tail"/>
+
+          <!-- Back legs -->
+          <g class="leg-bl">
+            <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+          </g>
+          <g class="leg-br">
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="#3a2a1f"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+          </g>
+
+          <!-- Body main -->
+          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#catFur)"/>
+          <!-- Belly accent -->
+          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.6"/>
+
+          <!-- Front legs -->
+          <g class="leg-fl">
+            <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+          </g>
+          <g class="leg-fr">
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="#3a2a1f"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+          </g>
+
+          <!-- Head -->
+          <circle cx="185" cy="95" r="36" fill="url(#catFur)"/>
+
+          <!-- Ears -->
+          <path d="M 162 75 L 164 48 L 178 70 Z" fill="#3a2a1f"/>
+          <path d="M 195 70 L 209 48 L 211 75 Z" fill="#3a2a1f"/>
+          <!-- Inner ears -->
+          <path d="M 166 70 L 169 55 L 174 68 Z" fill="#d97757" opacity="0.85"/>
+          <path d="M 199 68 L 206 55 L 209 72 Z" fill="#d97757" opacity="0.85"/>
+
+          <!-- Cheek fluff -->
+          <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.7"/>
+          <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.7"/>
+
+          <!-- Eyes — green glowing -->
+          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
+          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
+          <!-- Eye irises -->
+          <ellipse cx="174" cy="92" rx="3" ry="5" fill="#a8c574"/>
+          <ellipse cx="198" cy="92" rx="3" ry="5" fill="#a8c574"/>
+          <!-- Pupils (thin slits) -->
+          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
+          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
+          <!-- Eye shine -->
+          <circle cx="175" cy="89" r="1" fill="#faf3e3"/>
+          <circle cx="199" cy="89" r="1" fill="#faf3e3"/>
+
+          <!-- Nose -->
+          <path d="M 183 105 L 187 105 L 185 108 Z" fill="#d97757"/>
+
+          <!-- Mouth -->
+          <path d="M 185 108 L 185 112" stroke="#1a120a" stroke-width="1" stroke-linecap="round"/>
+          <path d="M 185 112 Q 181 115, 178 113" stroke="#1a120a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 112 Q 189 115, 192 113" stroke="#1a120a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+          <!-- Whiskers -->
+          <line x1="195" y1="108" x2="218" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
+          <line x1="195" y1="111" x2="220" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
+          <line x1="175" y1="108" x2="152" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
+          <line x1="175" y1="111" x2="150" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Single source of truth — CSS layouts handle PiP vs fullscreen -->
+  <div class="action-bar">
+    <!-- Primary: timer + controls (centered at pixel center) -->
+    <div class="ab-primary">
+      <div class="ab-timer-block">
+        <div class="ab-mode-row">
+          <span class="mode-label" id="modeLabel">focus</span>
+        </div>
+        <div class="ab-timer" id="timerDisplay">15:00</div>
+      </div>
+
+      <div class="ab-controls">
+        <button class="btn btn-primary ab-btn" id="startBtn">start</button>
+        <button class="btn btn-secondary ab-btn" id="resetBtn">reset</button>
+      </div>
+
+      <div class="ab-status" id="abStatus" aria-live="polite"></div>
+    </div>
+
+    <!-- Secondary: settings as a horizontal row (session | music | url) -->
+    <div class="ab-secondary">
+      <div class="ab-session-block">
+        <span class="ab-label">session</span>
+        <div class="preset-select-wrap">
+          <select class="preset-select" id="presetSelect">
+            <option value="classic">classic · 25/5</option>
+            <option value="short" selected>quick · 15/3</option>
+            <option value="deep">deep · 50/10</option>
+            <option value="marathon">marathon · 90/15</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ab-divider" aria-hidden="true"></div>
+
+      <div class="ab-music-block">
+        <span class="ab-label">music</span>
+        <div class="source-tabs">
+          <button class="source-tab" data-source="spotify">Spotify</button>
+          <button class="source-tab active" data-source="soundcloud">SoundCloud</button>
+        </div>
+      </div>
+
+      <div class="ab-url-wrap">
+        <input type="text" class="url-input" id="urlInput" value="https://soundcloud.com/concernedape" placeholder="วาง URL...">
+      </div>
+
+      <!-- Lock overlay — shown while running, blocks edits, tooltip on hover -->
+      <div class="ab-lock-overlay" aria-hidden="true"
+           data-tooltip="🌱 Can't edit while focus mode is active — pause or end the session to make changes"></div>
+    </div>
+
+    <div class="ab-music-status" id="musicStatus">♪ ready · plays with timer</div>
+  </div>
+</div>
+
+<!-- Hidden iframe for music playback control — kept outside widget so PiP doesn't move it -->
+<div id="hiddenPlayer" style="position:fixed; bottom:0; right:0; width:1px; height:1px; overflow:hidden; opacity:0.01; pointer-events:none;"></div>
+
+<script>
+  // PiP window reference — declared at top so applyTimeOfDay can reference safely
+  let pipWindow = null;
+
+  // Grass + flowers — generate identical content in both halves for seamless scroll
+  const meadowA = document.getElementById('meadowA');
+  const meadowB = document.getElementById('meadowB');
+
+  // Pre-generate positions so both halves are identical
+  const grassData = [];
+  for (let i = 0; i < 15; i++) {     // fewer blades — visual diff is small but cuts ~40% of animated elements
+    grassData.push({
+      height: 6 + Math.random() * 14,
+      left: Math.random() * 100,
+      shade: ['#6a9a4f', '#7aab5d', '#5a8a3f', '#8fb86a'][Math.floor(Math.random() * 4)],
+      delay: Math.random() * 3,
+      duration: 2 + Math.random() * 2,
+    });
+  }
+  const flowerData = [];
+  for (let i = 0; i < 3; i++) {
+    flowerData.push({
+      left: 10 + Math.random() * 80,
+      bottom: 8 + Math.random() * 20,
+      color: ['#f4c2a1', '#e89b7a', '#faf3e3', '#d97757'][Math.floor(Math.random() * 4)],
+      delay: Math.random() * 4,
+    });
+  }
+
+  function populateMeadow(container) {
+    grassData.forEach(g => {
+      const blade = document.createElement('div');
+      blade.className = 'grass-blade';
+      blade.style.height = g.height + 'px';
+      blade.style.left = g.left + '%';
+      blade.style.background = g.shade;
+      blade.style.animationDelay = g.delay + 's';
+      blade.style.animationDuration = g.duration + 's';
+      container.appendChild(blade);
+    });
+    flowerData.forEach(f => {
+      const flower = document.createElement('div');
+      flower.className = 'flower';
+      flower.style.left = f.left + '%';
+      flower.style.bottom = f.bottom + 'px';
+      flower.style.background = f.color;
+      flower.style.animationDelay = f.delay + 's';
+      container.appendChild(flower);
+    });
+  }
+  populateMeadow(meadowA);
+  populateMeadow(meadowB);
+
+  // ===== Generate bee swarm =====
+  const beeSwarm = document.getElementById('beeSwarm');
+  const beeStyle = document.createElement('style');
+  let beeKeyframes = '';
+  for (let i = 0; i < 5; i++) {
+    const bee = document.createElement('div');
+    bee.className = 'bee';
+    // Each bee orbits around a unique offset within the swarm
+    const angle = (i / 5) * Math.PI * 2;
+    const radius = 18 + Math.random() * 12;
+    bee.style.left = (35 + Math.cos(angle) * radius) + 'px';
+    bee.style.top = (35 + Math.sin(angle) * radius) + 'px';
+    bee.style.animation = `beeOrbit${i} ${2.5 + Math.random() * 1.5}s ease-in-out infinite`;
+
+    const body = document.createElement('div');
+    body.className = 'bee-body';
+    bee.appendChild(body);
+    beeSwarm.appendChild(bee);
+
+    // Each bee has its own little orbit path
+    const ox = (Math.random() - 0.5) * 25;
+    const oy = (Math.random() - 0.5) * 25;
+    beeKeyframes += `
+      @keyframes beeOrbit${i} {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(${ox}px, ${oy}px); }
+      }`;
+  }
+  beeStyle.textContent = beeKeyframes;
+  document.head.appendChild(beeStyle);
+
+  // ===== Generate trees =====
+  const treeA = document.getElementById('treeA');
+  const treeB = document.getElementById('treeB');
+
+  const treeData = [
+    { left: 8,  trunkW: 12, trunkH: 35, crownW: 60, crownH: 65, color: '#5a8a3f', crownBottom: 25 },
+    { left: 25, trunkW: 16, trunkH: 42, crownW: 80, crownH: 80, color: '#4a7a30', crownBottom: 32 },
+    { left: 48, trunkW: 11, trunkH: 32, crownW: 55, crownH: 60, color: '#6a9a4f', crownBottom: 22 },
+    { left: 70, trunkW: 14, trunkH: 38, crownW: 70, crownH: 75, color: '#5a8a3f', crownBottom: 28 },
+    { left: 88, trunkW: 12, trunkH: 34, crownW: 58, crownH: 62, color: '#7aab5d', crownBottom: 24 },
+  ];
+
+  function populateTrees(container) {
+    treeData.forEach(t => {
+      const tree = document.createElement('div');
+      tree.className = 'tree';
+      tree.style.left = t.left + '%';
+      tree.style.width = t.crownW + 'px';
+      tree.style.height = (t.trunkH + t.crownH) + 'px';
+
+      const trunk = document.createElement('div');
+      trunk.className = 'tree-trunk';
+      trunk.style.width = t.trunkW + 'px';
+      trunk.style.height = t.trunkH + 'px';
+      tree.appendChild(trunk);
+
+      const crown = document.createElement('div');
+      crown.className = 'tree-crown';
+      crown.style.width = t.crownW + 'px';
+      crown.style.height = t.crownH + 'px';
+      crown.style.bottom = t.crownBottom + 'px';
+      crown.style.background = t.color;
+      tree.appendChild(crown);
+
+      container.appendChild(tree);
+    });
+  }
+  populateTrees(treeA);
+  populateTrees(treeB);
+
+
+  // Presets — focus / short break durations (minutes)
+  const presets = {
+    classic:  { focus: 25, short: 5  },
+    short:    { focus: 15, short: 3  },
+    deep:     { focus: 50, short: 10 },
+    marathon: { focus: 90, short: 15 },
+  };
+  let currentPreset = 'short';
+
+  const state = {
+    mode: 'focus',
+    timeLeft: presets[currentPreset].focus * 60,
+    running: false,
+    paused: false, // true หมายถึงเคยกด start แล้วกด pause (ไม่ใช่ fresh start)
+    countingDown: false,
+    interval: null,
+    countdownTimeout: null,
+  };
+
+  const timerDisplay = document.getElementById('timerDisplay');
+  const modeLabel = document.getElementById('modeLabel');
+  const startBtn = document.getElementById('startBtn');
+  const widget = document.getElementById('widget');
+
+  // ===== Mode detection =====
+  // Body gets .fullscreen-mode when widget is on the main page,
+  // and .pip-mode when widget is in a Picture-in-Picture window.
+  function setMode(mode) {
+    document.body.classList.toggle('fullscreen-mode', mode === 'fullscreen');
+    document.body.classList.toggle('pip-mode', mode === 'pip');
+  }
+  // Default to fullscreen for main page
+  setMode('fullscreen');
+
+  // ===== Time-of-day mood =====
+  function getTimeOfDay() {
+    const h = new Date().getHours();
+    if (h >= 6  && h < 11) return 'morning';   // 6:00 – 10:59
+    if (h >= 11 && h < 16) return 'afternoon'; // 11:00 – 15:59
+    if (h >= 16 && h < 19) return 'evening';   // 16:00 – 18:59
+    return 'night';                            // 19:00 – 5:59
+  }
+
+  function applyTimeOfDay() {
+    const tod = getTimeOfDay();
+    document.body.classList.remove('time-morning', 'time-afternoon', 'time-evening', 'time-night');
+    document.body.classList.add('time-' + tod);
+    // Sync into PiP window too, if open
+    if (typeof pipWindow !== 'undefined' && pipWindow) {
+      pipWindow.document.body.classList.remove('time-morning', 'time-afternoon', 'time-evening', 'time-night');
+      pipWindow.document.body.classList.add('time-' + tod);
+    }
+  }
+  applyTimeOfDay();
+  // Re-check every 15 minutes — time-of-day boundaries are ~3 hours apart, 15min is plenty fine
+  setInterval(applyTimeOfDay, 15 * 60 * 1000);
+
+  // ===== Pause animations when tab is hidden (save CPU) =====
+  // Timer logic keeps running (setInterval is throttled by browser anyway),
+  // only visual animations stop to save resources.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      document.body.classList.add('animations-paused');
+    } else {
+      document.body.classList.remove('animations-paused');
+    }
+  });
+
+  function getDuration(mode) { return presets[currentPreset][mode] * 60; }
+
+  const abStatus = document.getElementById('abStatus');
+
+  // Inline SVG icons used inside the primary button
+  const ICON_PAUSE = '<svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5" width="4" height="14" rx="1"/><rect x="13" y="5" width="4" height="14" rx="1"/></svg>';
+  const ICON_PLAY  = '<svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5 L19 12 L7 19 Z"/></svg>';
+
+  function setStartText(text) {
+    // Plain-text setter — used by countdown ("3"/"2"/"1") and idle states
+    startBtn.textContent = text;
+  }
+
+  function setStartDisabled(disabled) {
+    startBtn.disabled = disabled;
+  }
+
+  // Re-render the primary button + status text based on current state
+  function renderRunState() {
+    if (state.paused) {
+      startBtn.innerHTML = ICON_PLAY + 'resume';
+      startBtn.disabled = false;
+      abStatus.textContent = '⏸ timer paused';
+    } else if (state.running) {
+      startBtn.innerHTML = ICON_PAUSE + 'pause';
+      // Break mode — pause disabled (rest is enforced)
+      startBtn.disabled = (state.mode !== 'focus');
+      abStatus.textContent = '';   // no extra status text while running
+    } else {
+      startBtn.textContent = 'start';
+      startBtn.disabled = false;
+      abStatus.textContent = '';
+    }
+  }
+
+  function updateDisplay() {
+    const m = Math.floor(state.timeLeft / 60);
+    const s = state.timeLeft % 60;
+    const timeStr = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    timerDisplay.textContent = timeStr;
+    // Mode label reflects activity: focusing/break time when running, paused, or the base mode at rest
+    const baseLabels = { focus: 'focus', short: 'short break' };
+    const runningLabels = { focus: 'focusing', short: 'break time' };
+    let label;
+    if (state.paused) label = 'paused';
+    else if (state.running) label = runningLabels[state.mode];
+    else label = baseLabels[state.mode];
+    modeLabel.textContent = label;
+    document.title = `${timeStr} · ${baseLabels[state.mode]}`;
+  }
+
+  // Last-3-seconds audio cue for the focus → short break handoff (no visual countdown follows)
+  const PRE_END_TICK_FREQ = { 3: 784, 2: 880, 1: 988 }; // G5 · A5 · B5
+
+  function tick() {
+    if (state.timeLeft <= 0) { onSessionEnd(); return; }
+    state.timeLeft--;
+    if (state.mode === 'focus' && PRE_END_TICK_FREQ[state.timeLeft]) {
+      playTick(PRE_END_TICK_FREQ[state.timeLeft], 0.14);
+    }
+    updateDisplay();
+  }
+
+  // ===== Sound: gentle bell chime =====
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  // Small "ting" — single soft bell note
+  function playTing(when = 0, freq = 1320, volume = 0.08) {
+    try {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime + when;
+      // Two oscillators for a bell-like timbre (fundamental + harmonic)
+      const fundamental = ctx.createOscillator();
+      const harmonic = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      fundamental.type = 'sine';
+      fundamental.frequency.value = freq;
+      harmonic.type = 'sine';
+      harmonic.frequency.value = freq * 2.76; // inharmonic — bell-like
+      const harmonicGain = ctx.createGain();
+      harmonicGain.gain.value = 0.3;
+
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(volume, t + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+
+      fundamental.connect(gain);
+      harmonic.connect(harmonicGain).connect(gain);
+      gain.connect(ctx.destination);
+
+      fundamental.start(t);
+      harmonic.start(t);
+      fundamental.stop(t + 0.8);
+      harmonic.stop(t + 0.8);
+    } catch(e) {}
+  }
+
+  // Start chime: three rising soft tings
+  function playStartChime() {
+    playTing(0,    1175, 0.07); // D6
+    playTing(0.12, 1397, 0.08); // F6
+    playTing(0.24, 1760, 0.09); // A6
+  }
+
+  // End chime: gentle descending shimmer
+  function playEndChime() {
+    playTing(0,    1760, 0.08); // A6
+    playTing(0.15, 1397, 0.08); // F6
+    playTing(0.30, 1175, 0.09); // D6
+    playTing(0.45,  880, 0.07); // A5 — soft resolve
+  }
+
+  // Tick for countdown — clear bell-like blip with harmonic
+  function playTick(freq = 880, volume = 0.12) {
+    try {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime;
+      const fundamental = ctx.createOscillator();
+      const harmonic = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const harmonicGain = ctx.createGain();
+
+      fundamental.type = 'sine';
+      fundamental.frequency.value = freq;
+      harmonic.type = 'sine';
+      harmonic.frequency.value = freq * 2.76;
+      harmonicGain.gain.value = 0.35;
+
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(volume, t + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+
+      fundamental.connect(gain);
+      harmonic.connect(harmonicGain).connect(gain);
+      gain.connect(ctx.destination);
+
+      fundamental.start(t);
+      harmonic.start(t);
+      fundamental.stop(t + 0.4);
+      harmonic.stop(t + 0.4);
+    } catch(e) {}
+  }
+
+  function onSessionEnd() {
+    clearInterval(state.interval);
+    state.running = false;
+    widget.classList.remove('running', 'paused', 'break');
+    renderRunState();
+    stopScrolling();
+    pauseMusic();
+
+    if (state.mode === 'focus') {
+      // Focus → Short: instant handoff (audio cue already played during last 3s of focus)
+      state.mode = 'short';
+      state.timeLeft = getDuration('short');
+      updateDisplay();
+      actuallyStartTimer();
+    } else {
+      // Short → Focus: end chime, brief pause, then visual 3-2-1 countdown
+      playEndChime();
+      state.mode = 'focus';
+      state.timeLeft = getDuration('focus');
+      updateDisplay();
+      setTimeout(() => {
+        if (!state.running && !state.countingDown) {
+          runCountdown(actuallyStartTimer);
+        }
+      }, 1200);
+    }
+  }
+
+  const meadowScroll = document.getElementById('meadowScroll');
+
+  function startScrolling() { meadowScroll.classList.add('scrolling'); }
+  function stopScrolling() { meadowScroll.classList.remove('scrolling'); }
+
+  function runCountdown(onComplete) {
+    state.countingDown = true;
+    setStartDisabled(true);
+    widget.classList.add('counting');
+    getAudioCtx(); // unlock audio
+
+    const steps = [
+      { label: '3', freq: 784 },  // G5
+      { label: '2', freq: 880 },  // A5
+      { label: '1', freq: 988 },  // B5
+    ];
+
+    let i = 0;
+    const showStep = () => {
+      if (i < steps.length) {
+        setStartText(steps[i].label);
+        playTick(steps[i].freq, 0.14);
+        i++;
+        state.countdownTimeout = setTimeout(showStep, 800);
+      } else {
+        setStartDisabled(false);
+        widget.classList.remove('counting');
+        playStartChime();
+        state.countingDown = false;
+        onComplete();
+      }
+    };
+    showStep();
+  }
+
+  function actuallyStartTimer() {
+    state.running = true;
+    state.paused = false;
+    state.countingDown = false;
+    widget.classList.add('running');
+    widget.classList.remove('paused');
+    widget.classList.toggle('break', state.mode === 'short');
+    renderRunState();
+    updateDisplay();
+    state.interval = setInterval(tick, 1000);
+    // Cat walks + music plays only during focus; short break is rest mode
+    if (state.mode === 'focus') {
+      startScrolling();
+      playMusic();
+    } else {
+      stopScrolling();
+      pauseMusic();
+    }
+  }
+
+  function startTimer() {
+    if (state.running || state.countingDown) return;
+
+    // Resume from pause — no countdown, no chime
+    if (state.paused) {
+      actuallyStartTimer();
+      return;
+    }
+
+    // Fresh start — countdown then go
+    runCountdown(actuallyStartTimer);
+  }
+
+  function pauseTimer() {
+    // Cancel countdown if in progress
+    if (state.countingDown) {
+      clearTimeout(state.countdownTimeout);
+      state.countingDown = false;
+      setStartDisabled(false);
+      setStartText('start');
+      widget.classList.remove('counting');
+      return;
+    }
+    if (!state.running) return;
+    state.running = false;
+    state.paused = true; // mark as paused (so resume won't countdown)
+    widget.classList.remove('running');
+    widget.classList.add('paused');
+    renderRunState();
+    updateDisplay();
+    clearInterval(state.interval);
+    stopScrolling();
+    pauseMusic();
+  }
+
+  // Full stop — used on reset and session end
+  function stopTimer() {
+    if (state.countingDown) {
+      clearTimeout(state.countdownTimeout);
+      state.countingDown = false;
+      widget.classList.remove('counting');
+    }
+    state.running = false;
+    state.paused = false;
+    setStartDisabled(false);
+    widget.classList.remove('running', 'paused', 'break');
+    renderRunState();
+    clearInterval(state.interval);
+    stopScrolling();
+    pauseMusic();
+  }
+
+  function resetTimer() {
+    stopTimer();
+    // Full session reset — back to focus mode, fresh state
+    state.mode = 'focus';
+    state.timeLeft = getDuration('focus');
+    updateDisplay();
+    // Reset music back to first track of playlist
+    resetMusic();
+  }
+
+  startBtn.addEventListener('click', () => { state.running ? pauseTimer() : startTimer(); });
+  document.getElementById('resetBtn').addEventListener('click', resetTimer);
+
+  function handlePresetChange(value) {
+    currentPreset = value;
+    // Sync the preset dropdown in both main doc and PiP doc (if open)
+    const docs = [document];
+    if (pipWindow) docs.push(pipWindow.document);
+    docs.forEach(d => {
+      const sel = d.getElementById('presetSelect');
+      if (sel) sel.value = value;
+    });
+    stopTimer();
+    state.mode = 'focus';
+    state.timeLeft = getDuration('focus');
+    updateDisplay();
+  }
+
+  document.getElementById('presetSelect').addEventListener('change', (e) => handlePresetChange(e.target.value));
+
+  // PiP window dimensions — expanded shows the action-bar, collapsed shrinks to just the scene
+  const PIP_WIDTH = 320;
+  const PIP_HEIGHT_EXPANDED = 480;
+  const PIP_HEIGHT_COLLAPSED = 200; // larger than scene height to keep collapse-btn visible after browser chrome
+
+  document.getElementById('collapseBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isCollapsed = widget.classList.toggle('collapsed');
+    const label = isCollapsed ? 'Show menu' : 'Hide menu';
+    e.currentTarget.setAttribute('data-tooltip', label);
+    e.currentTarget.setAttribute('aria-label', label);
+    if (pipWindow) {
+      try {
+        pipWindow.resizeTo(PIP_WIDTH, isCollapsed ? PIP_HEIGHT_COLLAPSED : PIP_HEIGHT_EXPANDED);
+      } catch(_) {}
+    }
+  });
+
+  // ===== Picture-in-Picture (float over all windows) =====
+  const pipBtn = document.getElementById('pipBtn');
+
+  // Check if Document PiP is supported
+  if (!('documentPictureInPicture' in window)) {
+    pipBtn.style.display = 'none';
+    console.log('Document Picture-in-Picture not supported in this browser');
+  }
+
+  async function togglePiP() {
+    // If already in PiP, close it
+    if (pipWindow) {
+      pipWindow.close();
+      return;
+    }
+
+    try {
+      const targetHeight = widget.classList.contains('collapsed')
+        ? PIP_HEIGHT_COLLAPSED
+        : PIP_HEIGHT_EXPANDED;
+
+      pipWindow = await documentPictureInPicture.requestWindow({
+        width: PIP_WIDTH,
+        height: targetHeight,
+      });
+
+      // Copy all stylesheets to the PiP window
+      [...document.styleSheets].forEach((styleSheet) => {
+        try {
+          const cssRules = [...styleSheet.cssRules].map(rule => rule.cssText).join('');
+          const style = document.createElement('style');
+          style.textContent = cssRules;
+          pipWindow.document.head.appendChild(style);
+        } catch (e) {
+          // Cross-origin stylesheet (Google Fonts) — copy as <link> instead
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.type = styleSheet.type;
+          link.media = styleSheet.media;
+          link.href = styleSheet.href;
+          pipWindow.document.head.appendChild(link);
+        }
+      });
+
+      // Style the PiP window — widget fills the whole window, no card frame
+      const pipStyle = pipWindow.document.createElement('style');
+      pipStyle.textContent = `
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          overflow: hidden;
+          font-family: 'Fraunces', serif;
+        }
+        body {
+          display: block;
+        }
+        /* Widget fills the PiP window — no card frame */
+        #widget {
+          position: relative !important;
+          top: auto !important;
+          left: auto !important;
+          right: auto !important;
+          width: 100% !important;
+          height: 100% !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+        }
+      `;
+      pipWindow.document.head.appendChild(pipStyle);
+
+      // Move the widget into the PiP window — preserve its original look
+      pipWindow.document.body.append(widget);
+
+      // Switch widget to PiP mode (compact layout)
+      pipWindow.document.body.classList.add('pip-mode');
+      document.body.classList.remove('fullscreen-mode');
+
+      // Sync current time-of-day class to PiP window
+      applyTimeOfDay();
+
+      pipBtn.classList.add('active');
+
+      // When PiP closes, move widget back to original page
+      pipWindow.addEventListener('pagehide', () => {
+        document.body.append(widget);
+        // Clear ALL inline styles that may have been set during PiP setup
+        // so that fullscreen-mode CSS rules apply cleanly
+        widget.style.cssText = '';
+        pipBtn.classList.remove('active');
+        pipWindow = null;
+        // Restore fullscreen layout on main page
+        setMode('fullscreen');
+        // Re-apply time-of-day to main body
+        applyTimeOfDay();
+      });
+    } catch (err) {
+      console.error('PiP failed:', err);
+      // Silent fail — no alert popup. User can try the button again.
+    }
+  }
+
+  pipBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePiP();
+  });
+
+  // Note: Chrome blocks programmatic PiP without a fresh user gesture,
+  // so true "auto-PiP on tab switch" like Google Meet is not possible
+  // with Document Picture-in-Picture API. User must click the PiP button.
+
+  // Drag
+  let isDragging = false;
+  let dragOffset = { x: 0, y: 0 };
+
+  function startDrag(e) {
+    if (e.target.closest('.collapse-btn') || e.target.closest('.pip-btn')) return;
+    // Don't drag in fullscreen mode — the widget fills the screen
+    if (document.body.classList.contains('fullscreen-mode')) return;
+    isDragging = true;
+    widget.classList.add('dragging');
+    const rect = widget.getBoundingClientRect();
+    dragOffset.x = e.clientX - rect.left;
+    dragOffset.y = e.clientY - rect.top;
+    widget.style.right = 'auto';
+    widget.style.left = rect.left + 'px';
+    widget.style.top = rect.top + 'px';
+  }
+
+  document.getElementById('scene').addEventListener('mousedown', startDrag);
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    let x = e.clientX - dragOffset.x;
+    let y = e.clientY - dragOffset.y;
+    const w = widget.offsetWidth;
+    const h = widget.offsetHeight;
+    x = Math.max(0, Math.min(window.innerWidth - w, x));
+    y = Math.max(0, Math.min(window.innerHeight - h, y));
+    widget.style.left = x + 'px';
+    widget.style.top = y + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    widget.classList.remove('dragging');
+  });
+
+  // ===== Music (hidden player, controlled by timer) =====
+  let currentSource = 'soundcloud';
+  let scWidget = null; // SoundCloud widget instance
+  let musicReady = false;
+  const urlInput = document.getElementById('urlInput');
+  const hiddenPlayer = document.getElementById('hiddenPlayer');
+  const musicStatus = document.getElementById('musicStatus');
+
+  function setStatus(text, playing = false) {
+    musicStatus.textContent = text;
+    musicStatus.classList.toggle('playing', playing);
+  }
+
+  function syncSourceTabs(source) {
+    document.querySelectorAll('.source-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.source === source);
+    });
+  }
+
+  // Remember the last URL the user had for each source so switching back restores it
+  const lastUrlBySource = {
+    soundcloud: 'https://soundcloud.com/concernedape',
+    spotify: ''
+  };
+
+  function handleSourceChange(source) {
+    if (source === currentSource) return;
+    // Save the current input value to the source we're leaving (preserves user's paste)
+    lastUrlBySource[currentSource] = urlInput.value;
+
+    currentSource = source;
+    syncSourceTabs(source);
+    urlInput.placeholder = source === 'spotify'
+      ? 'วาง Spotify playlist URL...'
+      : 'วาง SoundCloud URL...';
+    urlInput.value = lastUrlBySource[source];
+    musicReady = false;
+    scWidget = null;
+    hiddenPlayer.innerHTML = '';
+
+    if (urlInput.value) {
+      setStatus('♪ loading...');
+      loadMusic();   // auto-load when switching back to a source with a remembered URL
+    } else {
+      setStatus('♪ paste URL...');
+    }
+  }
+
+  document.querySelectorAll('.source-tab').forEach(tab => {
+    tab.addEventListener('click', () => handleSourceChange(tab.dataset.source));
+  });
+
+  // SoundCloud widget event bindings — extracted so loadMusic and resetMusic both get the handlers
+  // The widget does not reliably auto-advance for all URL types (user profile, /tracks), and FINISH may
+  // never fire in those cases. So we drive shuffle ourselves via PLAY_PROGRESS: when the current track
+  // crosses 97% of duration, jump to a random different track. FINISH stays as a belt-and-suspenders fallback.
+  let lastTrackSwitchTime = 0;
+  const TRACK_SWITCH_THROTTLE_MS = 2000;
+
+  function shuffleToRandomTrack(widget) {
+    widget.getSounds((sounds) => {
+      if (!Array.isArray(sounds) || sounds.length === 0) return;
+      if (sounds.length === 1) {
+        // Single-track queue — restart from beginning
+        widget.seekTo(0);
+        widget.play();
+        return;
+      }
+      widget.getCurrentSound((current) => {
+        const currentId = current ? current.id : null;
+        let nextIdx, attempts = 0;
+        do {
+          nextIdx = Math.floor(Math.random() * sounds.length);
+          attempts++;
+        } while (currentId && sounds[nextIdx] && sounds[nextIdx].id === currentId && attempts < 10);
+        widget.skip(nextIdx);
+      });
+    });
+  }
+
+  function bindScEvents(widget) {
+    widget.bind(SC.Widget.Events.READY, () => {
+      musicReady = true;
+      try {
+        widget.getSounds((sounds) => {
+          const count = Array.isArray(sounds) ? sounds.length : 0;
+          if (count <= 1) {
+            setStatus('♪ ready · 1 track (loops) — use /sets/ URL for playlist');
+          } else {
+            setStatus(`♪ ready · ${count} tracks (shuffles)`);
+          }
+        });
+      } catch (_) {
+        setStatus('♪ ready · plays with timer');
+      }
+    });
+    // Proactive shuffle: jump to a random track ~3% before the current one ends
+    widget.bind(SC.Widget.Events.PLAY_PROGRESS, (data) => {
+      if (!data || data.relativePosition < 0.97) return;
+      if (!state.running || state.mode !== 'focus') return; // only advance during running focus
+      if (Date.now() - lastTrackSwitchTime < TRACK_SWITCH_THROTTLE_MS) return;
+      lastTrackSwitchTime = Date.now();
+      try { shuffleToRandomTrack(widget); } catch (_) {}
+    });
+    // Fallback if PLAY_PROGRESS missed it (slow polling, etc.)
+    widget.bind(SC.Widget.Events.FINISH, () => {
+      if (Date.now() - lastTrackSwitchTime < TRACK_SWITCH_THROTTLE_MS) return;
+      lastTrackSwitchTime = Date.now();
+      try { shuffleToRandomTrack(widget); } catch (_) {}
+    });
+    // PLAY fires when each track starts — keep status text showing the current title
+    widget.bind(SC.Widget.Events.PLAY, () => {
+      try {
+        widget.getCurrentSound((sound) => {
+          if (sound && sound.title) setStatus('♪ ' + sound.title, true);
+        });
+      } catch (_) {}
+    });
+  }
+
+  function loadMusic() {
+    const url = urlInput.value.trim();
+    if (!url) return;
+    musicReady = false;
+    scWidget = null;
+    hiddenPlayer.innerHTML = '';
+
+    if (currentSource === 'soundcloud') {
+      if (!url.includes('soundcloud.com')) {
+        setStatus('✕ invalid SoundCloud URL');
+        return;
+      }
+      const iframe = document.createElement('iframe');
+      iframe.id = 'scIframe';
+      iframe.width = '100%';
+      iframe.height = '100';
+      iframe.scrolling = 'no';
+      iframe.frameBorder = 'no';
+      iframe.allow = 'autoplay';
+      iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`;
+      hiddenPlayer.appendChild(iframe);
+
+      // Wait a tick then bind widget
+      setTimeout(() => {
+        try {
+          scWidget = SC.Widget(iframe);
+          bindScEvents(scWidget);
+        } catch(e) {
+          setStatus('✕ could not load player');
+        }
+      }, 200);
+    } else {
+      // Spotify — embed API is limited for free control, so we show a note
+      const match = url.match(/spotify\.com\/(playlist|track|album|episode|show)\/([a-zA-Z0-9]+)/);
+      if (!match) {
+        setStatus('✕ invalid Spotify URL');
+        return;
+      }
+      const [, type, id] = match;
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://open.spotify.com/embed/${type}/${id}?utm_source=generator`;
+      iframe.width = '100%';
+      iframe.height = '152';
+      iframe.allow = 'autoplay; encrypted-media';
+      hiddenPlayer.appendChild(iframe);
+      musicReady = true;
+      setStatus('♪ Spotify loaded · press play once to allow');
+      // Note: Spotify embed doesn't allow programmatic play/pause without user gesture each time
+    }
+  }
+
+  function playMusic() {
+    if (!musicReady) return;
+    if (currentSource === 'soundcloud' && scWidget) {
+      scWidget.play();
+      // Show which track is playing — gives user feedback that the playlist is advancing
+      try {
+        scWidget.getCurrentSound((sound) => {
+          const title = sound && sound.title ? sound.title : 'softly';
+          setStatus('♪ ' + title, true);
+        });
+      } catch (_) {
+        setStatus('♪ playing softly', true);
+      }
+    } else if (currentSource === 'spotify') {
+      // Spotify embed: can't programmatically play due to browser restrictions
+      setStatus('♪ open Spotify iframe to play (browser limit)');
+    }
+  }
+
+  function pauseMusic() {
+    if (currentSource === 'soundcloud' && scWidget) {
+      scWidget.pause();
+      setStatus('♪ paused');
+    }
+  }
+
+  function resetMusic() {
+    if (currentSource === 'soundcloud' && scWidget) {
+      // skip(0) causes auto-play in SoundCloud widget — reload iframe instead for clean reset
+      scWidget.pause();
+      const iframe = hiddenPlayer.querySelector('iframe');
+      if (iframe) {
+        const src = iframe.src;
+        scWidget = null;
+        musicReady = false;
+        iframe.src = '';
+        setTimeout(() => {
+          iframe.src = src;
+          setTimeout(() => {
+            try {
+              scWidget = SC.Widget(iframe);
+              bindScEvents(scWidget);
+            } catch(_) {}
+          }, 200);
+        }, 50);
+      }
+      setStatus('♪ resetting...');
+    } else if (currentSource === 'spotify') {
+      const iframe = hiddenPlayer.querySelector('iframe');
+      if (iframe) {
+        const src = iframe.src;
+        iframe.src = '';
+        setTimeout(() => { iframe.src = src; }, 50);
+      }
+      setStatus('♪ Spotify reset · press play once to allow');
+    }
+  }
+
+  // URL input: debounced auto-load + immediate load on Enter
+  let urlDebounceTimer = null;
+  urlInput.addEventListener('input', () => {
+    clearTimeout(urlDebounceTimer);
+    urlDebounceTimer = setTimeout(loadMusic, 800);
+  });
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      clearTimeout(urlDebounceTimer);
+      loadMusic();
+    }
+  });
+
+  updateDisplay();
+  loadMusic();
+</script>
+
+</body>
+</html>
