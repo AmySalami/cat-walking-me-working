@@ -4,9 +4,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![No build step](https://img.shields.io/badge/build-none-brightgreen)
-![Single file](https://img.shields.io/badge/file-pomodoro--cat.html-blue)
+![Single file](https://img.shields.io/badge/file-index.html-blue)
 
-[**▶ Live demo**](https://AmySalami.github.io/cat-walking-me-working/pomodoro-cat.html)
+[**▶ Live demo**](https://AmySalami.github.io/cat-walking-me-working/)
 
 ---
 
@@ -42,13 +42,13 @@ Something calm — a meadow you can glance at, a cat that walks while you focus,
 
 It's one file. Two options:
 
-**Easiest** — double-click `pomodoro-cat.html`
+**Easiest** — double-click `index.html`
 SoundCloud iframe needs `http://` (not `file://`) to embed properly, so:
 
 ```bash
 # Python (any version)
 python3 -m http.server 8765
-# then open http://localhost:8765/pomodoro-cat.html
+# then open http://localhost:8765/
 ```
 
 ```bash
