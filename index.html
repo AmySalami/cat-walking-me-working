@@ -1013,6 +1013,286 @@
   body.pip-mode .widget.collapsed .scene { flex: 1; height: auto; }
 
   /* ===================================================================
+     ONBOARDING — first-visit welcome modal
+     =================================================================== */
+  .onboarding {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 36, 23, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+    animation: onboardingFadeIn 0.3s ease;
+  }
+  .onboarding[hidden] { display: none; }
+  @keyframes onboardingFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .onboarding-card {
+    background: var(--cream);
+    border-radius: 28px;
+    padding: 36px;
+    max-width: 540px;
+    width: 100%;
+    box-shadow:
+      0 30px 60px -15px rgba(0,0,0,0.4),
+      0 12px 24px -8px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: onboardingPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  @keyframes onboardingPopIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .onboarding-emoji { font-size: 36px; display: block; margin-bottom: 6px; line-height: 1; }
+  .onboarding-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 24px;
+    color: var(--ink);
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+  .onboarding-tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    opacity: 0.78;
+    line-height: 1.75;
+    margin-bottom: 36px;        /* gap to action buttons */
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Steps — only one visible at a time */
+  .onboarding-step { display: none; }
+  .onboarding-step.is-active { display: block; animation: stepFadeIn 0.25s ease; }
+  @keyframes stepFadeIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Step 2 header — Back button + left-aligned title */
+  .onboarding-step-header {
+    text-align: left;
+    margin-bottom: 32px;       /* gap between main title and first section subheading */
+  }
+  .onboarding-step-header .onboarding-back {
+    margin-bottom: 10px;
+  }
+  .onboarding-step-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--ink);
+    margin: 0;
+    text-align: center;
+  }
+
+  /* Section wrapper inside step 2 — extra breathing room */
+  .onboarding-section { margin-bottom: 32px; }              /* gap between sections */
+  .onboarding-section:last-of-type { margin-bottom: 36px; }  /* gap between input and primary button */
+
+  .onboarding-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin-bottom: 10px;
+    opacity: 0.85;
+  }
+
+  .onboarding-presets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .onboarding-preset {
+    background: rgba(45, 36, 23, 0.05);
+    border: 1.5px solid transparent;
+    border-radius: 14px;
+    padding: 12px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    text-align: left;
+  }
+  .onboarding-preset:hover { background: rgba(45, 36, 23, 0.09); }
+  .onboarding-preset.is-selected {
+    background: var(--cream);
+    border-color: var(--ink);
+    box-shadow: 0 2px 8px rgba(45, 36, 23, 0.12);
+  }
+  .preset-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .preset-detail {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    opacity: 0.6;
+    letter-spacing: 0.04em;
+  }
+
+  /* Step 2: music options — vertical list */
+  .onboarding-music-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .onboarding-music {
+    background: rgba(45, 36, 23, 0.05);
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    text-align: left;
+  }
+  .onboarding-music:hover { background: rgba(45, 36, 23, 0.09); }
+  .onboarding-music.is-selected {
+    background: var(--cream);
+    border-color: var(--ink);
+    box-shadow: 0 2px 8px rgba(45, 36, 23, 0.12);
+  }
+  .music-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .music-detail {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    opacity: 0.6;
+    letter-spacing: 0.02em;
+  }
+
+  /* Custom URL input */
+  .onboarding-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 0;          /* gap to button controlled by .onboarding-section margin-bottom */
+  }
+  .onboarding-custom-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0.6;
+    text-align: left;
+  }
+  .onboarding-custom-input {
+    padding: 10px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+  }
+
+  /* Action row — Next / Back + CTA */
+  .onboarding-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;             /* gap to input controlled by .onboarding-section margin-bottom (16px) */
+  }
+  /* Stack variant — used on step 1 (welcome) for primary + tertiary stacked at equal size */
+  .onboarding-actions--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  /* Equal dimensions for both buttons in the stack — same width + height */
+  .onboarding-actions--stack .onboarding-cta,
+  .onboarding-actions--stack .onboarding-tertiary {
+    width: 100%;
+    padding: 14px 20px;
+  }
+
+  /* Tertiary action — same size as primary, outlined visual for secondary path */
+  .onboarding-tertiary {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid rgba(45, 36, 23, 0.18);
+    background: transparent;
+    color: var(--ink);
+    opacity: 0.85;
+    cursor: pointer;
+    border-radius: var(--radius-pill);
+    transition: all 0.15s ease;
+  }
+  .onboarding-tertiary:hover { background: rgba(45, 36, 23, 0.06); opacity: 1; }
+  .onboarding-tertiary:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
+  .onboarding-cta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 14px 36px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--ink);
+    color: var(--cream);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .onboarding-cta:hover { background: var(--moss); }
+  .onboarding-cta:active { transform: scale(0.97); }
+  .onboarding-cta:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
+
+  .onboarding-back {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink);
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .onboarding-back:hover { opacity: 1; background: rgba(45, 36, 23, 0.06); }
+  .onboarding-back:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
+
+  /* ===================================================================
      PERFORMANCE — pause animations when tab is hidden
      =================================================================== */
   body.animations-paused *,
@@ -1377,6 +1657,81 @@
 
 <!-- Hidden iframe for music playback control — kept outside widget so PiP doesn't move it -->
 <div id="hiddenPlayer" style="position:fixed; bottom:0; right:0; width:1px; height:1px; overflow:hidden; opacity:0.01; pointer-events:none;"></div>
+
+<!-- Onboarding modal — shown only on the first visit (localStorage gate) -->
+<div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" hidden>
+  <div class="onboarding-card">
+
+    <!-- Step 1: Welcome (quick start OR customize) -->
+    <div class="onboarding-step is-active" data-step="1">
+      <span class="onboarding-emoji" aria-hidden="true">🐾</span>
+      <h1 class="onboarding-title" id="onboardingTitle">Welcome to Pomodoro Meadow</h1>
+      <p class="onboarding-tagline">Stay focused without burning out — the easy way. Pomodoro-paced work and rest keeps your mind fresh, set to your favorite playlist.</p>
+
+      <div class="onboarding-actions onboarding-actions--stack">
+        <button class="onboarding-cta" id="onboardingQuickStart">Let's focus 🌱</button>
+        <button class="onboarding-tertiary" id="onboardingCustomize">Wait, I want to adjust the settings</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Customize (session + music together) -->
+    <div class="onboarding-step" data-step="2">
+      <div class="onboarding-step-header">
+        <button class="onboarding-back" id="onboardingBack">← Back</button>
+        <h2 class="onboarding-step-title">Customize your session</h2>
+      </div>
+
+      <div class="onboarding-section">
+        <h3 class="onboarding-section-title">Pick your rhythm</h3>
+        <div class="onboarding-presets" role="radiogroup" aria-label="Session preset">
+          <button class="onboarding-preset" data-preset="classic" role="radio" aria-checked="false">
+            <span class="preset-name">classic</span>
+            <span class="preset-detail">25 min focus · 5 min break</span>
+          </button>
+          <button class="onboarding-preset is-selected" data-preset="short" role="radio" aria-checked="true">
+            <span class="preset-name">quick</span>
+            <span class="preset-detail">15 min focus · 3 min break</span>
+          </button>
+          <button class="onboarding-preset" data-preset="deep" role="radio" aria-checked="false">
+            <span class="preset-name">deep</span>
+            <span class="preset-detail">50 min focus · 10 min break</span>
+          </button>
+          <button class="onboarding-preset" data-preset="marathon" role="radio" aria-checked="false">
+            <span class="preset-name">marathon</span>
+            <span class="preset-detail">90 min focus · 15 min break</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="onboarding-section">
+        <h3 class="onboarding-section-title">Choose your soundtrack</h3>
+        <div class="onboarding-music-options" role="radiogroup" aria-label="Music source">
+          <button class="onboarding-music is-selected" data-music-url="https://soundcloud.com/concernedape" role="radio" aria-checked="true">
+            <span class="music-name">Stardew Valley OST</span>
+            <span class="music-detail">cozy farm vibes · ConcernedApe</span>
+          </button>
+          <button class="onboarding-music" data-music-url="https://soundcloud.com/lofi_girl" role="radio" aria-checked="false">
+            <span class="music-name">Lofi Hip Hop</span>
+            <span class="music-detail">chill beats for focus · Lofi Girl</span>
+          </button>
+          <button class="onboarding-music" data-music-url="https://soundcloud.com/chillhopdotcom" role="radio" aria-checked="false">
+            <span class="music-name">Chillhop Essentials</span>
+            <span class="music-detail">jazzy chill · Chillhop Music</span>
+          </button>
+        </div>
+        <div class="onboarding-custom">
+          <label class="onboarding-custom-label" for="onboardingCustomUrl">Or paste your own</label>
+          <input type="text" id="onboardingCustomUrl" class="url-input onboarding-custom-input"
+                 placeholder="https://soundcloud.com/...">
+        </div>
+      </div>
+
+      <div class="onboarding-actions">
+        <button class="onboarding-cta" id="onboardingStart">Let's focus 🌱</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
   // PiP window reference — declared at top so applyTimeOfDay can reference safely
@@ -2295,6 +2650,109 @@
 
   updateDisplay();
   loadMusic();
+
+  // ===== Onboarding modal — first-visit 2-step flow (session → music) =====
+  const onboarding = document.getElementById('onboarding');
+  const ONBOARDING_KEY = 'pomodoroMeadowOnboardingSeen';
+
+  function openOnboarding() {
+    onboarding.hidden = false;
+    goToStep(1);
+  }
+  function closeOnboarding() {
+    onboarding.hidden = true;
+    try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch(_) {}
+  }
+
+  // Step navigation
+  function goToStep(n) {
+    onboarding.querySelectorAll('.onboarding-step').forEach(s => {
+      s.classList.toggle('is-active', +s.dataset.step === n);
+    });
+    // Focus the primary CTA of the active step
+    requestAnimationFrame(() => {
+      const target = n === 1
+        ? document.getElementById('onboardingQuickStart')
+        : document.getElementById('onboardingStart');
+      target?.focus();
+    });
+  }
+
+  // --- Step 1: welcome → either quick start or go to customize ---
+  document.getElementById('onboardingQuickStart').addEventListener('click', () => {
+    closeOnboarding();
+    startTimer();      // start with the app's current defaults
+  });
+  document.getElementById('onboardingCustomize').addEventListener('click', () => goToStep(2));
+
+  // --- Step 2: session + music selection ---
+  onboarding.querySelectorAll('.onboarding-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      onboarding.querySelectorAll('.onboarding-preset').forEach(b => {
+        b.classList.remove('is-selected');
+        b.setAttribute('aria-checked', 'false');
+      });
+      btn.classList.add('is-selected');
+      btn.setAttribute('aria-checked', 'true');
+      handlePresetChange(btn.dataset.preset);
+    });
+  });
+
+  const customUrlInput = document.getElementById('onboardingCustomUrl');
+
+  onboarding.querySelectorAll('.onboarding-music').forEach(btn => {
+    btn.addEventListener('click', () => {
+      onboarding.querySelectorAll('.onboarding-music').forEach(b => {
+        b.classList.remove('is-selected');
+        b.setAttribute('aria-checked', 'false');
+      });
+      btn.classList.add('is-selected');
+      btn.setAttribute('aria-checked', 'true');
+      customUrlInput.value = ''; // clear custom when a preset is picked
+    });
+  });
+
+  // Typing in custom URL clears the preset selection
+  customUrlInput.addEventListener('input', () => {
+    if (customUrlInput.value.trim()) {
+      onboarding.querySelectorAll('.onboarding-music').forEach(b => {
+        b.classList.remove('is-selected');
+        b.setAttribute('aria-checked', 'false');
+      });
+    }
+  });
+
+  document.getElementById('onboardingBack').addEventListener('click', () => goToStep(1));
+
+  // Start — apply music choice, close modal, begin countdown
+  document.getElementById('onboardingStart').addEventListener('click', () => {
+    const custom = customUrlInput.value.trim();
+    const selectedMusic = onboarding.querySelector('.onboarding-music.is-selected');
+    const chosenUrl = custom || (selectedMusic && selectedMusic.dataset.musicUrl);
+
+    if (chosenUrl) {
+      // Make sure source tab is SoundCloud + load the chosen URL
+      handleSourceChange('soundcloud');
+      urlInput.value = chosenUrl;
+      loadMusic();
+    }
+
+    closeOnboarding();
+    startTimer();
+  });
+
+  // Click backdrop or press Escape to dismiss (without auto-starting)
+  onboarding.addEventListener('click', (e) => {
+    if (e.target === onboarding) closeOnboarding();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !onboarding.hidden) closeOnboarding();
+  });
+
+  // Show on first visit only — localStorage flag persists across reloads
+  try {
+    if (!localStorage.getItem(ONBOARDING_KEY)) openOnboarding();
+  } catch(_) { /* private browsing — skip onboarding silently */ }
 </script>
 
 </body>
