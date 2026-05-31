@@ -360,10 +360,11 @@
     -webkit-appearance: none;
     width: 100%;
     padding: 7px 28px 7px 12px;
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 600;
-    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--ink);
     background: rgba(45, 36, 23, 0.06);
     border: none;
@@ -937,15 +938,16 @@
     height: 28px;
     background: rgba(45, 36, 23, 0.18);
   }
-  body.fullscreen-mode .ab-url-wrap { width: 260px; }
+  body.fullscreen-mode .ab-url-wrap { width: 280px; }
   body.fullscreen-mode .ab-url-wrap .url-input {
     width: 100%;
     padding: 10px 16px;
     border-radius: var(--radius-pill);
+    font-size: 11px;       /* slightly larger so lowercase URL has same visual weight as uppercase toggle/dropdown */
   }
   body.fullscreen-mode .preset-select {
     padding: 10px 32px 10px 16px;
-    font-size: 13px;
+    font-size: 9px;            /* match toggle + url-input */
   }
   /* Music toggle: match the dropdown / URL input height in fullscreen */
   body.fullscreen-mode .source-tabs { padding: 4px; }
@@ -994,7 +996,7 @@
   body.pip-mode .ab-music-block .source-tabs { align-self: flex-end; }
   body.pip-mode .preset-select-wrap,
   body.pip-mode .ab-url-wrap { width: 100%; }
-  body.pip-mode .preset-select { padding: 7px 28px 7px 12px; font-size: 12px; }
+  body.pip-mode .preset-select { padding: 7px 28px 7px 12px; font-size: 9px; }
   body.pip-mode .url-input { padding: 7px 10px; }
 
   /* ===================================================================
