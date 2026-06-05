@@ -228,13 +228,59 @@
   .widget.running .settings-btn,
   .widget.counting .settings-btn { display: none; }
 
-  /* Character switching — only the active character's SVGs render.
-     Using `display: contents` on the wrapper means the existing
-     .cat-simple/.cat-detailed pip/fullscreen rules keep working unchanged. */
-  .cat-character { display: contents; }
-  .cat-character[data-character="khonloy"] { display: none; }
-  body[data-character="khonloy"] .cat-character[data-character="khuntong"] { display: none; }
-  body[data-character="khonloy"] .cat-character[data-character="khonloy"] { display: contents; }
+  /* ===================================================================
+     CHARACTER SYSTEM — palette as CSS variables.
+     One SVG per size renders all characters. To add a new character:
+     (1) Add a `body[data-character="..."]` block below with the palette.
+     (2) Add an entry to the CHARACTERS array in the script section.
+     No SVG duplication. No new HTML. No new selectors.
+     =================================================================== */
+
+  /* Khuntong (black cat) — default when no data-character is set.
+     Applies via `:root` (everything) plus an explicit `[data-character="khuntong"]`
+     so that swatches in the picker can carry their own data-character attribute
+     and pick up the right palette regardless of the body's current selection. */
+  :root,
+  [data-character="khuntong"] {
+    --fur-base:      #4a3424;
+    --fur-shadow:    #2a1d14;
+    --fur-side:      #3a2a1f;
+    --fur-side-flat: #3a2a1f;   /* non-gradient siblings (legs, simple body) */
+    --belly-light:   #6b4c33;
+    --belly-dark:    #4a3424;
+    --paw:           #1a120a;
+    --stripe-color:  #1f1410;
+    --stripe-opacity: 0;        /* Khuntong has no visible stripes */
+    --eye-sclera:    #1a120a;
+    --eye-iris:      #a8c574;   /* green */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #d97757;   /* warm pink */
+    --nose:          #d97757;
+    --whisker:       #faf3e3;
+    --mouth-stroke:  #1a120a;
+  }
+
+  /* Khonloy (brown mackerel tabby) */
+  [data-character="khonloy"] {
+    --fur-base:      #a89070;
+    --fur-shadow:    #6e5c44;
+    --fur-side:      #6e5c44;
+    --fur-side-flat: #6e5c44;
+    --belly-light:   #c4a880;
+    --belly-dark:    #a89070;
+    --paw:           #1f1410;
+    --stripe-color:  #1f1410;
+    --stripe-opacity: 0.85;     /* prominent mackerel pattern */
+    --eye-sclera:    #1a120a;
+    --eye-iris:      #a8c574;   /* same green as Khuntong */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #d97757;
+    --nose:          #d97757;
+    --whisker:       #faf3e3;
+    --mouth-stroke:  #1a120a;
+  }
 
   /* Custom tooltips for icon-only buttons — shown on hover/focus, hidden otherwise */
   .collapse-btn[data-tooltip]:hover::after,
@@ -1184,14 +1230,14 @@
     margin-bottom: 4px;
     box-shadow: inset 0 -2px 6px rgba(0,0,0,0.18);
   }
-  .char-swatch--khuntong {
-    background: radial-gradient(circle at 35% 30%, #4a3424 0%, #2a1d14 70%);
-  }
-  .char-swatch--khonloy {
-    background: radial-gradient(circle at 35% 30%, #a89070 0%, #6e5c44 70%);
+  /* Swatch uses the character palette via data-character on the swatch.
+     The diagonal-stripe overlay is always present, but `--stripe-opacity`
+     hides it for characters that don't have stripes. */
+  .char-swatch {
     position: relative;
+    background: radial-gradient(circle at 35% 30%, var(--fur-base) 0%, var(--fur-shadow) 70%);
   }
-  .char-swatch--khonloy::after {
+  .char-swatch::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -1199,8 +1245,9 @@
     background: repeating-linear-gradient(45deg,
       transparent 0px,
       transparent 4px,
-      rgba(31, 20, 16, 0.75) 4px,
-      rgba(31, 20, 16, 0.75) 5px);
+      var(--stripe-color) 4px,
+      var(--stripe-color) 5px);
+    opacity: var(--stripe-opacity);
   }
   .char-name {
     font-family: 'Fraunces', serif;
@@ -1765,40 +1812,69 @@
     </div>
 
     <div class="cat-walker">
-      <!-- Character: Khuntong (black) — default -->
-      <div class="cat-character" data-character="khuntong">
+      <!-- Single SVG renders every character via CSS variables.
+           Stripes/markings are always in the markup but hidden via
+           `--stripe-opacity: 0` when the active palette has no stripes. -->
       <!-- Compact cat for PiP/small widget -->
       <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
         <g class="cat-body">
-          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="#3a2a1f" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="#3a2a1f"/>
-          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="#2a1d14"/>
-          <ellipse cx="28" cy="30" rx="16" ry="9" fill="#3a2a1f"/>
-          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="#3a2a1f"/>
-          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="#2a1d14"/>
-          <circle cx="44" cy="22" r="8" fill="#3a2a1f"/>
-          <path d="M 38 17 L 39 11 L 42 16 Z" fill="#3a2a1f"/>
-          <path d="M 46 16 L 49 11 L 50 17 Z" fill="#3a2a1f"/>
-          <path d="M 39 14 L 40 12 L 41 14 Z" fill="#d97757"/>
-          <path d="M 47 14 L 48 12 L 49 14 Z" fill="#d97757"/>
-          <circle cx="47" cy="22" r="1" fill="#faf3e3"/>
-          <circle cx="42" cy="22" r="1" fill="#faf3e3"/>
-          <path d="M 44 25 L 45 26 L 46 25" stroke="#faf3e3" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-          <line x1="48" y1="24" x2="52" y2="23" stroke="#faf3e3" stroke-width="0.4"/>
-          <line x1="48" y1="25" x2="52" y2="25" stroke="#faf3e3" stroke-width="0.4"/>
+          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="var(--fur-side)" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- Tail rings (stripe layer) -->
+          <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
+          <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
+          <line class="tail" x1="6" y1="18" x2="8" y2="20" stroke="var(--stripe-color)" stroke-width="1" style="opacity: var(--stripe-opacity)"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
+          <ellipse cx="28" cy="30" rx="16" ry="9" fill="var(--fur-side-flat)"/>
+          <!-- Body stripes (stripe layer) -->
+          <path d="M 18 27 Q 19 31, 19 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 23 26 Q 24 31, 24 36" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 28 25 Q 29 31, 29 36" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 33 26 Q 34 31, 34 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 38 27 Q 39 31, 38 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <!-- Leg stripes -->
+          <line x1="16" y1="36" x2="19" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="16" y1="39" x2="19" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="21" y1="36" x2="24" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="21" y1="39" x2="24" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
+          <line x1="36" y1="36" x2="39" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="36" y1="39" x2="39" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="41" y1="36" x2="44" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="41" y1="39" x2="44" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <circle cx="44" cy="22" r="8" fill="var(--fur-side-flat)"/>
+          <!-- Forehead "M" stripes -->
+          <path d="M 40 16 L 42 19 L 44 16 L 46 19 L 48 16" stroke="var(--stripe-color)" stroke-width="0.9" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <!-- Cheek stripes -->
+          <line x1="37" y1="23" x2="40" y2="23" stroke="var(--stripe-color)" stroke-width="0.7" style="opacity: var(--stripe-opacity)"/>
+          <line x1="48" y1="23" x2="51" y2="23" stroke="var(--stripe-color)" stroke-width="0.7" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 38 17 L 39 11 L 42 16 Z" fill="var(--fur-side)"/>
+          <path d="M 46 16 L 49 11 L 50 17 Z" fill="var(--fur-side)"/>
+          <path d="M 39 14 L 40 12 L 41 14 Z" fill="var(--inner-ear)"/>
+          <path d="M 47 14 L 48 12 L 49 14 Z" fill="var(--inner-ear)"/>
+          <!-- Eyes — colored iris dot + tiny pupil -->
+          <circle cx="47" cy="22" r="1" fill="var(--eye-iris)"/>
+          <circle cx="42" cy="22" r="1" fill="var(--eye-iris)"/>
+          <circle cx="47" cy="22" r="0.4" fill="var(--eye-pupil)"/>
+          <circle cx="42" cy="22" r="0.4" fill="var(--eye-pupil)"/>
+          <path d="M 44 25 L 45 26 L 46 25" stroke="var(--mouth-stroke)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="24" x2="52" y2="23" stroke="var(--whisker)" stroke-width="0.4"/>
+          <line x1="48" y1="25" x2="52" y2="25" stroke="var(--whisker)" stroke-width="0.4"/>
         </g>
       </svg>
 
       <!-- Detailed cat for fullscreen — bigger, more polish -->
+      <!-- Detailed cat for fullscreen — palette + stripe layer driven by CSS vars -->
       <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
         <defs>
           <linearGradient id="catFur" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#4a3424"/>
-            <stop offset="100%" stop-color="#2a1d14"/>
+            <stop offset="0%" stop-color="var(--fur-base)"/>
+            <stop offset="100%" stop-color="var(--fur-shadow)"/>
           </linearGradient>
           <linearGradient id="catBelly" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#6b4c33"/>
-            <stop offset="100%" stop-color="#4a3424"/>
+            <stop offset="0%" stop-color="var(--belly-light)"/>
+            <stop offset="100%" stop-color="var(--belly-dark)"/>
           </linearGradient>
         </defs>
 
@@ -1809,256 +1885,109 @@
           <!-- Tail (curls up, animates) -->
           <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
                 stroke="url(#catFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
-          <path d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
-                stroke="#1a120a" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.3" class="tail"/>
+          <!-- Tail rings (stripe layer) -->
+          <path class="tail" d="M 48 65 Q 51 68, 54 65" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 32 73 Q 36 78, 41 72" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 24 90 Q 27 94, 31 89" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 26 108 Q 30 110, 34 105" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 38 120 Q 43 124, 48 119" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
 
           <!-- Back legs -->
           <g class="leg-bl">
             <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
-            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="68" y1="148" x2="81" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="68" y1="158" x2="81" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="68" y1="168" x2="81" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-br">
-            <rect x="87" y="138" width="13" height="42" rx="6" fill="#3a2a1f"/>
-            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="var(--fur-side)"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="87" y1="148" x2="100" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="87" y1="158" x2="100" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="87" y1="168" x2="100" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
           <!-- Body main -->
           <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#catFur)"/>
-          <!-- Belly accent -->
-          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.6"/>
+          <!-- Body stripes (mackerel pattern — vertical, evenly spaced) -->
+          <path d="M 65 110 Q 67 130, 65 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 80 100 Q 82 130, 80 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 95 96 Q 97 130, 95 162" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 110 95 Q 112 130, 110 163" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 125 95 Q 127 130, 125 163" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 140 96 Q 142 130, 140 162" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 155 100 Q 157 130, 155 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 170 110 Q 172 130, 170 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <!-- Belly accent (no stripes) -->
+          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.85"/>
 
           <!-- Front legs -->
           <g class="leg-fl">
             <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
-            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="148" y1="148" x2="161" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="148" y1="158" x2="161" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="148" y1="168" x2="161" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-fr">
-            <rect x="167" y="138" width="13" height="42" rx="6" fill="#3a2a1f"/>
-            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="var(--fur-side)"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="167" y1="148" x2="180" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="167" y1="158" x2="180" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="167" y1="168" x2="180" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
           <!-- Head -->
           <circle cx="185" cy="95" r="36" fill="url(#catFur)"/>
+          <!-- Forehead "M" tabby marking -->
+          <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
+                stroke="var(--stripe-color)" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: var(--stripe-opacity)"/>
+          <!-- Forehead extra stripe between M and ears -->
+          <path d="M 175 65 L 185 70 L 195 65" stroke="var(--stripe-color)" stroke-width="2" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <!-- Cheek stripes -->
+          <path d="M 155 100 Q 160 104, 165 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 205 100 Q 210 104, 215 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 158 110 Q 162 113, 166 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 204 110 Q 208 113, 212 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
 
           <!-- Ears -->
-          <path d="M 162 75 L 164 48 L 178 70 Z" fill="#3a2a1f"/>
-          <path d="M 195 70 L 209 48 L 211 75 Z" fill="#3a2a1f"/>
+          <path d="M 162 75 L 164 48 L 178 70 Z" fill="var(--fur-side)"/>
+          <path d="M 195 70 L 209 48 L 211 75 Z" fill="var(--fur-side)"/>
           <!-- Inner ears -->
-          <path d="M 166 70 L 169 55 L 174 68 Z" fill="#d97757" opacity="0.85"/>
-          <path d="M 199 68 L 206 55 L 209 72 Z" fill="#d97757" opacity="0.85"/>
+          <path d="M 166 70 L 169 55 L 174 68 Z" fill="var(--inner-ear)" opacity="0.85"/>
+          <path d="M 199 68 L 206 55 L 209 72 Z" fill="var(--inner-ear)" opacity="0.85"/>
 
           <!-- Cheek fluff -->
-          <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.7"/>
-          <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.7"/>
+          <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.8"/>
+          <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.8"/>
 
-          <!-- Eyes — green glowing -->
-          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
-          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
-          <!-- Eye irises -->
-          <ellipse cx="174" cy="92" rx="3" ry="5" fill="#a8c574"/>
-          <ellipse cx="198" cy="92" rx="3" ry="5" fill="#a8c574"/>
-          <!-- Pupils (thin slits) -->
-          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
-          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
-          <!-- Eye shine -->
-          <circle cx="175" cy="89" r="1" fill="#faf3e3"/>
-          <circle cx="199" cy="89" r="1" fill="#faf3e3"/>
+          <!-- Eyes -->
+          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
+          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
+          <ellipse cx="174" cy="92" rx="3" ry="5" fill="var(--eye-iris)"/>
+          <ellipse cx="198" cy="92" rx="3" ry="5" fill="var(--eye-iris)"/>
+          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
+          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
+          <circle cx="175" cy="89" r="1" fill="var(--eye-shine)"/>
+          <circle cx="199" cy="89" r="1" fill="var(--eye-shine)"/>
 
           <!-- Nose -->
-          <path d="M 183 105 L 187 105 L 185 108 Z" fill="#d97757"/>
+          <path d="M 183 105 L 187 105 L 185 108 Z" fill="var(--nose)"/>
 
           <!-- Mouth -->
-          <path d="M 185 108 L 185 112" stroke="#1a120a" stroke-width="1" stroke-linecap="round"/>
-          <path d="M 185 112 Q 181 115, 178 113" stroke="#1a120a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-          <path d="M 185 112 Q 189 115, 192 113" stroke="#1a120a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 108 L 185 112" stroke="var(--mouth-stroke)" stroke-width="1" stroke-linecap="round"/>
+          <path d="M 185 112 Q 181 115, 178 113" stroke="var(--mouth-stroke)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 112 Q 189 115, 192 113" stroke="var(--mouth-stroke)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
 
           <!-- Whiskers -->
-          <line x1="195" y1="108" x2="218" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
-          <line x1="195" y1="111" x2="220" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
-          <line x1="175" y1="108" x2="152" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
-          <line x1="175" y1="111" x2="150" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
-        </g>
-      </svg>
-      </div>
-
-      <!-- Character: Khonloy (brown mackerel tabby) — alternate -->
-      <div class="cat-character" data-character="khonloy">
-      <!-- Compact tabby cat for PiP -->
-      <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
-        <g class="cat-body">
-          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="#8a7556" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <!-- Tail rings (dark) -->
-          <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="#1f1410" stroke-width="1.1"/>
-          <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="#1f1410" stroke-width="1.1"/>
-          <line class="tail" x1="6" y1="18" x2="8" y2="20" stroke="#1f1410" stroke-width="1"/>
-          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="#8a7556"/>
-          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="#5a4a36"/>
-          <ellipse cx="28" cy="30" rx="16" ry="9" fill="#9a8060"/>
-          <!-- Body stripes (dark, prominent — mackerel pattern) -->
-          <path d="M 18 27 Q 19 31, 19 35" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
-          <path d="M 23 26 Q 24 31, 24 36" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
-          <path d="M 28 25 Q 29 31, 29 36" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
-          <path d="M 33 26 Q 34 31, 34 35" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
-          <path d="M 38 27 Q 39 31, 38 35" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
-          <!-- Leg stripes -->
-          <line x1="16" y1="36" x2="19" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <line x1="16" y1="39" x2="19" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <line x1="21" y1="36" x2="24" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <line x1="21" y1="39" x2="24" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="#8a7556"/>
-          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="#5a4a36"/>
-          <line x1="36" y1="36" x2="39" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <line x1="36" y1="39" x2="39" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <line x1="41" y1="36" x2="44" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <line x1="41" y1="39" x2="44" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
-          <circle cx="44" cy="22" r="8" fill="#9a8060"/>
-          <!-- Forehead "M" stripes (dark) -->
-          <path d="M 40 16 L 42 19 L 44 16 L 46 19 L 48 16" stroke="#1f1410" stroke-width="0.9" fill="none" opacity="0.9"/>
-          <!-- Cheek stripes -->
-          <line x1="37" y1="23" x2="40" y2="23" stroke="#1f1410" stroke-width="0.7" opacity="0.7"/>
-          <line x1="48" y1="23" x2="51" y2="23" stroke="#1f1410" stroke-width="0.7" opacity="0.7"/>
-          <path d="M 38 17 L 39 11 L 42 16 Z" fill="#5a4a36"/>
-          <path d="M 46 16 L 49 11 L 50 17 Z" fill="#5a4a36"/>
-          <path d="M 39 14 L 40 12 L 41 14 Z" fill="#d97757"/>
-          <path d="M 47 14 L 48 12 L 49 14 Z" fill="#d97757"/>
-          <!-- Amber eyes -->
-          <circle cx="47" cy="22" r="1" fill="#a8c574"/>
-          <circle cx="42" cy="22" r="1" fill="#a8c574"/>
-          <circle cx="47" cy="22" r="0.4" fill="#1a120a"/>
-          <circle cx="42" cy="22" r="0.4" fill="#1a120a"/>
-          <path d="M 44 25 L 45 26 L 46 25" stroke="#1f1410" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-          <line x1="48" y1="24" x2="52" y2="23" stroke="#faf3e3" stroke-width="0.4"/>
-          <line x1="48" y1="25" x2="52" y2="25" stroke="#faf3e3" stroke-width="0.4"/>
+          <line x1="195" y1="108" x2="218" y2="105" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="195" y1="111" x2="220" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="108" x2="152" y2="105" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="111" x2="150" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
         </g>
       </svg>
 
-      <!-- Detailed brown tabby cat for fullscreen -->
-      <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
-        <defs>
-          <linearGradient id="khonloyFur" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#a89070"/>
-            <stop offset="100%" stop-color="#6e5c44"/>
-          </linearGradient>
-          <linearGradient id="khonloyBelly" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#c4a880"/>
-            <stop offset="100%" stop-color="#a89070"/>
-          </linearGradient>
-        </defs>
-
-        <g class="cat-body">
-          <!-- Shadow under cat -->
-          <ellipse cx="120" cy="180" rx="70" ry="6" fill="rgba(0,0,0,0.15)"/>
-
-          <!-- Tail (curls up, animates) -->
-          <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
-                stroke="url(#khonloyFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
-          <!-- Tail rings (dark, prominent) -->
-          <path class="tail" d="M 48 65 Q 51 68, 54 65" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <path class="tail" d="M 32 73 Q 36 78, 41 72" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <path class="tail" d="M 24 90 Q 27 94, 31 89" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <path class="tail" d="M 26 108 Q 30 110, 34 105" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <path class="tail" d="M 38 120 Q 43 124, 48 119" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-
-          <!-- Back legs -->
-          <g class="leg-bl">
-            <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#khonloyFur)"/>
-            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
-            <!-- Leg stripes (dark, prominent) -->
-            <line x1="68" y1="148" x2="81" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="68" y1="158" x2="81" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="68" y1="168" x2="81" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-          </g>
-          <g class="leg-br">
-            <rect x="87" y="138" width="13" height="42" rx="6" fill="#6e5c44"/>
-            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
-            <line x1="87" y1="148" x2="100" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="87" y1="158" x2="100" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="87" y1="168" x2="100" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-          </g>
-
-          <!-- Body main -->
-          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#khonloyFur)"/>
-          <!-- Body stripes (mackerel — vertical, dark, evenly spaced) -->
-          <path d="M 65 110 Q 67 130, 65 150" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
-          <path d="M 80 100 Q 82 130, 80 158" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
-          <path d="M 95 96 Q 97 130, 95 162" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
-          <path d="M 110 95 Q 112 130, 110 163" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
-          <path d="M 125 95 Q 127 130, 125 163" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
-          <path d="M 140 96 Q 142 130, 140 162" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
-          <path d="M 155 100 Q 157 130, 155 158" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.8"/>
-          <path d="M 170 110 Q 172 130, 170 150" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.75"/>
-          <!-- Belly accent (lighter, no stripes) -->
-          <ellipse cx="130" cy="148" rx="40" ry="16" fill="url(#khonloyBelly)" opacity="0.95"/>
-
-          <!-- Front legs -->
-          <g class="leg-fl">
-            <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#khonloyFur)"/>
-            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
-            <line x1="148" y1="148" x2="161" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="148" y1="158" x2="161" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="148" y1="168" x2="161" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-          </g>
-          <g class="leg-fr">
-            <rect x="167" y="138" width="13" height="42" rx="6" fill="#6e5c44"/>
-            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
-            <line x1="167" y1="148" x2="180" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="167" y1="158" x2="180" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-            <line x1="167" y1="168" x2="180" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
-          </g>
-
-          <!-- Head -->
-          <circle cx="185" cy="95" r="36" fill="url(#khonloyFur)"/>
-          <!-- Forehead "M" tabby marking (dark, prominent) -->
-          <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
-                stroke="#1f1410" stroke-width="2.6" fill="none" opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
-          <!-- Forehead extra stripe between M and ears -->
-          <path d="M 175 65 L 185 70 L 195 65" stroke="#1f1410" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round"/>
-          <!-- Cheek stripes -->
-          <path d="M 155 100 Q 160 104, 165 100" stroke="#1f1410" stroke-width="2.2" fill="none" opacity="0.8"/>
-          <path d="M 205 100 Q 210 104, 215 100" stroke="#1f1410" stroke-width="2.2" fill="none" opacity="0.8"/>
-          <path d="M 158 110 Q 162 113, 166 110" stroke="#1f1410" stroke-width="1.6" fill="none" opacity="0.6"/>
-          <path d="M 204 110 Q 208 113, 212 110" stroke="#1f1410" stroke-width="1.6" fill="none" opacity="0.6"/>
-
-          <!-- Ears -->
-          <path d="M 162 75 L 164 48 L 178 70 Z" fill="#6e5c44"/>
-          <path d="M 195 70 L 209 48 L 211 75 Z" fill="#6e5c44"/>
-          <!-- Inner ears (pink) -->
-          <path d="M 166 70 L 169 55 L 174 68 Z" fill="#d97757" opacity="0.85"/>
-          <path d="M 199 68 L 206 55 L 209 72 Z" fill="#d97757" opacity="0.85"/>
-
-          <!-- Cheek fluff -->
-          <circle cx="158" cy="105" r="6" fill="url(#khonloyFur)" opacity="0.8"/>
-          <circle cx="212" cy="103" r="6" fill="url(#khonloyFur)" opacity="0.8"/>
-
-          <!-- Eyes — amber/gold (warm tabby look) -->
-          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
-          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
-          <!-- Eye irises -->
-          <ellipse cx="174" cy="92" rx="3" ry="5" fill="#a8c574"/>
-          <ellipse cx="198" cy="92" rx="3" ry="5" fill="#a8c574"/>
-          <!-- Pupils (thin slits) -->
-          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
-          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
-          <!-- Eye shine -->
-          <circle cx="175" cy="89" r="1" fill="#faf3e3"/>
-          <circle cx="199" cy="89" r="1" fill="#faf3e3"/>
-
-          <!-- Nose (pink/rose) -->
-          <path d="M 183 105 L 187 105 L 185 108 Z" fill="#d97757"/>
-
-          <!-- Mouth -->
-          <path d="M 185 108 L 185 112" stroke="#1f1410" stroke-width="1" stroke-linecap="round"/>
-          <path d="M 185 112 Q 181 115, 178 113" stroke="#1f1410" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-          <path d="M 185 112 Q 189 115, 192 113" stroke="#1f1410" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-
-          <!-- Whiskers -->
-          <line x1="195" y1="108" x2="218" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
-          <line x1="195" y1="111" x2="220" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
-          <line x1="175" y1="108" x2="152" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
-          <line x1="175" y1="111" x2="150" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
-        </g>
-      </svg>
-      </div>
     </div>
   </div>
 
@@ -2097,21 +2026,10 @@
       </button>
     </div>
 
-    <!-- Character -->
+    <!-- Character — populated from the JS CHARACTERS registry -->
     <div class="settings-section">
       <h3 class="settings-section-title">Choose your companion</h3>
-      <div class="settings-characters" role="radiogroup" aria-label="Character">
-        <button class="settings-character is-selected" data-character-pick="khuntong" role="radio" aria-checked="true">
-          <span class="char-swatch char-swatch--khuntong" aria-hidden="true"></span>
-          <span class="char-name">Khuntong</span>
-          <span class="char-detail">black cat · classic</span>
-        </button>
-        <button class="settings-character" data-character-pick="khonloy" role="radio" aria-checked="false">
-          <span class="char-swatch char-swatch--khonloy" aria-hidden="true"></span>
-          <span class="char-name">Khonloy</span>
-          <span class="char-detail">tabby cat · warm</span>
-        </button>
-      </div>
+      <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
     </div>
 
     <!-- Session -->
@@ -2235,11 +2153,24 @@
   }
   const savedSettings = loadSettings();
 
-  // Apply saved character to <body> ASAP so the correct cat renders without a flash.
-  // CSS uses body[data-character="khonloy"] to swap which character's SVGs show.
-  if (savedSettings.character === 'khonloy') {
-    document.body.setAttribute('data-character', 'khonloy');
-  }
+  // ===== Character registry =====
+  // Adding a new character is a two-step change:
+  //   1. Add a `[data-character="<id>"]` palette block in the CSS character section.
+  //   2. Add an entry below.
+  // The unified SVGs + the picker render from here — no HTML duplication.
+  const CHARACTERS = [
+    { id: 'khuntong', name: 'Khuntong', detail: 'black cat · classic' },
+    { id: 'khonloy',  name: 'Khonloy',  detail: 'brown tabby · warm'   },
+  ];
+  const DEFAULT_CHARACTER = 'khuntong';
+
+  // Apply saved character to <body> ASAP so the correct palette is active for
+  // the first paint. Unknown saved values fall back to the default.
+  (() => {
+    const saved = savedSettings.character;
+    const valid = CHARACTERS.some(c => c.id === saved);
+    document.body.setAttribute('data-character', valid ? saved : DEFAULT_CHARACTER);
+  })();
 
   // PiP window reference — declared at top so applyTimeOfDay can reference safely
   let pipWindow = null;
@@ -3459,30 +3390,39 @@
     if (e.key === 'Escape' && !settingsPopover.hidden) closeSettings();
   });
 
-  // ===== Character switcher =====
-  const characterButtons = settingsPopover.querySelectorAll('.settings-character');
+  // ===== Character switcher (rendered from the CHARACTERS registry) =====
+  const charactersContainer = settingsPopover.querySelector('.settings-characters');
 
-  function setCharacter(name) {
-    if (name !== 'khuntong' && name !== 'khonloy') return;
-    if (name === 'khuntong') {
-      document.body.removeAttribute('data-character');
-    } else {
-      document.body.setAttribute('data-character', name);
-    }
-    saveSettings({ character: name });
+  function renderCharacterPicker() {
+    charactersContainer.innerHTML = CHARACTERS.map(char => `
+      <button class="settings-character" data-character-pick="${char.id}" role="radio" aria-checked="false">
+        <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
+        <span class="char-name">${char.name}</span>
+        <span class="char-detail">${char.detail}</span>
+      </button>
+    `).join('');
+    charactersContainer.querySelectorAll('.settings-character').forEach(btn => {
+      btn.addEventListener('click', () => setCharacter(btn.dataset.characterPick));
+    });
+  }
+
+  function setCharacter(id) {
+    if (!CHARACTERS.some(c => c.id === id)) return;
+    document.body.setAttribute('data-character', id);
+    saveSettings({ character: id });
     syncCharacterCards();
   }
+
   function syncCharacterCards() {
-    const active = document.body.getAttribute('data-character') || 'khuntong';
-    characterButtons.forEach(btn => {
+    const active = document.body.getAttribute('data-character') || DEFAULT_CHARACTER;
+    charactersContainer.querySelectorAll('.settings-character').forEach(btn => {
       const isActive = btn.dataset.characterPick === active;
       btn.classList.toggle('is-selected', isActive);
       btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
     });
   }
-  characterButtons.forEach(btn => {
-    btn.addEventListener('click', () => setCharacter(btn.dataset.characterPick));
-  });
+
+  renderCharacterPicker();
   syncCharacterCards();
 
   // ===== Onboarding modal — first-visit 2-step flow (session → music) =====
