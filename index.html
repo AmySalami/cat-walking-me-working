@@ -182,6 +182,60 @@
   .pip-btn:hover { background: rgba(45, 36, 23, 0.6); }
   .pip-btn.active { background: var(--rose); }
 
+  /* Settings (gear) — top-right corner, same visual family as pip-btn */
+  .settings-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    background: rgba(45, 36, 23, 0.4);
+    backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cream);
+    z-index: 10;
+    transition: background 0.2s;
+  }
+  .settings-btn:hover { background: rgba(45, 36, 23, 0.6); }
+  .settings-btn.active { background: var(--rose); }
+
+  /* Tooltips on settings — anchor to LEFT so they don't go off-screen at right edge */
+  .settings-btn[data-tooltip]:hover::after,
+  .settings-btn[data-tooltip]:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* Hide settings button during running/counting (consistent with lock-overlay behavior) */
+  .widget.running .settings-btn,
+  .widget.counting .settings-btn { display: none; }
+
+  /* Character switching — only the active character's SVGs render.
+     Using `display: contents` on the wrapper means the existing
+     .cat-simple/.cat-detailed pip/fullscreen rules keep working unchanged. */
+  .cat-character { display: contents; }
+  .cat-character[data-character="khonloy"] { display: none; }
+  body[data-character="khonloy"] .cat-character[data-character="khuntong"] { display: none; }
+  body[data-character="khonloy"] .cat-character[data-character="khonloy"] { display: contents; }
+
   /* Custom tooltips for icon-only buttons — shown on hover/focus, hidden otherwise */
   .collapse-btn[data-tooltip]:hover::after,
   .pip-btn[data-tooltip]:hover::after,
@@ -1014,6 +1068,226 @@
   body.pip-mode .widget.collapsed .scene { flex: 1; height: auto; }
 
   /* ===================================================================
+     SETTINGS POPOVER — character / session / music
+     =================================================================== */
+  .settings-popover {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 36, 23, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+    padding: 24px;
+    animation: settingsFadeIn 0.2s ease;
+  }
+  .settings-popover[hidden] { display: none; }
+
+  @keyframes settingsFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .settings-panel {
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 32px;
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(45, 36, 23, 0.25);
+    animation: settingsRiseIn 0.25s ease;
+  }
+  @keyframes settingsRiseIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .settings-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0;
+  }
+  .settings-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: rgba(45, 36, 23, 0.6);
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .settings-close:hover {
+    background: rgba(45, 36, 23, 0.08);
+    color: var(--ink);
+  }
+
+  .settings-section {
+    margin-bottom: 28px;
+  }
+  .settings-section:last-child { margin-bottom: 0; }
+
+  .settings-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0 0 14px 0;
+  }
+
+  /* Character picker — two cards side by side */
+  .settings-characters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .settings-character {
+    background: rgba(45, 36, 23, 0.04);
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+    font-family: inherit;
+  }
+  .settings-character:hover { background: rgba(45, 36, 23, 0.08); }
+  .settings-character.is-selected {
+    background: rgba(45, 36, 23, 0.06);
+    border-color: var(--ink);
+  }
+  .char-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+    box-shadow: inset 0 -2px 6px rgba(0,0,0,0.18);
+  }
+  .char-swatch--khuntong {
+    background: radial-gradient(circle at 35% 30%, #4a3424 0%, #2a1d14 70%);
+  }
+  .char-swatch--khonloy {
+    background: radial-gradient(circle at 35% 30%, #e2b888 0%, #b88a5c 70%);
+    position: relative;
+  }
+  .char-swatch--khonloy::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-linear-gradient(45deg,
+      transparent 0px,
+      transparent 4px,
+      rgba(122, 74, 48, 0.5) 4px,
+      rgba(122, 74, 48, 0.5) 5px);
+  }
+  .char-name {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .char-detail {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: rgba(45, 36, 23, 0.6);
+    letter-spacing: 0.3px;
+  }
+
+  /* Session preset dropdown — full-width inside popover */
+  .settings-section .preset-select-wrap { width: 100%; }
+  .settings-section .preset-select {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(45, 36, 23, 0.04);
+    border: 1.5px solid transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1L5 5L9 1' stroke='%232d2417' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .settings-section .preset-select:hover { background: rgba(45, 36, 23, 0.08); }
+  .settings-section .preset-select:focus { outline: none; border-color: var(--ink); }
+
+  /* Music source tabs — full-width segmented control */
+  .settings-section .source-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(45, 36, 23, 0.04);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 12px;
+  }
+  .settings-section .source-tab {
+    flex: 1;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(45, 36, 23, 0.55);
+    transition: background 0.15s, color 0.15s;
+  }
+  .settings-section .source-tab:hover { color: var(--ink); }
+  .settings-section .source-tab.active {
+    background: var(--ink);
+    color: var(--cream);
+  }
+
+  /* URL input — full-width in popover */
+  .settings-url-input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(45, 36, 23, 0.04);
+    border: 1.5px solid transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .settings-url-input::placeholder { color: rgba(45, 36, 23, 0.4); }
+  .settings-url-input:focus {
+    outline: none;
+    border-color: var(--ink);
+    background: var(--cream);
+  }
+
+  /* ===================================================================
      ONBOARDING — first-visit welcome modal
      =================================================================== */
   .onboarding {
@@ -1436,6 +1710,12 @@
         <rect x="5.5" y="5" width="4" height="3" rx="0.5" fill="currentColor"/>
       </svg>
     </button>
+    <button class="settings-btn" id="settingsBtn" data-tooltip="Settings" aria-label="Open settings" aria-haspopup="dialog">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </button>
     <div class="sun"></div>
     <div class="cloud cloud-1"></div>
     <div class="cloud cloud-2"></div>
@@ -1485,6 +1765,8 @@
     </div>
 
     <div class="cat-walker">
+      <!-- Character: Khuntong (black) — default -->
+      <div class="cat-character" data-character="khuntong">
       <!-- Compact cat for PiP/small widget -->
       <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
         <g class="cat-body">
@@ -1597,6 +1879,163 @@
           <line x1="175" y1="111" x2="150" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
         </g>
       </svg>
+      </div>
+
+      <!-- Character: Khonloy (tabby) — alternate -->
+      <div class="cat-character" data-character="khonloy">
+      <!-- Compact tabby cat for PiP -->
+      <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
+        <g class="cat-body">
+          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="#c89a6a" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- Tail rings -->
+          <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="#7a4a30" stroke-width="0.8"/>
+          <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="#7a4a30" stroke-width="0.8"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="#c89a6a"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="#a37a4f"/>
+          <ellipse cx="28" cy="30" rx="16" ry="9" fill="#d4a373"/>
+          <!-- Body stripes -->
+          <path d="M 20 27 Q 22 31, 24 27" stroke="#7a4a30" stroke-width="0.9" fill="none" opacity="0.7"/>
+          <path d="M 28 26 Q 30 31, 32 26" stroke="#7a4a30" stroke-width="0.9" fill="none" opacity="0.7"/>
+          <path d="M 36 27 Q 38 31, 40 27" stroke="#7a4a30" stroke-width="0.9" fill="none" opacity="0.7"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="#c89a6a"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="#a37a4f"/>
+          <circle cx="44" cy="22" r="8" fill="#d4a373"/>
+          <!-- Forehead "M" stripes -->
+          <path d="M 41 17 L 43 19 L 44 17 L 45 19 L 47 17" stroke="#7a4a30" stroke-width="0.7" fill="none" opacity="0.75"/>
+          <path d="M 38 17 L 39 11 L 42 16 Z" fill="#c89a6a"/>
+          <path d="M 46 16 L 49 11 L 50 17 Z" fill="#c89a6a"/>
+          <path d="M 39 14 L 40 12 L 41 14 Z" fill="#d97757"/>
+          <path d="M 47 14 L 48 12 L 49 14 Z" fill="#d97757"/>
+          <!-- Amber eyes -->
+          <circle cx="47" cy="22" r="1" fill="#e8b04c"/>
+          <circle cx="42" cy="22" r="1" fill="#e8b04c"/>
+          <circle cx="47" cy="22" r="0.4" fill="#1a120a"/>
+          <circle cx="42" cy="22" r="0.4" fill="#1a120a"/>
+          <path d="M 44 25 L 45 26 L 46 25" stroke="#7a4a30" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="24" x2="52" y2="23" stroke="#faf3e3" stroke-width="0.4"/>
+          <line x1="48" y1="25" x2="52" y2="25" stroke="#faf3e3" stroke-width="0.4"/>
+        </g>
+      </svg>
+
+      <!-- Detailed tabby cat for fullscreen -->
+      <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
+        <defs>
+          <linearGradient id="khonloyFur" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#e2b888"/>
+            <stop offset="100%" stop-color="#b88a5c"/>
+          </linearGradient>
+          <linearGradient id="khonloyBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f4dcb0"/>
+            <stop offset="100%" stop-color="#e2b888"/>
+          </linearGradient>
+        </defs>
+
+        <g class="cat-body">
+          <!-- Shadow under cat -->
+          <ellipse cx="120" cy="180" rx="70" ry="6" fill="rgba(0,0,0,0.15)"/>
+
+          <!-- Tail (curls up, animates) -->
+          <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
+                stroke="url(#khonloyFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
+          <!-- Tail rings -->
+          <path class="tail" d="M 50 65 Q 52 67, 54 65" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path class="tail" d="M 32 75 Q 36 77, 40 73" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path class="tail" d="M 24 95 Q 28 96, 32 93" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path class="tail" d="M 38 120 Q 42 122, 46 119" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+          <!-- Back legs -->
+          <g class="leg-bl">
+            <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#khonloyFur)"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
+            <!-- Leg stripes -->
+            <line x1="68" y1="150" x2="81" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="68" y1="160" x2="81" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="68" y1="170" x2="81" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+          </g>
+          <g class="leg-br">
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="#b88a5c"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
+            <line x1="87" y1="150" x2="100" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="87" y1="160" x2="100" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="87" y1="170" x2="100" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+          </g>
+
+          <!-- Body main -->
+          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#khonloyFur)"/>
+          <!-- Body stripes (tabby pattern) -->
+          <path d="M 70 115 Q 74 130, 70 145" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
+          <path d="M 90 105 Q 94 130, 90 155" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
+          <path d="M 110 100 Q 114 130, 110 160" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
+          <path d="M 130 100 Q 134 130, 130 160" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
+          <path d="M 150 105 Q 154 130, 150 155" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.6"/>
+          <!-- Belly accent (no stripes on belly) -->
+          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#khonloyBelly)" opacity="0.85"/>
+
+          <!-- Front legs -->
+          <g class="leg-fl">
+            <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#khonloyFur)"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
+            <line x1="148" y1="150" x2="161" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="148" y1="160" x2="161" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="148" y1="170" x2="161" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+          </g>
+          <g class="leg-fr">
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="#b88a5c"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
+            <line x1="167" y1="150" x2="180" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="167" y1="160" x2="180" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <line x1="167" y1="170" x2="180" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+          </g>
+
+          <!-- Head -->
+          <circle cx="185" cy="95" r="36" fill="url(#khonloyFur)"/>
+          <!-- Forehead "M" tabby marking -->
+          <path d="M 170 72 L 175 80 L 180 72 L 185 80 L 190 72 L 195 80 L 200 72"
+                stroke="#7a4a30" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round"/>
+          <!-- Cheek stripes -->
+          <path d="M 158 100 Q 162 105, 165 100" stroke="#7a4a30" stroke-width="1.8" fill="none" opacity="0.6"/>
+          <path d="M 205 100 Q 209 105, 212 100" stroke="#7a4a30" stroke-width="1.8" fill="none" opacity="0.6"/>
+
+          <!-- Ears -->
+          <path d="M 162 75 L 164 48 L 178 70 Z" fill="#b88a5c"/>
+          <path d="M 195 70 L 209 48 L 211 75 Z" fill="#b88a5c"/>
+          <!-- Inner ears -->
+          <path d="M 166 70 L 169 55 L 174 68 Z" fill="#d97757" opacity="0.85"/>
+          <path d="M 199 68 L 206 55 L 209 72 Z" fill="#d97757" opacity="0.85"/>
+
+          <!-- Cheek fluff -->
+          <circle cx="158" cy="105" r="6" fill="url(#khonloyFur)" opacity="0.8"/>
+          <circle cx="212" cy="103" r="6" fill="url(#khonloyFur)" opacity="0.8"/>
+
+          <!-- Eyes — amber/gold (warm tabby look) -->
+          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
+          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
+          <!-- Eye irises -->
+          <ellipse cx="174" cy="92" rx="3" ry="5" fill="#e8b04c"/>
+          <ellipse cx="198" cy="92" rx="3" ry="5" fill="#e8b04c"/>
+          <!-- Pupils (thin slits) -->
+          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
+          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
+          <!-- Eye shine -->
+          <circle cx="175" cy="89" r="1" fill="#faf3e3"/>
+          <circle cx="199" cy="89" r="1" fill="#faf3e3"/>
+
+          <!-- Nose (pink/rose) -->
+          <path d="M 183 105 L 187 105 L 185 108 Z" fill="#d97757"/>
+
+          <!-- Mouth -->
+          <path d="M 185 108 L 185 112" stroke="#5a3a22" stroke-width="1" stroke-linecap="round"/>
+          <path d="M 185 112 Q 181 115, 178 113" stroke="#5a3a22" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 112 Q 189 115, 192 113" stroke="#5a3a22" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+          <!-- Whiskers -->
+          <line x1="195" y1="108" x2="218" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
+          <line x1="195" y1="111" x2="220" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="108" x2="152" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="111" x2="150" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
+        </g>
+      </svg>
+      </div>
     </div>
   </div>
 
@@ -1619,40 +2058,62 @@
       <div class="ab-status" id="abStatus" aria-live="polite"></div>
     </div>
 
-    <!-- Secondary: settings as a horizontal row (session | music | url) -->
-    <div class="ab-secondary">
-      <div class="ab-session-block">
-        <span class="ab-label">session</span>
-        <div class="preset-select-wrap">
-          <select class="preset-select" id="presetSelect">
-            <option value="classic">classic · 25/5</option>
-            <option value="short" selected>quick · 15/3</option>
-            <option value="deep">deep · 50/10</option>
-            <option value="marathon">marathon · 90/15</option>
-          </select>
-        </div>
-      </div>
+    <div class="ab-music-status" id="musicStatus">♪ ready · plays with timer</div>
+  </div>
+</div>
 
-      <div class="ab-divider" aria-hidden="true"></div>
-
-      <div class="ab-music-block">
-        <span class="ab-label">music</span>
-        <div class="source-tabs">
-          <button class="source-tab active" data-source="soundcloud">SoundCloud</button>
-          <button class="source-tab" data-source="youtube">YouTube</button>
-        </div>
-      </div>
-
-      <div class="ab-url-wrap">
-        <input type="text" class="url-input" id="urlInput" value="https://soundcloud.com/concernedape" placeholder="วาง URL...">
-      </div>
-
-      <!-- Lock overlay — shown while running, blocks edits, tooltip on hover -->
-      <div class="ab-lock-overlay" aria-hidden="true"
-           data-tooltip="🌱 Can't edit while focus mode is active — pause or end the session to make changes"></div>
+<!-- Settings popover — character / session / music. Lives outside .widget so PiP doesn't move it. -->
+<div class="settings-popover" id="settingsPopover" role="dialog" aria-modal="false" aria-labelledby="settingsTitle" hidden>
+  <div class="settings-panel">
+    <div class="settings-header">
+      <h2 class="settings-title" id="settingsTitle">Settings</h2>
+      <button class="settings-close" id="settingsClose" aria-label="Close settings">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3 3 L11 11 M11 3 L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
 
-    <div class="ab-music-status" id="musicStatus">♪ ready · plays with timer</div>
+    <!-- Character -->
+    <div class="settings-section">
+      <h3 class="settings-section-title">Choose your companion</h3>
+      <div class="settings-characters" role="radiogroup" aria-label="Character">
+        <button class="settings-character is-selected" data-character-pick="khuntong" role="radio" aria-checked="true">
+          <span class="char-swatch char-swatch--khuntong" aria-hidden="true"></span>
+          <span class="char-name">Khuntong</span>
+          <span class="char-detail">black cat · classic</span>
+        </button>
+        <button class="settings-character" data-character-pick="khonloy" role="radio" aria-checked="false">
+          <span class="char-swatch char-swatch--khonloy" aria-hidden="true"></span>
+          <span class="char-name">Khonloy</span>
+          <span class="char-detail">tabby cat · warm</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Session -->
+    <div class="settings-section">
+      <h3 class="settings-section-title">Session rhythm</h3>
+      <div class="preset-select-wrap">
+        <select class="preset-select" id="presetSelect">
+          <option value="classic">classic · 25 min focus / 5 min break</option>
+          <option value="short" selected>quick · 15 min focus / 3 min break</option>
+          <option value="deep">deep · 50 min focus / 10 min break</option>
+          <option value="marathon">marathon · 90 min focus / 15 min break</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Music -->
+    <div class="settings-section">
+      <h3 class="settings-section-title">Music source</h3>
+      <div class="source-tabs">
+        <button class="source-tab active" data-source="soundcloud">SoundCloud</button>
+        <button class="source-tab" data-source="youtube">YouTube</button>
+      </div>
+      <input type="text" class="url-input settings-url-input" id="urlInput"
+             value="https://soundcloud.com/concernedape" placeholder="วาง URL...">
+    </div>
   </div>
 </div>
 
@@ -1735,6 +2196,28 @@
 </div>
 
 <script>
+  // ===== Settings store — persisted user choices (character / preset / source / URL) =====
+  const SETTINGS_KEY = 'pomodoroMeadowSettings';
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      return raw ? (JSON.parse(raw) || {}) : {};
+    } catch (_) { return {}; }
+  }
+  function saveSettings(patch) {
+    try {
+      const current = loadSettings();
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...current, ...patch }));
+    } catch (_) {}
+  }
+  const savedSettings = loadSettings();
+
+  // Apply saved character to <body> ASAP so the correct cat renders without a flash.
+  // CSS uses body[data-character="khonloy"] to swap which character's SVGs show.
+  if (savedSettings.character === 'khonloy') {
+    document.body.setAttribute('data-character', 'khonloy');
+  }
+
   // PiP window reference — declared at top so applyTimeOfDay can reference safely
   let pipWindow = null;
 
@@ -1866,7 +2349,12 @@
     deep:     { focus: 50, short: 10 },
     marathon: { focus: 90, short: 15 },
   };
-  let currentPreset = 'short';
+  let currentPreset = (savedSettings.preset && presets[savedSettings.preset]) ? savedSettings.preset : 'short';
+  // Sync the dropdown's `selected` to the hydrated value before any interaction
+  setTimeout(() => {
+    const sel = document.getElementById('presetSelect');
+    if (sel) sel.value = currentPreset;
+  }, 0);
 
   const state = {
     mode: 'focus',
@@ -2229,6 +2717,7 @@
 
   function handlePresetChange(value) {
     currentPreset = value;
+    saveSettings({ preset: value });
     // Sync the preset dropdown in both main doc and PiP doc (if open)
     const docs = [document];
     if (pipWindow) docs.push(pipWindow.document);
@@ -2411,7 +2900,7 @@
   });
 
   // ===== Music (hidden player, controlled by timer) =====
-  let currentSource = 'soundcloud';
+  let currentSource = (savedSettings.source === 'youtube') ? 'youtube' : 'soundcloud';
   let scWidget = null;   // SoundCloud widget instance
   let ytPlayer = null;   // YouTube IFrame Player instance
   let ytReady = false;   // YT IFrame API script ready
@@ -2421,6 +2910,10 @@
   const urlInput = document.getElementById('urlInput');
   const hiddenPlayer = document.getElementById('hiddenPlayer');
   const musicStatus = document.getElementById('musicStatus');
+
+  // Apply hydrated source to URL input + toggle state before any user interaction
+  if (savedSettings.url) urlInput.value = savedSettings.url;
+  // Source tab UI is synced inside the IIFE below since `.source-tab` exists in the DOM at this point
 
   function setStatus(text, playing = false) {
     musicStatus.textContent = text;
@@ -2433,11 +2926,16 @@
     });
   }
 
-  // Remember the last URL the user had for each source so switching back restores it
+  // Remember the last URL the user had for each source so switching back restores it.
+  // Hydrate the active source's slot from saved settings so the URL persists too.
   const lastUrlBySource = {
     soundcloud: 'https://soundcloud.com/concernedape',
     youtube: ''
   };
+  if (savedSettings.url) lastUrlBySource[currentSource] = savedSettings.url;
+
+  // Sync the source tab UI to the hydrated source (no event = no save)
+  syncSourceTabs(currentSource);
 
   function handleSourceChange(source) {
     if (source === currentSource) return;
@@ -2458,6 +2956,8 @@
       ? 'วาง YouTube playlist หรือ video URL...'
       : 'วาง SoundCloud URL...';
     urlInput.value = lastUrlBySource[source];
+    // Persist the new source + its current URL
+    saveSettings({ source, url: urlInput.value });
 
     if (urlInput.value) {
       setStatus('♪ loading...');
@@ -2891,6 +3391,8 @@
   urlInput.addEventListener('input', () => {
     clearTimeout(urlDebounceTimer);
     urlDebounceTimer = setTimeout(() => {
+      // Persist URL on every commit. If we auto-switch source, that path saves too.
+      saveSettings({ url: urlInput.value.trim() });
       if (!maybeAutoSwitchSource()) loadMusic();
     }, 800);
   });
@@ -2903,6 +3405,62 @@
 
   updateDisplay();
   loadMusic();
+
+  // ===== Settings popover — character / session / music =====
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsPopover = document.getElementById('settingsPopover');
+  const settingsClose = document.getElementById('settingsClose');
+
+  function openSettings() {
+    if (state.running || state.countingDown) return; // edit-lock during active session
+    settingsPopover.hidden = false;
+    settingsBtn.classList.add('active');
+    // Make sure character cards reflect the current saved value when reopened
+    syncCharacterCards();
+  }
+  function closeSettings() {
+    settingsPopover.hidden = true;
+    settingsBtn.classList.remove('active');
+  }
+
+  settingsBtn.addEventListener('click', () => {
+    settingsPopover.hidden ? openSettings() : closeSettings();
+  });
+  settingsClose.addEventListener('click', closeSettings);
+  // Click outside the panel (on the dim backdrop) to dismiss
+  settingsPopover.addEventListener('click', (e) => {
+    if (e.target === settingsPopover) closeSettings();
+  });
+  // Escape to dismiss (only if popover is open AND onboarding isn't capturing focus)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !settingsPopover.hidden) closeSettings();
+  });
+
+  // ===== Character switcher =====
+  const characterButtons = settingsPopover.querySelectorAll('.settings-character');
+
+  function setCharacter(name) {
+    if (name !== 'khuntong' && name !== 'khonloy') return;
+    if (name === 'khuntong') {
+      document.body.removeAttribute('data-character');
+    } else {
+      document.body.setAttribute('data-character', name);
+    }
+    saveSettings({ character: name });
+    syncCharacterCards();
+  }
+  function syncCharacterCards() {
+    const active = document.body.getAttribute('data-character') || 'khuntong';
+    characterButtons.forEach(btn => {
+      const isActive = btn.dataset.characterPick === active;
+      btn.classList.toggle('is-selected', isActive);
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+  }
+  characterButtons.forEach(btn => {
+    btn.addEventListener('click', () => setCharacter(btn.dataset.characterPick));
+  });
+  syncCharacterCards();
 
   // ===== Onboarding modal — first-visit 2-step flow (session → music) =====
   const onboarding = document.getElementById('onboarding');
