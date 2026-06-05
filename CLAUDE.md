@@ -28,6 +28,12 @@ This project uses a **feature-branch + PR workflow** even though it's solo, beca
 
 ### Reminders Claude must give
 
+**Split of responsibility:**
+- **Claude does (locally):** branch, code, commits.
+- **User does (on GitHub UI):** push, open PR, merge, optional tag.
+
+This means **don't suggest `gh pr ...` commands** in wrap-up messages — the user prefers the GitHub web UI for review/merge. Hand off cleanly with the branch ready and a PR description drafted; the user takes it from there.
+
 **Before starting any non-trivial work:**
 
 ```
@@ -38,21 +44,27 @@ This project uses a **feature-branch + PR workflow** even though it's solo, beca
   Run:     git checkout -b <branch-name>
 ```
 
-**After work is complete:**
+**After work is complete — what Claude hands to the user:**
 
 ```
-🚀 Wrap-up steps:
-  1. Commit:    git add . && git commit -m "<conventional-commit>"
-  2. Push:      git push -u origin <branch-name>
-  3. Open PR:   gh pr create --title "..." --body "..."
-                (or via GitHub UI)
-  4. Merge:     gh pr merge --squash
-                (or "Squash and merge" in GitHub UI)
-  5. Cleanup:   git checkout main && git pull && git branch -d <branch-name>
-  6. Tag (if release):
-                git tag -a vX.Y.Z -m "..."
-                git push --follow-tags
+🚀 Ready for PR.
+  Branch: <branch-name>
+  Commits: <count>, +<adds> / -<dels>
+
+  Next (user does these on GitHub UI):
+    1. Push:      git push -u origin <branch-name>
+    2. Open PR    on https://github.com/<owner>/<repo>/pulls
+                  (Compare & pull request banner appears after push)
+    3. Paste this PR description:
+       <ready-to-paste markdown body>
+    4. Merge      via "Squash and merge" or "Merge pull request"
+    5. (Optional) Tag release after merge if it's MAJOR/MINOR:
+       git checkout main && git pull
+       git tag -a vX.Y.Z -m "..."
+       git push --follow-tags
 ```
+
+Claude does NOT run push / PR / merge commands. The branch and a draft PR description are the deliverable.
 
 ### Branch naming
 

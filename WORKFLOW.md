@@ -7,27 +7,39 @@ Git workflow for Pomodoro Meadow. Followed even though the project is solo — f
 - **Tiny change** (typo, 1-line CSS) → push to `main` directly
 - **Anything else** → feature branch → PR → merge
 
+## Who does what
+
+| Step | Where | Who |
+|---|---|---|
+| Branch + commits | Local (terminal) | Claude (with my approval) |
+| Push branch | Local (terminal) | **Me** |
+| Open PR | GitHub web UI | **Me** |
+| Merge PR | GitHub web UI | **Me** |
+| Pull main + cleanup | Local (terminal) | **Me** |
+| Tag release | Local (terminal) | **Me** |
+
+Claude prepares the branch + drafts a PR description but does not push, open PRs, or merge. I handle all the GitHub-side actions through the web UI.
+
 ## Branch lifecycle
 
 ```bash
-# 1. Start a branch
+# 1. Claude creates the branch + commits locally
 git checkout -b feature/keyboard-shortcuts
+# ... Claude makes changes + commits ...
 
-# 2. Work — commit as you reach logical checkpoints
-git add . && git commit -m "feat: add S/R/Space keyboard shortcuts"
-
-# 3. Push the branch
+# 2. I push (after reviewing what Claude did)
 git push -u origin feature/keyboard-shortcuts
 
-# 4. Open a Pull Request
-gh pr create --title "Add keyboard shortcuts" --body "..."
-# (or via GitHub UI: https://github.com/AmySalami/cat-walking-me-working)
+# 3. I open the PR on GitHub
+#    → https://github.com/AmySalami/cat-walking-me-working
+#    → "Compare & pull request" banner shows up after push
+#    → Paste the PR description Claude drafted
 
-# 5. Merge into main
-gh pr merge --squash
-# (or "Squash and merge" in GitHub UI)
+# 4. I merge on GitHub
+#    → "Squash and merge" (or regular merge if I want commit history preserved)
+#    → "Delete branch" button after merge
 
-# 6. Clean up
+# 5. I sync local main + clean up
 git checkout main
 git pull
 git branch -d feature/keyboard-shortcuts
