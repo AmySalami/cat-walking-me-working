@@ -2085,7 +2085,10 @@
     pauseMusic();
 
     if (state.mode === 'focus') {
-      // Focus → Short: instant handoff (audio cue already played during last 3s of focus)
+      // Focus → Short: the last-3-seconds ticks (G5·A5·B5) just played; now follow
+      // with a bell chime to mark the moment rest begins — symmetrical with the
+      // start chime that plays when entering focus.
+      playStartChime();
       state.mode = 'short';
       state.timeLeft = getDuration('short');
       updateDisplay();
@@ -2413,6 +2416,7 @@
   let ytPlayer = null;   // YouTube IFrame Player instance
   let ytReady = false;   // YT IFrame API script ready
   let ytPendingLoad = null; // {videoId, listId} to load once YT API is ready
+  let ytEmbedSkipCount = 0; // how many embed-blocked tracks we auto-skipped in a row
   let musicReady = false;
   const urlInput = document.getElementById('urlInput');
   const hiddenPlayer = document.getElementById('hiddenPlayer');
@@ -2642,6 +2646,7 @@
   }
 
   function createYtPlayer({ videoId, listId }) {
+    ytEmbedSkipCount = 0;
     // YT IFrame API needs a real DOM element to replace with the iframe
     const target = document.createElement('div');
     target.id = 'ytPlayerTarget';
@@ -2695,13 +2700,32 @@
               }
             }
           } else if (e.data === YT.PlayerState.PLAYING) {
+            // A track is actually playing — reset the embed-skip safety counter so
+            // future blocked tracks later in the playlist don't trip the limit
+            ytEmbedSkipCount = 0;
             updateYtStatus(null, true);
           }
         },
         onError: (e) => {
           // 2=invalid param, 5=HTML5 player issue, 100=not found,
           // 101/150=owner doesn't allow embedded playback, "auth"=requires sign-in
-          const msg = (e && (e.data === 101 || e.data === 150))
+          const isEmbedBlock = e && (e.data === 101 || e.data === 150);
+          // If we're in a playlist and this track blocks embedding, hop to the next
+          // track instead of giving up. Cap the auto-skips so a playlist full of
+          // blocked videos doesn't loop forever.
+          if (isEmbedBlock && listId) {
+            ytEmbedSkipCount = (ytEmbedSkipCount || 0) + 1;
+            const playlistLen = (ytPlayer.getPlaylist && ytPlayer.getPlaylist()?.length) || 0;
+            if (ytEmbedSkipCount <= Math.min(10, playlistLen)) {
+              setStatus(`♪ skipping blocked track (${ytEmbedSkipCount})...`);
+              try { ytPlayer.nextVideo(); } catch (_) {}
+              return;
+            }
+            // Too many blocks in a row — stop trying
+            setStatus('✕ too many blocked tracks in this playlist — try another');
+            return;
+          }
+          const msg = isEmbedBlock
             ? '✕ this video blocks embedding — try another URL'
             : '✕ YouTube video unavailable';
           setStatus(msg);
