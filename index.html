@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://w.soundcloud.com/player/api.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <style>
   :root {
     --sky-top: #f7e8c9;
@@ -1637,8 +1638,8 @@
       <div class="ab-music-block">
         <span class="ab-label">music</span>
         <div class="source-tabs">
-          <button class="source-tab" data-source="spotify">Spotify</button>
           <button class="source-tab active" data-source="soundcloud">SoundCloud</button>
+          <button class="source-tab" data-source="youtube">YouTube</button>
         </div>
       </div>
 
@@ -1656,7 +1657,7 @@
 </div>
 
 <!-- Hidden iframe for music playback control — kept outside widget so PiP doesn't move it -->
-<div id="hiddenPlayer" style="position:fixed; bottom:0; right:0; width:1px; height:1px; overflow:hidden; opacity:0.01; pointer-events:none;"></div>
+<div id="hiddenPlayer" style="position:fixed; left:-9999px; top:-9999px; width:320px; height:120px; overflow:hidden; opacity:0.01; pointer-events:none;"></div>
 
 <!-- Onboarding modal — shown only on the first visit (localStorage gate) -->
 <div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" hidden>
@@ -1706,23 +1707,23 @@
       <div class="onboarding-section">
         <h3 class="onboarding-section-title">Choose your soundtrack</h3>
         <div class="onboarding-music-options" role="radiogroup" aria-label="Music source">
-          <button class="onboarding-music is-selected" data-music-url="https://soundcloud.com/concernedape" role="radio" aria-checked="true">
+          <button class="onboarding-music is-selected" data-music-source="soundcloud" data-music-url="https://soundcloud.com/concernedape" role="radio" aria-checked="true">
             <span class="music-name">Stardew Valley OST</span>
-            <span class="music-detail">cozy farm vibes · ConcernedApe</span>
+            <span class="music-detail">cozy farm vibes · SoundCloud</span>
           </button>
-          <button class="onboarding-music" data-music-url="https://soundcloud.com/lofi_girl" role="radio" aria-checked="false">
-            <span class="music-name">Lofi Hip Hop</span>
-            <span class="music-detail">chill beats for focus · Lofi Girl</span>
+          <button class="onboarding-music" data-music-source="youtube" data-music-url="https://www.youtube.com/playlist?list=PLOzDu-MXXLliO9fBNZOQTBDddoA3FzZUo" role="radio" aria-checked="false">
+            <span class="music-name">Lofi Girl Mix</span>
+            <span class="music-detail">chill beats for focus · YouTube</span>
           </button>
-          <button class="onboarding-music" data-music-url="https://soundcloud.com/chillhopdotcom" role="radio" aria-checked="false">
+          <button class="onboarding-music" data-music-source="soundcloud" data-music-url="https://soundcloud.com/chillhopdotcom" role="radio" aria-checked="false">
             <span class="music-name">Chillhop Essentials</span>
-            <span class="music-detail">jazzy chill · Chillhop Music</span>
+            <span class="music-detail">jazzy chill · SoundCloud</span>
           </button>
         </div>
         <div class="onboarding-custom">
-          <label class="onboarding-custom-label" for="onboardingCustomUrl">Or paste your own</label>
+          <label class="onboarding-custom-label" for="onboardingCustomUrl">Or paste your own (SoundCloud or YouTube)</label>
           <input type="text" id="onboardingCustomUrl" class="url-input onboarding-custom-input"
-                 placeholder="https://soundcloud.com/...">
+                 placeholder="https://soundcloud.com/... or https://youtube.com/...">
         </div>
       </div>
 
@@ -2408,7 +2409,10 @@
 
   // ===== Music (hidden player, controlled by timer) =====
   let currentSource = 'soundcloud';
-  let scWidget = null; // SoundCloud widget instance
+  let scWidget = null;   // SoundCloud widget instance
+  let ytPlayer = null;   // YouTube IFrame Player instance
+  let ytReady = false;   // YT IFrame API script ready
+  let ytPendingLoad = null; // {videoId, listId} to load once YT API is ready
   let musicReady = false;
   const urlInput = document.getElementById('urlInput');
   const hiddenPlayer = document.getElementById('hiddenPlayer');
@@ -2428,7 +2432,7 @@
   // Remember the last URL the user had for each source so switching back restores it
   const lastUrlBySource = {
     soundcloud: 'https://soundcloud.com/concernedape',
-    spotify: ''
+    youtube: ''
   };
 
   function handleSourceChange(source) {
@@ -2436,21 +2440,26 @@
     // Save the current input value to the source we're leaving (preserves user's paste)
     lastUrlBySource[currentSource] = urlInput.value;
 
+    // Tear down whatever player is currently in the hidden container
+    try { if (scWidget) scWidget.pause(); } catch (_) {}
+    try { if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo(); } catch (_) {}
+    scWidget = null;
+    ytPlayer = null;
+    musicReady = false;
+    hiddenPlayer.innerHTML = '';
+
     currentSource = source;
     syncSourceTabs(source);
-    urlInput.placeholder = source === 'spotify'
-      ? 'วาง Spotify playlist URL...'
+    urlInput.placeholder = source === 'youtube'
+      ? 'วาง YouTube playlist หรือ video URL...'
       : 'วาง SoundCloud URL...';
     urlInput.value = lastUrlBySource[source];
-    musicReady = false;
-    scWidget = null;
-    hiddenPlayer.innerHTML = '';
 
     if (urlInput.value) {
       setStatus('♪ loading...');
       loadMusic();   // auto-load when switching back to a source with a remembered URL
     } else {
-      setStatus('♪ paste URL...');
+      setStatus(source === 'youtube' ? '♪ paste YouTube URL... (tip: ad-blocker for cleaner focus)' : '♪ paste URL...');
     }
   }
 
@@ -2472,6 +2481,7 @@
         // Single-track queue — restart from beginning
         widget.seekTo(0);
         widget.play();
+        nudgePlayback(widget);
         return;
       }
       widget.getCurrentSound((current) => {
@@ -2482,8 +2492,38 @@
           attempts++;
         } while (currentId && sounds[nextIdx] && sounds[nextIdx].id === currentId && attempts < 10);
         widget.skip(nextIdx);
+        nudgePlayback(widget);
       });
     });
+  }
+
+  // After skip()/play(), some SoundCloud tracks stall silently — audio element is
+  // "playing" but no sound until user interacts. Auto-kick with pause→play sequence
+  // if we detect the widget isn't actually paused but no progress is being made.
+  function nudgePlayback(widget) {
+    // Wait for the new track to settle, then verify it's actually progressing
+    setTimeout(() => {
+      if (!state.running || state.mode !== 'focus') return;
+      widget.isPaused((paused) => {
+        if (paused) {
+          // Widget reports paused after skip — force play
+          widget.play();
+          return;
+        }
+        // Widget says playing — verify by checking position twice
+        widget.getPosition((pos1) => {
+          setTimeout(() => {
+            widget.getPosition((pos2) => {
+              if (pos2 === pos1) {
+                // Position didn't advance → stalled. Kick with pause+play
+                widget.pause();
+                setTimeout(() => widget.play(), 100);
+              }
+            });
+          }, 400);
+        });
+      });
+    }, 600);
   }
 
   function bindScEvents(widget) {
@@ -2502,12 +2542,43 @@
         setStatus('♪ ready · plays with timer');
       }
     });
+    // Stall watchdog: track the last PLAY_PROGRESS position. If the audio buffer hangs
+    // (widget says playing, position frozen) for >5s while we expect playback, kick it
+    // with pause→play so the user doesn't have to do it themselves.
+    let lastProgressPos = -1;
+    let lastProgressTime = 0;
+    let lastStallKickTime = 0;
+    const STALL_THRESHOLD_MS = 5000;
+    const STALL_KICK_THROTTLE_MS = 8000;
     // Proactive shuffle: jump to a random track ~3% before the current one ends
     widget.bind(SC.Widget.Events.PLAY_PROGRESS, (data) => {
-      if (!data || data.relativePosition < 0.97) return;
+      if (!data) return;
+      // Stall detection — only meaningful while we expect audio to be playing
+      if (state.running && state.mode === 'focus') {
+        const now = Date.now();
+        const pos = data.currentPosition || 0;
+        if (pos !== lastProgressPos) {
+          lastProgressPos = pos;
+          lastProgressTime = now;
+        } else if (lastProgressTime && now - lastProgressTime > STALL_THRESHOLD_MS
+                   && now - lastStallKickTime > STALL_KICK_THROTTLE_MS) {
+          // Position frozen too long — kick playback
+          lastStallKickTime = now;
+          lastProgressTime = now; // reset so we don't kick again immediately
+          try {
+            widget.pause();
+            setTimeout(() => { try { widget.play(); } catch (_) {} }, 150);
+          } catch (_) {}
+        }
+      }
+      // Shuffle near end of track
+      if (data.relativePosition < 0.97) return;
       if (!state.running || state.mode !== 'focus') return; // only advance during running focus
       if (Date.now() - lastTrackSwitchTime < TRACK_SWITCH_THROTTLE_MS) return;
       lastTrackSwitchTime = Date.now();
+      // Reset stall tracking — about to skip to a new track
+      lastProgressPos = -1;
+      lastProgressTime = 0;
       try { shuffleToRandomTrack(widget); } catch (_) {}
     });
     // Fallback if PLAY_PROGRESS missed it (slow polling, etc.)
@@ -2526,11 +2597,152 @@
     });
   }
 
+  // Parse a YouTube URL into { videoId, listId }. Either can be null.
+  // Recognises: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/playlist?list=LIST,
+  // youtube.com/watch?v=ID&list=LIST (video inside playlist).
+  // Auto-generated Radio/Mix lists (RD prefix) cannot be embedded via IFrame API,
+  // so we strip them and fall back to playing the video alone.
+  function parseYouTubeUrl(url) {
+    try {
+      const u = new URL(url);
+      const host = u.hostname.replace(/^www\./, '');
+      let videoId = null, listId = null;
+      if (host === 'youtu.be') {
+        videoId = u.pathname.replace(/^\//, '').split('/')[0] || null;
+      } else if (host.endsWith('youtube.com') || host.endsWith('youtube-nocookie.com')) {
+        if (u.pathname === '/watch') videoId = u.searchParams.get('v');
+        else if (u.pathname === '/playlist') { /* playlist only */ }
+        else if (u.pathname.startsWith('/embed/')) videoId = u.pathname.split('/')[2] || null;
+        else if (u.pathname.startsWith('/shorts/')) videoId = u.pathname.split('/')[2] || null;
+        listId = u.searchParams.get('list');
+      } else {
+        return null;
+      }
+      // Strip Radio/Mix/My-Mix lists — YT IFrame API can't embed those.
+      // RD = Radio, RDMM = My Mix, RDCLAK = Topic Radio, UL = User Liked.
+      if (listId && /^(RD|UL)/i.test(listId)) {
+        listId = null;
+      }
+      if (!videoId && !listId) return null;
+      return { videoId, listId };
+    } catch (_) { return null; }
+  }
+
+  // The YouTube IFrame API calls this global when its script finishes loading
+  window.onYouTubeIframeAPIReady = function() {
+    ytReady = true;
+    if (ytPendingLoad) {
+      const p = ytPendingLoad; ytPendingLoad = null;
+      createYtPlayer(p);
+    }
+  };
+  // If the API loaded before this script ran (race), mark ready now
+  if (typeof YT !== 'undefined' && YT.Player) {
+    window.onYouTubeIframeAPIReady();
+  }
+
+  function createYtPlayer({ videoId, listId }) {
+    // YT IFrame API needs a real DOM element to replace with the iframe
+    const target = document.createElement('div');
+    target.id = 'ytPlayerTarget';
+    hiddenPlayer.appendChild(target);
+
+    const playerVars = {
+      autoplay: 0,
+      controls: 0,
+      disablekb: 1,
+      modestbranding: 1,
+      rel: 0,
+      iv_load_policy: 3,
+      playsinline: 1,
+      fs: 0,
+    };
+    if (listId) {
+      playerVars.list = listId;
+      playerVars.listType = 'playlist';
+    }
+
+    // Build options conditionally — passing `videoId: undefined` alongside a playlist
+    // confuses YT.Player and leaves the iframe with no src.
+    const opts = {
+      width: '320',
+      height: '180',
+      playerVars,
+      events: {
+        onReady: () => {
+          musicReady = true;
+          try { ytPlayer.setVolume(80); } catch (_) {}
+          try { if (ytPlayer.setShuffle && listId) ytPlayer.setShuffle(true); } catch (_) {}
+          updateYtStatus('♪ YouTube ready · ad-blocker recommended');
+        },
+        onStateChange: (e) => {
+          // 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued, -1=unstarted
+          if (e.data === YT.PlayerState.ENDED) {
+            // Only loop/restart while we expect playback (focus + running).
+            // Otherwise let the player rest — keeps things calm during break.
+            if (!state.running || state.mode !== 'focus') return;
+            if (!listId) {
+              // Single video — seek back to start and replay
+              try { ytPlayer.seekTo(0); ytPlayer.playVideo(); } catch (_) {}
+            } else {
+              // Playlist — ENDED fires after the LAST track ends. Jump back
+              // to the first track to keep the music going.
+              try {
+                ytPlayer.playVideoAt(0);
+              } catch (_) {
+                // Fallback for very old YT API: full reload via cuePlaylist
+                try { ytPlayer.cuePlaylist({ list: listId, listType: 'playlist', index: 0 }); ytPlayer.playVideo(); } catch (_) {}
+              }
+            }
+          } else if (e.data === YT.PlayerState.PLAYING) {
+            updateYtStatus(null, true);
+          }
+        },
+        onError: (e) => {
+          // 2=invalid param, 5=HTML5 player issue, 100=not found,
+          // 101/150=owner doesn't allow embedded playback, "auth"=requires sign-in
+          const msg = (e && (e.data === 101 || e.data === 150))
+            ? '✕ this video blocks embedding — try another URL'
+            : '✕ YouTube video unavailable';
+          setStatus(msg);
+        }
+      }
+    };
+    if (videoId) opts.videoId = videoId;
+
+    try {
+      ytPlayer = new YT.Player('ytPlayerTarget', opts);
+    } catch (e) {
+      setStatus('✕ could not load YouTube player');
+    }
+  }
+
+  function updateYtStatus(fallback, playing = false) {
+    if (!ytPlayer || !ytPlayer.getVideoData) {
+      if (fallback) setStatus(fallback, playing);
+      return;
+    }
+    try {
+      const data = ytPlayer.getVideoData();
+      if (data && data.title) {
+        setStatus('♪ ' + data.title, playing);
+      } else if (fallback) {
+        setStatus(fallback, playing);
+      }
+    } catch (_) {
+      if (fallback) setStatus(fallback, playing);
+    }
+  }
+
   function loadMusic() {
     const url = urlInput.value.trim();
     if (!url) return;
     musicReady = false;
+    // Tear down both players (handleSourceChange may already have done this, but loadMusic
+    // is also called on URL paste within the same source — keep it idempotent)
     scWidget = null;
+    try { if (ytPlayer && ytPlayer.destroy) ytPlayer.destroy(); } catch (_) {}
+    ytPlayer = null;
     hiddenPlayer.innerHTML = '';
 
     if (currentSource === 'soundcloud') {
@@ -2540,11 +2752,12 @@
       }
       const iframe = document.createElement('iframe');
       iframe.id = 'scIframe';
-      iframe.width = '100%';
-      iframe.height = '100';
+      iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.width = '320';
+      iframe.height = '120';
       iframe.scrolling = 'no';
       iframe.frameBorder = 'no';
-      iframe.allow = 'autoplay';
       iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`;
       hiddenPlayer.appendChild(iframe);
 
@@ -2557,23 +2770,19 @@
           setStatus('✕ could not load player');
         }
       }, 200);
-    } else {
-      // Spotify — embed API is limited for free control, so we show a note
-      const match = url.match(/spotify\.com\/(playlist|track|album|episode|show)\/([a-zA-Z0-9]+)/);
-      if (!match) {
-        setStatus('✕ invalid Spotify URL');
+    } else if (currentSource === 'youtube') {
+      const parsed = parseYouTubeUrl(url);
+      if (!parsed) {
+        setStatus('✕ invalid YouTube URL');
         return;
       }
-      const [, type, id] = match;
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://open.spotify.com/embed/${type}/${id}?utm_source=generator`;
-      iframe.width = '100%';
-      iframe.height = '152';
-      iframe.allow = 'autoplay; encrypted-media';
-      hiddenPlayer.appendChild(iframe);
-      musicReady = true;
-      setStatus('♪ Spotify loaded · press play once to allow');
-      // Note: Spotify embed doesn't allow programmatic play/pause without user gesture each time
+      // If the YT IFrame API script hasn't fired its ready callback yet, queue the load
+      if (!ytReady) {
+        ytPendingLoad = parsed;
+        setStatus('♪ loading YouTube...');
+        return;
+      }
+      createYtPlayer(parsed);
     }
   }
 
@@ -2581,6 +2790,7 @@
     if (!musicReady) return;
     if (currentSource === 'soundcloud' && scWidget) {
       scWidget.play();
+      nudgePlayback(scWidget);
       // Show which track is playing — gives user feedback that the playlist is advancing
       try {
         scWidget.getCurrentSound((sound) => {
@@ -2590,15 +2800,18 @@
       } catch (_) {
         setStatus('♪ playing softly', true);
       }
-    } else if (currentSource === 'spotify') {
-      // Spotify embed: can't programmatically play due to browser restrictions
-      setStatus('♪ open Spotify iframe to play (browser limit)');
+    } else if (currentSource === 'youtube' && ytPlayer) {
+      try { ytPlayer.playVideo(); } catch (_) {}
+      updateYtStatus('♪ playing softly', true);
     }
   }
 
   function pauseMusic() {
     if (currentSource === 'soundcloud' && scWidget) {
       scWidget.pause();
+      setStatus('♪ paused');
+    } else if (currentSource === 'youtube' && ytPlayer) {
+      try { ytPlayer.pauseVideo(); } catch (_) {}
       setStatus('♪ paused');
     }
   }
@@ -2624,27 +2837,43 @@
         }, 50);
       }
       setStatus('♪ resetting...');
-    } else if (currentSource === 'spotify') {
-      const iframe = hiddenPlayer.querySelector('iframe');
-      if (iframe) {
-        const src = iframe.src;
-        iframe.src = '';
-        setTimeout(() => { iframe.src = src; }, 50);
-      }
-      setStatus('♪ Spotify reset · press play once to allow');
+    } else if (currentSource === 'youtube' && ytPlayer) {
+      try {
+        ytPlayer.pauseVideo();
+        ytPlayer.seekTo(0, true);
+      } catch (_) {}
+      setStatus('♪ ready');
     }
   }
 
-  // URL input: debounced auto-load + immediate load on Enter
+  // URL input: debounced auto-load + immediate load on Enter.
+  // Also auto-detect source from URL so pasting a YouTube link while on the SoundCloud
+  // tab silently switches the toggle (and vice-versa) — saves an extra click.
+  function maybeAutoSwitchSource() {
+    const url = urlInput.value.trim();
+    if (!url) return false;
+    const detected = /youtube\.com|youtu\.be/i.test(url) ? 'youtube'
+                   : /soundcloud\.com/i.test(url) ? 'soundcloud'
+                   : null;
+    if (detected && detected !== currentSource) {
+      // Stash this URL so handleSourceChange restores it as the new tab's value
+      lastUrlBySource[detected] = url;
+      handleSourceChange(detected);
+      return true; // handleSourceChange already called loadMusic
+    }
+    return false;
+  }
   let urlDebounceTimer = null;
   urlInput.addEventListener('input', () => {
     clearTimeout(urlDebounceTimer);
-    urlDebounceTimer = setTimeout(loadMusic, 800);
+    urlDebounceTimer = setTimeout(() => {
+      if (!maybeAutoSwitchSource()) loadMusic();
+    }, 800);
   });
   urlInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       clearTimeout(urlDebounceTimer);
-      loadMusic();
+      if (!maybeAutoSwitchSource()) loadMusic();
     }
   });
 
@@ -2724,17 +2953,39 @@
 
   document.getElementById('onboardingBack').addEventListener('click', () => goToStep(1));
 
+  // Detect which source a pasted URL belongs to. Defaults to soundcloud for unknown URLs.
+  function detectMusicSource(url) {
+    if (!url) return 'soundcloud';
+    if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
+    return 'soundcloud';
+  }
+
   // Start — apply music choice, close modal, begin countdown
   document.getElementById('onboardingStart').addEventListener('click', () => {
     const custom = customUrlInput.value.trim();
     const selectedMusic = onboarding.querySelector('.onboarding-music.is-selected');
-    const chosenUrl = custom || (selectedMusic && selectedMusic.dataset.musicUrl);
+    let chosenUrl, chosenSource;
+    if (custom) {
+      chosenUrl = custom;
+      chosenSource = detectMusicSource(custom);
+    } else if (selectedMusic) {
+      chosenUrl = selectedMusic.dataset.musicUrl;
+      chosenSource = selectedMusic.dataset.musicSource || 'soundcloud';
+    }
 
     if (chosenUrl) {
-      // Make sure source tab is SoundCloud + load the chosen URL
-      handleSourceChange('soundcloud');
-      urlInput.value = chosenUrl;
-      loadMusic();
+      // Switch to the correct source tab, then load the chosen URL.
+      // handleSourceChange is a no-op if already on this source — so set urlInput
+      // and call loadMusic() ourselves either way for predictable behavior.
+      if (chosenSource !== currentSource) {
+        // handleSourceChange triggers its own loadMusic, but only when the URL it
+        // restores from memory is non-empty. Easiest: set lastUrlBySource first.
+        lastUrlBySource[chosenSource] = chosenUrl;
+        handleSourceChange(chosenSource);
+      } else {
+        urlInput.value = chosenUrl;
+        loadMusic();
+      }
     }
 
     closeOnboarding();
