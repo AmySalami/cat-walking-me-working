@@ -182,6 +182,106 @@
   .pip-btn:hover { background: rgba(45, 36, 23, 0.6); }
   .pip-btn.active { background: var(--rose); }
 
+  /* Settings (gear) — top-right corner, same visual family as pip-btn */
+  .settings-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    background: rgba(45, 36, 23, 0.4);
+    backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cream);
+    z-index: 10;
+    transition: background 0.2s;
+  }
+  .settings-btn:hover { background: rgba(45, 36, 23, 0.6); }
+  .settings-btn.active { background: var(--rose); }
+
+  /* Tooltips on settings — anchor to LEFT so they don't go off-screen at right edge */
+  .settings-btn[data-tooltip]:hover::after,
+  .settings-btn[data-tooltip]:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* Hide settings button during running/counting (consistent with lock-overlay behavior) */
+  .widget.running .settings-btn,
+  .widget.counting .settings-btn { display: none; }
+
+  /* ===================================================================
+     CHARACTER SYSTEM — palette as CSS variables.
+     One SVG per size renders all characters. To add a new character:
+     (1) Add a `body[data-character="..."]` block below with the palette.
+     (2) Add an entry to the CHARACTERS array in the script section.
+     No SVG duplication. No new HTML. No new selectors.
+     =================================================================== */
+
+  /* Khuntong (black cat) — default when no data-character is set.
+     Applies via `:root` (everything) plus an explicit `[data-character="khuntong"]`
+     so that swatches in the picker can carry their own data-character attribute
+     and pick up the right palette regardless of the body's current selection. */
+  :root,
+  [data-character="khuntong"] {
+    --fur-base:      #4a3424;
+    --fur-shadow:    #2a1d14;
+    --fur-side:      #3a2a1f;
+    --fur-side-flat: #3a2a1f;   /* non-gradient siblings (legs, simple body) */
+    --belly-light:   #6b4c33;
+    --belly-dark:    #4a3424;
+    --paw:           #1a120a;
+    --stripe-color:  #1f1410;
+    --stripe-opacity: 0;        /* Khuntong has no visible stripes */
+    --eye-sclera:    #1a120a;
+    --eye-iris:      #a8c574;   /* green */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #d97757;   /* warm pink */
+    --nose:          #d97757;
+    --whisker:       #faf3e3;
+    --mouth-stroke:  #1a120a;
+  }
+
+  /* Khonloy (brown mackerel tabby) */
+  [data-character="khonloy"] {
+    --fur-base:      #a89070;
+    --fur-shadow:    #6e5c44;
+    --fur-side:      #6e5c44;
+    --fur-side-flat: #6e5c44;
+    --belly-light:   #c4a880;
+    --belly-dark:    #a89070;
+    --paw:           #1f1410;
+    --stripe-color:  #1f1410;
+    --stripe-opacity: 0.85;     /* prominent mackerel pattern */
+    --eye-sclera:    #1a120a;
+    --eye-iris:      #a8c574;   /* same green as Khuntong */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #d97757;
+    --nose:          #d97757;
+    --whisker:       #faf3e3;
+    --mouth-stroke:  #1a120a;
+  }
+
   /* Custom tooltips for icon-only buttons — shown on hover/focus, hidden otherwise */
   .collapse-btn[data-tooltip]:hover::after,
   .pip-btn[data-tooltip]:hover::after,
@@ -1014,6 +1114,227 @@
   body.pip-mode .widget.collapsed .scene { flex: 1; height: auto; }
 
   /* ===================================================================
+     SETTINGS POPOVER — character / session / music
+     =================================================================== */
+  .settings-popover {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 36, 23, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+    padding: 24px;
+    animation: settingsFadeIn 0.2s ease;
+  }
+  .settings-popover[hidden] { display: none; }
+
+  @keyframes settingsFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .settings-panel {
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 32px;
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(45, 36, 23, 0.25);
+    animation: settingsRiseIn 0.25s ease;
+  }
+  @keyframes settingsRiseIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .settings-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0;
+  }
+  .settings-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: rgba(45, 36, 23, 0.6);
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .settings-close:hover {
+    background: rgba(45, 36, 23, 0.08);
+    color: var(--ink);
+  }
+
+  .settings-section {
+    margin-bottom: 28px;
+  }
+  .settings-section:last-child { margin-bottom: 0; }
+
+  .settings-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0 0 14px 0;
+  }
+
+  /* Character picker — two cards side by side */
+  .settings-characters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .settings-character {
+    background: rgba(45, 36, 23, 0.04);
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+    font-family: inherit;
+  }
+  .settings-character:hover { background: rgba(45, 36, 23, 0.08); }
+  .settings-character.is-selected {
+    background: rgba(45, 36, 23, 0.06);
+    border-color: var(--ink);
+  }
+  .char-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+    box-shadow: inset 0 -2px 6px rgba(0,0,0,0.18);
+  }
+  /* Swatch uses the character palette via data-character on the swatch.
+     The diagonal-stripe overlay is always present, but `--stripe-opacity`
+     hides it for characters that don't have stripes. */
+  .char-swatch {
+    position: relative;
+    background: radial-gradient(circle at 35% 30%, var(--fur-base) 0%, var(--fur-shadow) 70%);
+  }
+  .char-swatch::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-linear-gradient(45deg,
+      transparent 0px,
+      transparent 4px,
+      var(--stripe-color) 4px,
+      var(--stripe-color) 5px);
+    opacity: var(--stripe-opacity);
+  }
+  .char-name {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .char-detail {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: rgba(45, 36, 23, 0.6);
+    letter-spacing: 0.3px;
+  }
+
+  /* Session preset dropdown — full-width inside popover */
+  .settings-section .preset-select-wrap { width: 100%; }
+  .settings-section .preset-select {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(45, 36, 23, 0.04);
+    border: 1.5px solid transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1L5 5L9 1' stroke='%232d2417' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .settings-section .preset-select:hover { background: rgba(45, 36, 23, 0.08); }
+  .settings-section .preset-select:focus { outline: none; border-color: var(--ink); }
+
+  /* Music source tabs — full-width segmented control */
+  .settings-section .source-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(45, 36, 23, 0.04);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 12px;
+  }
+  .settings-section .source-tab {
+    flex: 1;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(45, 36, 23, 0.55);
+    transition: background 0.15s, color 0.15s;
+  }
+  .settings-section .source-tab:hover { color: var(--ink); }
+  .settings-section .source-tab.active {
+    background: var(--ink);
+    color: var(--cream);
+  }
+
+  /* URL input — full-width in popover */
+  .settings-url-input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(45, 36, 23, 0.04);
+    border: 1.5px solid transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .settings-url-input::placeholder { color: rgba(45, 36, 23, 0.4); }
+  .settings-url-input:focus {
+    outline: none;
+    border-color: var(--ink);
+    background: var(--cream);
+  }
+
+  /* ===================================================================
      ONBOARDING — first-visit welcome modal
      =================================================================== */
   .onboarding {
@@ -1436,6 +1757,12 @@
         <rect x="5.5" y="5" width="4" height="3" rx="0.5" fill="currentColor"/>
       </svg>
     </button>
+    <button class="settings-btn" id="settingsBtn" data-tooltip="Settings" aria-label="Open settings" aria-haspopup="dialog">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </button>
     <div class="sun"></div>
     <div class="cloud cloud-1"></div>
     <div class="cloud cloud-2"></div>
@@ -1485,38 +1812,69 @@
     </div>
 
     <div class="cat-walker">
+      <!-- Single SVG renders every character via CSS variables.
+           Stripes/markings are always in the markup but hidden via
+           `--stripe-opacity: 0` when the active palette has no stripes. -->
       <!-- Compact cat for PiP/small widget -->
       <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
         <g class="cat-body">
-          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="#3a2a1f" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="#3a2a1f"/>
-          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="#2a1d14"/>
-          <ellipse cx="28" cy="30" rx="16" ry="9" fill="#3a2a1f"/>
-          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="#3a2a1f"/>
-          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="#2a1d14"/>
-          <circle cx="44" cy="22" r="8" fill="#3a2a1f"/>
-          <path d="M 38 17 L 39 11 L 42 16 Z" fill="#3a2a1f"/>
-          <path d="M 46 16 L 49 11 L 50 17 Z" fill="#3a2a1f"/>
-          <path d="M 39 14 L 40 12 L 41 14 Z" fill="#d97757"/>
-          <path d="M 47 14 L 48 12 L 49 14 Z" fill="#d97757"/>
-          <circle cx="47" cy="22" r="1" fill="#faf3e3"/>
-          <circle cx="42" cy="22" r="1" fill="#faf3e3"/>
-          <path d="M 44 25 L 45 26 L 46 25" stroke="#faf3e3" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-          <line x1="48" y1="24" x2="52" y2="23" stroke="#faf3e3" stroke-width="0.4"/>
-          <line x1="48" y1="25" x2="52" y2="25" stroke="#faf3e3" stroke-width="0.4"/>
+          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="var(--fur-side)" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- Tail rings (stripe layer) -->
+          <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
+          <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
+          <line class="tail" x1="6" y1="18" x2="8" y2="20" stroke="var(--stripe-color)" stroke-width="1" style="opacity: var(--stripe-opacity)"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
+          <ellipse cx="28" cy="30" rx="16" ry="9" fill="var(--fur-side-flat)"/>
+          <!-- Body stripes (stripe layer) -->
+          <path d="M 18 27 Q 19 31, 19 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 23 26 Q 24 31, 24 36" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 28 25 Q 29 31, 29 36" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 33 26 Q 34 31, 34 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 38 27 Q 39 31, 38 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <!-- Leg stripes -->
+          <line x1="16" y1="36" x2="19" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="16" y1="39" x2="19" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="21" y1="36" x2="24" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="21" y1="39" x2="24" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
+          <line x1="36" y1="36" x2="39" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="36" y1="39" x2="39" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="41" y1="36" x2="44" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="41" y1="39" x2="44" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <circle cx="44" cy="22" r="8" fill="var(--fur-side-flat)"/>
+          <!-- Forehead "M" stripes -->
+          <path d="M 40 16 L 42 19 L 44 16 L 46 19 L 48 16" stroke="var(--stripe-color)" stroke-width="0.9" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <!-- Cheek stripes -->
+          <line x1="37" y1="23" x2="40" y2="23" stroke="var(--stripe-color)" stroke-width="0.7" style="opacity: var(--stripe-opacity)"/>
+          <line x1="48" y1="23" x2="51" y2="23" stroke="var(--stripe-color)" stroke-width="0.7" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 38 17 L 39 11 L 42 16 Z" fill="var(--fur-side)"/>
+          <path d="M 46 16 L 49 11 L 50 17 Z" fill="var(--fur-side)"/>
+          <path d="M 39 14 L 40 12 L 41 14 Z" fill="var(--inner-ear)"/>
+          <path d="M 47 14 L 48 12 L 49 14 Z" fill="var(--inner-ear)"/>
+          <!-- Eyes — colored iris dot + tiny pupil -->
+          <circle cx="47" cy="22" r="1" fill="var(--eye-iris)"/>
+          <circle cx="42" cy="22" r="1" fill="var(--eye-iris)"/>
+          <circle cx="47" cy="22" r="0.4" fill="var(--eye-pupil)"/>
+          <circle cx="42" cy="22" r="0.4" fill="var(--eye-pupil)"/>
+          <path d="M 44 25 L 45 26 L 46 25" stroke="var(--mouth-stroke)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="24" x2="52" y2="23" stroke="var(--whisker)" stroke-width="0.4"/>
+          <line x1="48" y1="25" x2="52" y2="25" stroke="var(--whisker)" stroke-width="0.4"/>
         </g>
       </svg>
 
       <!-- Detailed cat for fullscreen — bigger, more polish -->
+      <!-- Detailed cat for fullscreen — palette + stripe layer driven by CSS vars -->
       <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
         <defs>
           <linearGradient id="catFur" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#4a3424"/>
-            <stop offset="100%" stop-color="#2a1d14"/>
+            <stop offset="0%" stop-color="var(--fur-base)"/>
+            <stop offset="100%" stop-color="var(--fur-shadow)"/>
           </linearGradient>
           <linearGradient id="catBelly" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#6b4c33"/>
-            <stop offset="100%" stop-color="#4a3424"/>
+            <stop offset="0%" stop-color="var(--belly-light)"/>
+            <stop offset="100%" stop-color="var(--belly-dark)"/>
           </linearGradient>
         </defs>
 
@@ -1527,76 +1885,109 @@
           <!-- Tail (curls up, animates) -->
           <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
                 stroke="url(#catFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
-          <path d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
-                stroke="#1a120a" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.3" class="tail"/>
+          <!-- Tail rings (stripe layer) -->
+          <path class="tail" d="M 48 65 Q 51 68, 54 65" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 32 73 Q 36 78, 41 72" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 24 90 Q 27 94, 31 89" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 26 108 Q 30 110, 34 105" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <path class="tail" d="M 38 120 Q 43 124, 48 119" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
 
           <!-- Back legs -->
           <g class="leg-bl">
             <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
-            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="68" y1="148" x2="81" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="68" y1="158" x2="81" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="68" y1="168" x2="81" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-br">
-            <rect x="87" y="138" width="13" height="42" rx="6" fill="#3a2a1f"/>
-            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="var(--fur-side)"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="87" y1="148" x2="100" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="87" y1="158" x2="100" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="87" y1="168" x2="100" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
           <!-- Body main -->
           <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#catFur)"/>
-          <!-- Belly accent -->
-          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.6"/>
+          <!-- Body stripes (mackerel pattern — vertical, evenly spaced) -->
+          <path d="M 65 110 Q 67 130, 65 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 80 100 Q 82 130, 80 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 95 96 Q 97 130, 95 162" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 110 95 Q 112 130, 110 163" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 125 95 Q 127 130, 125 163" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 140 96 Q 142 130, 140 162" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 155 100 Q 157 130, 155 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 170 110 Q 172 130, 170 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <!-- Belly accent (no stripes) -->
+          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.85"/>
 
           <!-- Front legs -->
           <g class="leg-fl">
             <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
-            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="148" y1="148" x2="161" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="148" y1="158" x2="161" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="148" y1="168" x2="161" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-fr">
-            <rect x="167" y="138" width="13" height="42" rx="6" fill="#3a2a1f"/>
-            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="#1a120a"/>
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="var(--fur-side)"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="167" y1="148" x2="180" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="167" y1="158" x2="180" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="167" y1="168" x2="180" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
           <!-- Head -->
           <circle cx="185" cy="95" r="36" fill="url(#catFur)"/>
+          <!-- Forehead "M" tabby marking -->
+          <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
+                stroke="var(--stripe-color)" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: var(--stripe-opacity)"/>
+          <!-- Forehead extra stripe between M and ears -->
+          <path d="M 175 65 L 185 70 L 195 65" stroke="var(--stripe-color)" stroke-width="2" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+          <!-- Cheek stripes -->
+          <path d="M 155 100 Q 160 104, 165 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 205 100 Q 210 104, 215 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 158 110 Q 162 113, 166 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
+          <path d="M 204 110 Q 208 113, 212 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
 
           <!-- Ears -->
-          <path d="M 162 75 L 164 48 L 178 70 Z" fill="#3a2a1f"/>
-          <path d="M 195 70 L 209 48 L 211 75 Z" fill="#3a2a1f"/>
+          <path d="M 162 75 L 164 48 L 178 70 Z" fill="var(--fur-side)"/>
+          <path d="M 195 70 L 209 48 L 211 75 Z" fill="var(--fur-side)"/>
           <!-- Inner ears -->
-          <path d="M 166 70 L 169 55 L 174 68 Z" fill="#d97757" opacity="0.85"/>
-          <path d="M 199 68 L 206 55 L 209 72 Z" fill="#d97757" opacity="0.85"/>
+          <path d="M 166 70 L 169 55 L 174 68 Z" fill="var(--inner-ear)" opacity="0.85"/>
+          <path d="M 199 68 L 206 55 L 209 72 Z" fill="var(--inner-ear)" opacity="0.85"/>
 
           <!-- Cheek fluff -->
-          <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.7"/>
-          <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.7"/>
+          <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.8"/>
+          <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.8"/>
 
-          <!-- Eyes — green glowing -->
-          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
-          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
-          <!-- Eye irises -->
-          <ellipse cx="174" cy="92" rx="3" ry="5" fill="#a8c574"/>
-          <ellipse cx="198" cy="92" rx="3" ry="5" fill="#a8c574"/>
-          <!-- Pupils (thin slits) -->
-          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
-          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
-          <!-- Eye shine -->
-          <circle cx="175" cy="89" r="1" fill="#faf3e3"/>
-          <circle cx="199" cy="89" r="1" fill="#faf3e3"/>
+          <!-- Eyes -->
+          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
+          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
+          <ellipse cx="174" cy="92" rx="3" ry="5" fill="var(--eye-iris)"/>
+          <ellipse cx="198" cy="92" rx="3" ry="5" fill="var(--eye-iris)"/>
+          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
+          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
+          <circle cx="175" cy="89" r="1" fill="var(--eye-shine)"/>
+          <circle cx="199" cy="89" r="1" fill="var(--eye-shine)"/>
 
           <!-- Nose -->
-          <path d="M 183 105 L 187 105 L 185 108 Z" fill="#d97757"/>
+          <path d="M 183 105 L 187 105 L 185 108 Z" fill="var(--nose)"/>
 
           <!-- Mouth -->
-          <path d="M 185 108 L 185 112" stroke="#1a120a" stroke-width="1" stroke-linecap="round"/>
-          <path d="M 185 112 Q 181 115, 178 113" stroke="#1a120a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-          <path d="M 185 112 Q 189 115, 192 113" stroke="#1a120a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 108 L 185 112" stroke="var(--mouth-stroke)" stroke-width="1" stroke-linecap="round"/>
+          <path d="M 185 112 Q 181 115, 178 113" stroke="var(--mouth-stroke)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 112 Q 189 115, 192 113" stroke="var(--mouth-stroke)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
 
           <!-- Whiskers -->
-          <line x1="195" y1="108" x2="218" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
-          <line x1="195" y1="111" x2="220" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
-          <line x1="175" y1="108" x2="152" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
-          <line x1="175" y1="111" x2="150" y2="112" stroke="#faf3e3" stroke-width="0.8" opacity="0.7"/>
+          <line x1="195" y1="108" x2="218" y2="105" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="195" y1="111" x2="220" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="108" x2="152" y2="105" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="111" x2="150" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
         </g>
       </svg>
+
     </div>
   </div>
 
@@ -1619,40 +2010,51 @@
       <div class="ab-status" id="abStatus" aria-live="polite"></div>
     </div>
 
-    <!-- Secondary: settings as a horizontal row (session | music | url) -->
-    <div class="ab-secondary">
-      <div class="ab-session-block">
-        <span class="ab-label">session</span>
-        <div class="preset-select-wrap">
-          <select class="preset-select" id="presetSelect">
-            <option value="classic">classic · 25/5</option>
-            <option value="short" selected>quick · 15/3</option>
-            <option value="deep">deep · 50/10</option>
-            <option value="marathon">marathon · 90/15</option>
-          </select>
-        </div>
-      </div>
+    <div class="ab-music-status" id="musicStatus">♪ ready · plays with timer</div>
+  </div>
+</div>
 
-      <div class="ab-divider" aria-hidden="true"></div>
-
-      <div class="ab-music-block">
-        <span class="ab-label">music</span>
-        <div class="source-tabs">
-          <button class="source-tab active" data-source="soundcloud">SoundCloud</button>
-          <button class="source-tab" data-source="youtube">YouTube</button>
-        </div>
-      </div>
-
-      <div class="ab-url-wrap">
-        <input type="text" class="url-input" id="urlInput" value="https://soundcloud.com/concernedape" placeholder="วาง URL...">
-      </div>
-
-      <!-- Lock overlay — shown while running, blocks edits, tooltip on hover -->
-      <div class="ab-lock-overlay" aria-hidden="true"
-           data-tooltip="🌱 Can't edit while focus mode is active — pause or end the session to make changes"></div>
+<!-- Settings popover — character / session / music. Lives outside .widget so PiP doesn't move it. -->
+<div class="settings-popover" id="settingsPopover" role="dialog" aria-modal="false" aria-labelledby="settingsTitle" hidden>
+  <div class="settings-panel">
+    <div class="settings-header">
+      <h2 class="settings-title" id="settingsTitle">Settings</h2>
+      <button class="settings-close" id="settingsClose" aria-label="Close settings">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3 3 L11 11 M11 3 L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
 
-    <div class="ab-music-status" id="musicStatus">♪ ready · plays with timer</div>
+    <!-- Character — populated from the JS CHARACTERS registry -->
+    <div class="settings-section">
+      <h3 class="settings-section-title">Choose your companion</h3>
+      <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
+    </div>
+
+    <!-- Session -->
+    <div class="settings-section">
+      <h3 class="settings-section-title">Session rhythm</h3>
+      <div class="preset-select-wrap">
+        <select class="preset-select" id="presetSelect">
+          <option value="classic">classic · 25 min focus / 5 min break</option>
+          <option value="short" selected>quick · 15 min focus / 3 min break</option>
+          <option value="deep">deep · 50 min focus / 10 min break</option>
+          <option value="marathon">marathon · 90 min focus / 15 min break</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Music -->
+    <div class="settings-section">
+      <h3 class="settings-section-title">Music source</h3>
+      <div class="source-tabs">
+        <button class="source-tab active" data-source="soundcloud">SoundCloud</button>
+        <button class="source-tab" data-source="youtube">YouTube</button>
+      </div>
+      <input type="text" class="url-input settings-url-input" id="urlInput"
+             value="https://soundcloud.com/concernedape" placeholder="วาง URL...">
+    </div>
   </div>
 </div>
 
@@ -1735,6 +2137,41 @@
 </div>
 
 <script>
+  // ===== Settings store — persisted user choices (character / preset / source / URL) =====
+  const SETTINGS_KEY = 'pomodoroMeadowSettings';
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      return raw ? (JSON.parse(raw) || {}) : {};
+    } catch (_) { return {}; }
+  }
+  function saveSettings(patch) {
+    try {
+      const current = loadSettings();
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...current, ...patch }));
+    } catch (_) {}
+  }
+  const savedSettings = loadSettings();
+
+  // ===== Character registry =====
+  // Adding a new character is a two-step change:
+  //   1. Add a `[data-character="<id>"]` palette block in the CSS character section.
+  //   2. Add an entry below.
+  // The unified SVGs + the picker render from here — no HTML duplication.
+  const CHARACTERS = [
+    { id: 'khuntong', name: 'Khuntong', detail: 'black cat · classic' },
+    { id: 'khonloy',  name: 'Khonloy',  detail: 'brown tabby · warm'   },
+  ];
+  const DEFAULT_CHARACTER = 'khuntong';
+
+  // Apply saved character to <body> ASAP so the correct palette is active for
+  // the first paint. Unknown saved values fall back to the default.
+  (() => {
+    const saved = savedSettings.character;
+    const valid = CHARACTERS.some(c => c.id === saved);
+    document.body.setAttribute('data-character', valid ? saved : DEFAULT_CHARACTER);
+  })();
+
   // PiP window reference — declared at top so applyTimeOfDay can reference safely
   let pipWindow = null;
 
@@ -1866,7 +2303,12 @@
     deep:     { focus: 50, short: 10 },
     marathon: { focus: 90, short: 15 },
   };
-  let currentPreset = 'short';
+  let currentPreset = (savedSettings.preset && presets[savedSettings.preset]) ? savedSettings.preset : 'short';
+  // Sync the dropdown's `selected` to the hydrated value before any interaction
+  setTimeout(() => {
+    const sel = document.getElementById('presetSelect');
+    if (sel) sel.value = currentPreset;
+  }, 0);
 
   const state = {
     mode: 'focus',
@@ -2229,6 +2671,7 @@
 
   function handlePresetChange(value) {
     currentPreset = value;
+    saveSettings({ preset: value });
     // Sync the preset dropdown in both main doc and PiP doc (if open)
     const docs = [document];
     if (pipWindow) docs.push(pipWindow.document);
@@ -2411,7 +2854,7 @@
   });
 
   // ===== Music (hidden player, controlled by timer) =====
-  let currentSource = 'soundcloud';
+  let currentSource = (savedSettings.source === 'youtube') ? 'youtube' : 'soundcloud';
   let scWidget = null;   // SoundCloud widget instance
   let ytPlayer = null;   // YouTube IFrame Player instance
   let ytReady = false;   // YT IFrame API script ready
@@ -2421,6 +2864,10 @@
   const urlInput = document.getElementById('urlInput');
   const hiddenPlayer = document.getElementById('hiddenPlayer');
   const musicStatus = document.getElementById('musicStatus');
+
+  // Apply hydrated source to URL input + toggle state before any user interaction
+  if (savedSettings.url) urlInput.value = savedSettings.url;
+  // Source tab UI is synced inside the IIFE below since `.source-tab` exists in the DOM at this point
 
   function setStatus(text, playing = false) {
     musicStatus.textContent = text;
@@ -2433,11 +2880,16 @@
     });
   }
 
-  // Remember the last URL the user had for each source so switching back restores it
+  // Remember the last URL the user had for each source so switching back restores it.
+  // Hydrate the active source's slot from saved settings so the URL persists too.
   const lastUrlBySource = {
     soundcloud: 'https://soundcloud.com/concernedape',
     youtube: ''
   };
+  if (savedSettings.url) lastUrlBySource[currentSource] = savedSettings.url;
+
+  // Sync the source tab UI to the hydrated source (no event = no save)
+  syncSourceTabs(currentSource);
 
   function handleSourceChange(source) {
     if (source === currentSource) return;
@@ -2458,6 +2910,8 @@
       ? 'วาง YouTube playlist หรือ video URL...'
       : 'วาง SoundCloud URL...';
     urlInput.value = lastUrlBySource[source];
+    // Persist the new source + its current URL
+    saveSettings({ source, url: urlInput.value });
 
     if (urlInput.value) {
       setStatus('♪ loading...');
@@ -2891,6 +3345,8 @@
   urlInput.addEventListener('input', () => {
     clearTimeout(urlDebounceTimer);
     urlDebounceTimer = setTimeout(() => {
+      // Persist URL on every commit. If we auto-switch source, that path saves too.
+      saveSettings({ url: urlInput.value.trim() });
       if (!maybeAutoSwitchSource()) loadMusic();
     }, 800);
   });
@@ -2903,6 +3359,71 @@
 
   updateDisplay();
   loadMusic();
+
+  // ===== Settings popover — character / session / music =====
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsPopover = document.getElementById('settingsPopover');
+  const settingsClose = document.getElementById('settingsClose');
+
+  function openSettings() {
+    if (state.running || state.countingDown) return; // edit-lock during active session
+    settingsPopover.hidden = false;
+    settingsBtn.classList.add('active');
+    // Make sure character cards reflect the current saved value when reopened
+    syncCharacterCards();
+  }
+  function closeSettings() {
+    settingsPopover.hidden = true;
+    settingsBtn.classList.remove('active');
+  }
+
+  settingsBtn.addEventListener('click', () => {
+    settingsPopover.hidden ? openSettings() : closeSettings();
+  });
+  settingsClose.addEventListener('click', closeSettings);
+  // Click outside the panel (on the dim backdrop) to dismiss
+  settingsPopover.addEventListener('click', (e) => {
+    if (e.target === settingsPopover) closeSettings();
+  });
+  // Escape to dismiss (only if popover is open AND onboarding isn't capturing focus)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !settingsPopover.hidden) closeSettings();
+  });
+
+  // ===== Character switcher (rendered from the CHARACTERS registry) =====
+  const charactersContainer = settingsPopover.querySelector('.settings-characters');
+
+  function renderCharacterPicker() {
+    charactersContainer.innerHTML = CHARACTERS.map(char => `
+      <button class="settings-character" data-character-pick="${char.id}" role="radio" aria-checked="false">
+        <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
+        <span class="char-name">${char.name}</span>
+        <span class="char-detail">${char.detail}</span>
+      </button>
+    `).join('');
+    charactersContainer.querySelectorAll('.settings-character').forEach(btn => {
+      btn.addEventListener('click', () => setCharacter(btn.dataset.characterPick));
+    });
+  }
+
+  function setCharacter(id) {
+    if (!CHARACTERS.some(c => c.id === id)) return;
+    document.body.setAttribute('data-character', id);
+    saveSettings({ character: id });
+    syncCharacterCards();
+  }
+
+  function syncCharacterCards() {
+    const active = document.body.getAttribute('data-character') || DEFAULT_CHARACTER;
+    charactersContainer.querySelectorAll('.settings-character').forEach(btn => {
+      const isActive = btn.dataset.characterPick === active;
+      btn.classList.toggle('is-selected', isActive);
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+  }
+
+  renderCharacterPicker();
+  syncCharacterCards();
 
   // ===== Onboarding modal — first-visit 2-step flow (session → music) =====
   const onboarding = document.getElementById('onboarding');
