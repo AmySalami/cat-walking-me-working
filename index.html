@@ -261,6 +261,13 @@
     --mouth-stroke:  #1a120a;
   }
 
+  /* Species visibility — only the active species' SVGs render.
+     `display: contents` keeps the existing PiP/fullscreen rules for
+     .cat-simple/.cat-detailed working without the wrapper interfering. */
+  .species-svg { display: contents; }
+  body[data-species="cat"] .species-svg[data-species="dog"],
+  body[data-species="dog"] .species-svg[data-species="cat"] { display: none; }
+
   /* Khonloy (brown mackerel tabby) */
   [data-character="khonloy"] {
     --fur-base:      #a89070;
@@ -278,6 +285,28 @@
     --eye-shine:     #faf3e3;
     --inner-ear:     #d97757;
     --nose:          #d97757;
+    --whisker:       #faf3e3;
+    --mouth-stroke:  #1a120a;
+  }
+
+  /* Merlin (white maltese dog) — dog species, fluffy white coat */
+  [data-character="merlin"] {
+    --fur-base:      #fff5e1;   /* warm cream-white */
+    --fur-shadow:    #ead8b8;   /* shadow under fluff */
+    --fur-side:      #e6d2ab;   /* slightly darker side panels */
+    --fur-side-flat: #e6d2ab;
+    --belly-light:   #fffbf0;
+    --belly-dark:    #f2e3c2;
+    --paw:           #d4b88a;   /* sandy paw pads */
+    --stripe-color:  transparent;
+    --stripe-opacity: 0;        /* no stripes — palette swatch shows solid */
+    --eye-sclera:    #1a120a;   /* round black eyes */
+    --eye-iris:      #1a120a;   /* black so dog looks button-eyed */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #e8a899;   /* soft pink inner ear */
+    --ear-floppy:    #d4b88a;   /* cinnamon tint on outer ear (like the photo) */
+    --nose:          #1a120a;   /* black button nose */
     --whisker:       #faf3e3;
     --mouth-stroke:  #1a120a;
   }
@@ -1201,7 +1230,8 @@
   /* Character picker — two cards side by side */
   .settings-characters {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* Scales to any number of characters: 1 row for 2-3 chars, wraps after */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
   }
   .settings-character {
@@ -1812,6 +1842,12 @@
     </div>
 
     <div class="cat-walker">
+      <!-- One SVG pair per SPECIES. Within a species, characters share
+           the same SVG and differ via CSS-variable palette + stripe layer.
+           CSS hides whichever species isn't currently selected. -->
+
+      <!-- ===== SPECIES: cat ===== -->
+      <div class="species-svg" data-species="cat">
       <!-- Single SVG renders every character via CSS variables.
            Stripes/markings are always in the markup but hidden via
            `--stripe-opacity: 0` when the active palette has no stripes. -->
@@ -1987,6 +2023,133 @@
           <line x1="175" y1="111" x2="150" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
         </g>
       </svg>
+      </div><!-- /species: cat -->
+
+      <!-- ===== SPECIES: dog ===== -->
+      <div class="species-svg" data-species="dog">
+      <!-- Compact dog for PiP/small widget -->
+      <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
+        <g class="cat-body">
+          <!-- Small curled tail (dogs wag, so we keep the .tail class) -->
+          <ellipse class="tail" cx="13" cy="29" rx="3" ry="4" fill="var(--fur-base)"/>
+          <!-- Back legs -->
+          <rect class="leg-bl" x="18" y="33" width="3.5" height="10" rx="1.7" fill="var(--fur-base)"/>
+          <rect class="leg-br" x="23" y="33" width="3.5" height="10" rx="1.7" fill="var(--fur-side)"/>
+          <!-- Body — fluffy oval with tuft bumps -->
+          <ellipse cx="28" cy="31" rx="15" ry="9.5" fill="var(--fur-base)"/>
+          <circle cx="19" cy="29" r="4" fill="var(--fur-base)"/>
+          <circle cx="37" cy="29" r="4" fill="var(--fur-base)"/>
+          <circle cx="28" cy="25" r="3" fill="var(--fur-base)"/>
+          <!-- Front legs -->
+          <rect class="leg-fl" x="33" y="33" width="3.5" height="10" rx="1.7" fill="var(--fur-base)"/>
+          <rect class="leg-fr" x="38" y="33" width="3.5" height="10" rx="1.7" fill="var(--fur-side)"/>
+          <!-- Head with fluffy cheek tufts -->
+          <circle cx="45" cy="24" r="8.5" fill="var(--fur-base)"/>
+          <circle cx="40" cy="29" r="3.5" fill="var(--fur-base)"/>
+          <circle cx="50" cy="29" r="3.5" fill="var(--fur-base)"/>
+          <!-- Floppy ears (hang down past the head) -->
+          <ellipse cx="38" cy="26" rx="2.8" ry="5.5" fill="var(--ear-floppy, var(--fur-side))"/>
+          <ellipse cx="52" cy="26" rx="2.8" ry="5.5" fill="var(--ear-floppy, var(--fur-side))"/>
+          <!-- Round black eyes with shine -->
+          <circle cx="42" cy="22" r="1.3" fill="var(--eye-sclera)"/>
+          <circle cx="47" cy="22" r="1.3" fill="var(--eye-sclera)"/>
+          <circle cx="42.4" cy="21.6" r="0.4" fill="var(--eye-shine)"/>
+          <circle cx="47.4" cy="21.6" r="0.4" fill="var(--eye-shine)"/>
+          <!-- Black button nose -->
+          <ellipse cx="44.5" cy="26.5" rx="1.3" ry="0.9" fill="var(--nose)"/>
+          <!-- Mouth -->
+          <path d="M 43 28 Q 44.5 29.5, 46 28" stroke="var(--mouth-stroke)" stroke-width="0.5" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+
+      <!-- Detailed dog for fullscreen -->
+      <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
+        <defs>
+          <linearGradient id="dogFur" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="var(--fur-base)"/>
+            <stop offset="100%" stop-color="var(--fur-shadow)"/>
+          </linearGradient>
+          <linearGradient id="dogBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="var(--belly-light)"/>
+            <stop offset="100%" stop-color="var(--belly-dark)"/>
+          </linearGradient>
+        </defs>
+
+        <g class="cat-body">
+          <!-- Shadow under dog -->
+          <ellipse cx="120" cy="180" rx="70" ry="6" fill="rgba(0,0,0,0.15)"/>
+
+          <!-- Small curled tail (sits above body left) -->
+          <ellipse class="tail" cx="48" cy="115" rx="14" ry="11" fill="url(#dogFur)"/>
+          <ellipse class="tail" cx="42" cy="108" rx="9" ry="7" fill="url(#dogFur)"/>
+
+          <!-- Back legs -->
+          <g class="leg-bl">
+            <rect x="68" y="142" width="16" height="38" rx="8" fill="url(#dogFur)"/>
+            <ellipse cx="76" cy="178" rx="11" ry="5" fill="var(--paw)"/>
+          </g>
+          <g class="leg-br">
+            <rect x="89" y="142" width="16" height="38" rx="8" fill="var(--fur-side)"/>
+            <ellipse cx="97" cy="178" rx="11" ry="5" fill="var(--paw)"/>
+          </g>
+
+          <!-- Body — compact + fluffy. Several puff overlays for texture. -->
+          <ellipse cx="120" cy="130" rx="68" ry="42" fill="url(#dogFur)"/>
+          <circle cx="80" cy="120" r="22" fill="url(#dogFur)"/>
+          <circle cx="160" cy="118" r="22" fill="url(#dogFur)"/>
+          <circle cx="115" cy="100" r="18" fill="url(#dogFur)"/>
+          <ellipse cx="125" cy="148" rx="42" ry="22" fill="url(#dogBelly)" opacity="0.7"/>
+
+          <!-- Front legs -->
+          <g class="leg-fl">
+            <rect x="146" y="142" width="16" height="38" rx="8" fill="url(#dogFur)"/>
+            <ellipse cx="154" cy="178" rx="11" ry="5" fill="var(--paw)"/>
+          </g>
+          <g class="leg-fr">
+            <rect x="167" y="142" width="16" height="38" rx="8" fill="var(--fur-side)"/>
+            <ellipse cx="175" cy="178" rx="11" ry="5" fill="var(--paw)"/>
+          </g>
+
+          <!-- Head — round, with cheek fluff tufts -->
+          <circle cx="185" cy="92" r="42" fill="url(#dogFur)"/>
+          <!-- Forehead tuft (fluff sticking up) -->
+          <circle cx="172" cy="55" r="11" fill="url(#dogFur)"/>
+          <circle cx="190" cy="50" r="12" fill="url(#dogFur)"/>
+          <circle cx="205" cy="55" r="10" fill="url(#dogFur)"/>
+          <!-- Cheek tufts -->
+          <circle cx="150" cy="100" r="13" fill="url(#dogFur)"/>
+          <circle cx="220" cy="100" r="13" fill="url(#dogFur)"/>
+          <circle cx="158" cy="118" r="10" fill="url(#dogFur)"/>
+          <circle cx="215" cy="118" r="10" fill="url(#dogFur)"/>
+
+          <!-- Floppy ears — long, hanging past the cheeks -->
+          <path d="M 145 75 Q 130 100, 138 130 Q 150 138, 162 120 Q 168 95, 162 78 Z"
+                fill="var(--ear-floppy, var(--fur-side))"/>
+          <path d="M 225 75 Q 240 100, 232 130 Q 220 138, 208 120 Q 202 95, 208 78 Z"
+                fill="var(--ear-floppy, var(--fur-side))"/>
+          <!-- Inner ear hint -->
+          <path d="M 152 90 Q 148 110, 152 122" stroke="var(--inner-ear)" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+          <path d="M 218 90 Q 222 110, 218 122" stroke="var(--inner-ear)" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+
+          <!-- Eyes — large round black with shine -->
+          <circle cx="170" cy="90" r="6" fill="var(--eye-sclera)"/>
+          <circle cx="202" cy="90" r="6" fill="var(--eye-sclera)"/>
+          <circle cx="171.5" cy="88" r="1.8" fill="var(--eye-shine)"/>
+          <circle cx="203.5" cy="88" r="1.8" fill="var(--eye-shine)"/>
+
+          <!-- Black button nose -->
+          <ellipse cx="186" cy="108" rx="5.5" ry="4" fill="var(--nose)"/>
+          <ellipse cx="184.5" cy="106" rx="1.2" ry="0.8" fill="var(--eye-shine)" opacity="0.6"/>
+
+          <!-- Mouth — small soft smile -->
+          <path d="M 186 113 L 186 117" stroke="var(--mouth-stroke)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M 186 117 Q 181 121, 177 118" stroke="var(--mouth-stroke)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <path d="M 186 117 Q 191 121, 195 118" stroke="var(--mouth-stroke)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <!-- Tiny tongue -->
+          <ellipse cx="186" cy="121" rx="2.5" ry="1.3" fill="#e88a8a" opacity="0.7"/>
+        </g>
+      </svg>
+      </div><!-- /species: dog -->
 
     </div>
   </div>
@@ -2154,22 +2317,31 @@
   const savedSettings = loadSettings();
 
   // ===== Character registry =====
-  // Adding a new character is a two-step change:
-  //   1. Add a `[data-character="<id>"]` palette block in the CSS character section.
-  //   2. Add an entry below.
-  // The unified SVGs + the picker render from here — no HTML duplication.
+  // To add a new character:
+  //   * Same species as an existing character (e.g. another cat or another dog):
+  //       1. Add `[data-character="<id>"] { ... }` palette block in the CSS section.
+  //       2. Add an entry below with the existing `species` value.
+  //   * New species entirely (e.g. rabbit, bird):
+  //       1. Draw a new pair of SVGs inside `.cat-walker`, wrapped in
+  //          `<div class="species-svg" data-species="<species>">`.
+  //       2. Add palette block + character entry as above with the new species.
+  // The picker renders from this array; the unified SVGs + species visibility
+  // CSS handle the rest. No new selectors needed.
   const CHARACTERS = [
-    { id: 'khuntong', name: 'Khuntong', detail: 'black cat · classic' },
-    { id: 'khonloy',  name: 'Khonloy',  detail: 'brown tabby · warm'   },
+    { id: 'khuntong', species: 'cat', name: 'Khuntong', detail: 'black cat · classic' },
+    { id: 'khonloy',  species: 'cat', name: 'Khonloy',  detail: 'brown tabby · warm'  },
+    { id: 'merlin',   species: 'dog', name: 'Merlin',   detail: 'fluffy maltese · soft' },
   ];
   const DEFAULT_CHARACTER = 'khuntong';
 
-  // Apply saved character to <body> ASAP so the correct palette is active for
-  // the first paint. Unknown saved values fall back to the default.
+  // Apply saved character to <body> ASAP so the correct palette + species
+  // are active for the first paint. Unknown saved values fall back to default.
   (() => {
     const saved = savedSettings.character;
-    const valid = CHARACTERS.some(c => c.id === saved);
-    document.body.setAttribute('data-character', valid ? saved : DEFAULT_CHARACTER);
+    const char = CHARACTERS.find(c => c.id === saved)
+              || CHARACTERS.find(c => c.id === DEFAULT_CHARACTER);
+    document.body.setAttribute('data-character', char.id);
+    document.body.setAttribute('data-species', char.species);
   })();
 
   // PiP window reference — declared at top so applyTimeOfDay can reference safely
@@ -3407,9 +3579,11 @@
   }
 
   function setCharacter(id) {
-    if (!CHARACTERS.some(c => c.id === id)) return;
-    document.body.setAttribute('data-character', id);
-    saveSettings({ character: id });
+    const char = CHARACTERS.find(c => c.id === id);
+    if (!char) return;
+    document.body.setAttribute('data-character', char.id);
+    document.body.setAttribute('data-species', char.species);
+    saveSettings({ character: char.id });
     syncCharacterCards();
   }
 
