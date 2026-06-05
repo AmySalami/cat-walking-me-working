@@ -1188,7 +1188,7 @@
     background: radial-gradient(circle at 35% 30%, #4a3424 0%, #2a1d14 70%);
   }
   .char-swatch--khonloy {
-    background: radial-gradient(circle at 35% 30%, #e2b888 0%, #b88a5c 70%);
+    background: radial-gradient(circle at 35% 30%, #a89070 0%, #6e5c44 70%);
     position: relative;
   }
   .char-swatch--khonloy::after {
@@ -1199,8 +1199,8 @@
     background: repeating-linear-gradient(45deg,
       transparent 0px,
       transparent 4px,
-      rgba(122, 74, 48, 0.5) 4px,
-      rgba(122, 74, 48, 0.5) 5px);
+      rgba(31, 20, 16, 0.75) 4px,
+      rgba(31, 20, 16, 0.75) 5px);
   }
   .char-name {
     font-family: 'Fraunces', serif;
@@ -1881,52 +1881,67 @@
       </svg>
       </div>
 
-      <!-- Character: Khonloy (tabby) — alternate -->
+      <!-- Character: Khonloy (brown mackerel tabby) — alternate -->
       <div class="cat-character" data-character="khonloy">
       <!-- Compact tabby cat for PiP -->
       <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
         <g class="cat-body">
-          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="#c89a6a" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <!-- Tail rings -->
-          <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="#7a4a30" stroke-width="0.8"/>
-          <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="#7a4a30" stroke-width="0.8"/>
-          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="#c89a6a"/>
-          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="#a37a4f"/>
-          <ellipse cx="28" cy="30" rx="16" ry="9" fill="#d4a373"/>
-          <!-- Body stripes -->
-          <path d="M 20 27 Q 22 31, 24 27" stroke="#7a4a30" stroke-width="0.9" fill="none" opacity="0.7"/>
-          <path d="M 28 26 Q 30 31, 32 26" stroke="#7a4a30" stroke-width="0.9" fill="none" opacity="0.7"/>
-          <path d="M 36 27 Q 38 31, 40 27" stroke="#7a4a30" stroke-width="0.9" fill="none" opacity="0.7"/>
-          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="#c89a6a"/>
-          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="#a37a4f"/>
-          <circle cx="44" cy="22" r="8" fill="#d4a373"/>
-          <!-- Forehead "M" stripes -->
-          <path d="M 41 17 L 43 19 L 44 17 L 45 19 L 47 17" stroke="#7a4a30" stroke-width="0.7" fill="none" opacity="0.75"/>
-          <path d="M 38 17 L 39 11 L 42 16 Z" fill="#c89a6a"/>
-          <path d="M 46 16 L 49 11 L 50 17 Z" fill="#c89a6a"/>
+          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="#8a7556" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- Tail rings (dark) -->
+          <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="#1f1410" stroke-width="1.1"/>
+          <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="#1f1410" stroke-width="1.1"/>
+          <line class="tail" x1="6" y1="18" x2="8" y2="20" stroke="#1f1410" stroke-width="1"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="#8a7556"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="#5a4a36"/>
+          <ellipse cx="28" cy="30" rx="16" ry="9" fill="#9a8060"/>
+          <!-- Body stripes (dark, prominent — mackerel pattern) -->
+          <path d="M 18 27 Q 19 31, 19 35" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
+          <path d="M 23 26 Q 24 31, 24 36" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
+          <path d="M 28 25 Q 29 31, 29 36" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
+          <path d="M 33 26 Q 34 31, 34 35" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
+          <path d="M 38 27 Q 39 31, 38 35" stroke="#1f1410" stroke-width="1.2" fill="none" opacity="0.85"/>
+          <!-- Leg stripes -->
+          <line x1="16" y1="36" x2="19" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <line x1="16" y1="39" x2="19" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <line x1="21" y1="36" x2="24" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <line x1="21" y1="39" x2="24" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="#8a7556"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="#5a4a36"/>
+          <line x1="36" y1="36" x2="39" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <line x1="36" y1="39" x2="39" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <line x1="41" y1="36" x2="44" y2="36" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <line x1="41" y1="39" x2="44" y2="39" stroke="#1f1410" stroke-width="0.8" opacity="0.8"/>
+          <circle cx="44" cy="22" r="8" fill="#9a8060"/>
+          <!-- Forehead "M" stripes (dark) -->
+          <path d="M 40 16 L 42 19 L 44 16 L 46 19 L 48 16" stroke="#1f1410" stroke-width="0.9" fill="none" opacity="0.9"/>
+          <!-- Cheek stripes -->
+          <line x1="37" y1="23" x2="40" y2="23" stroke="#1f1410" stroke-width="0.7" opacity="0.7"/>
+          <line x1="48" y1="23" x2="51" y2="23" stroke="#1f1410" stroke-width="0.7" opacity="0.7"/>
+          <path d="M 38 17 L 39 11 L 42 16 Z" fill="#5a4a36"/>
+          <path d="M 46 16 L 49 11 L 50 17 Z" fill="#5a4a36"/>
           <path d="M 39 14 L 40 12 L 41 14 Z" fill="#d97757"/>
           <path d="M 47 14 L 48 12 L 49 14 Z" fill="#d97757"/>
           <!-- Amber eyes -->
-          <circle cx="47" cy="22" r="1" fill="#e8b04c"/>
-          <circle cx="42" cy="22" r="1" fill="#e8b04c"/>
+          <circle cx="47" cy="22" r="1" fill="#c8a040"/>
+          <circle cx="42" cy="22" r="1" fill="#c8a040"/>
           <circle cx="47" cy="22" r="0.4" fill="#1a120a"/>
           <circle cx="42" cy="22" r="0.4" fill="#1a120a"/>
-          <path d="M 44 25 L 45 26 L 46 25" stroke="#7a4a30" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <path d="M 44 25 L 45 26 L 46 25" stroke="#1f1410" stroke-width="0.8" fill="none" stroke-linecap="round"/>
           <line x1="48" y1="24" x2="52" y2="23" stroke="#faf3e3" stroke-width="0.4"/>
           <line x1="48" y1="25" x2="52" y2="25" stroke="#faf3e3" stroke-width="0.4"/>
         </g>
       </svg>
 
-      <!-- Detailed tabby cat for fullscreen -->
+      <!-- Detailed brown tabby cat for fullscreen -->
       <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
         <defs>
           <linearGradient id="khonloyFur" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#e2b888"/>
-            <stop offset="100%" stop-color="#b88a5c"/>
+            <stop offset="0%" stop-color="#a89070"/>
+            <stop offset="100%" stop-color="#6e5c44"/>
           </linearGradient>
           <linearGradient id="khonloyBelly" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#f4dcb0"/>
-            <stop offset="100%" stop-color="#e2b888"/>
+            <stop offset="0%" stop-color="#c4a880"/>
+            <stop offset="100%" stop-color="#a89070"/>
           </linearGradient>
         </defs>
 
@@ -1937,69 +1952,77 @@
           <!-- Tail (curls up, animates) -->
           <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
                 stroke="url(#khonloyFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
-          <!-- Tail rings -->
-          <path class="tail" d="M 50 65 Q 52 67, 54 65" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <path class="tail" d="M 32 75 Q 36 77, 40 73" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <path class="tail" d="M 24 95 Q 28 96, 32 93" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <path class="tail" d="M 38 120 Q 42 122, 46 119" stroke="#7a4a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- Tail rings (dark, prominent) -->
+          <path class="tail" d="M 48 65 Q 51 68, 54 65" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path class="tail" d="M 32 73 Q 36 78, 41 72" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path class="tail" d="M 24 90 Q 27 94, 31 89" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path class="tail" d="M 26 108 Q 30 110, 34 105" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path class="tail" d="M 38 120 Q 43 124, 48 119" stroke="#1f1410" stroke-width="3.5" fill="none" stroke-linecap="round"/>
 
           <!-- Back legs -->
           <g class="leg-bl">
             <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#khonloyFur)"/>
-            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
-            <!-- Leg stripes -->
-            <line x1="68" y1="150" x2="81" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="68" y1="160" x2="81" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="68" y1="170" x2="81" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
+            <!-- Leg stripes (dark, prominent) -->
+            <line x1="68" y1="148" x2="81" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="68" y1="158" x2="81" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="68" y1="168" x2="81" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
           </g>
           <g class="leg-br">
-            <rect x="87" y="138" width="13" height="42" rx="6" fill="#b88a5c"/>
-            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
-            <line x1="87" y1="150" x2="100" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="87" y1="160" x2="100" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="87" y1="170" x2="100" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="#6e5c44"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
+            <line x1="87" y1="148" x2="100" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="87" y1="158" x2="100" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="87" y1="168" x2="100" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
           </g>
 
           <!-- Body main -->
           <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#khonloyFur)"/>
-          <!-- Body stripes (tabby pattern) -->
-          <path d="M 70 115 Q 74 130, 70 145" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
-          <path d="M 90 105 Q 94 130, 90 155" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
-          <path d="M 110 100 Q 114 130, 110 160" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
-          <path d="M 130 100 Q 134 130, 130 160" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.65"/>
-          <path d="M 150 105 Q 154 130, 150 155" stroke="#7a4a30" stroke-width="2.5" fill="none" opacity="0.6"/>
-          <!-- Belly accent (no stripes on belly) -->
-          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#khonloyBelly)" opacity="0.85"/>
+          <!-- Body stripes (mackerel — vertical, dark, evenly spaced) -->
+          <path d="M 65 110 Q 67 130, 65 150" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
+          <path d="M 80 100 Q 82 130, 80 158" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
+          <path d="M 95 96 Q 97 130, 95 162" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
+          <path d="M 110 95 Q 112 130, 110 163" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
+          <path d="M 125 95 Q 127 130, 125 163" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
+          <path d="M 140 96 Q 142 130, 140 162" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.85"/>
+          <path d="M 155 100 Q 157 130, 155 158" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.8"/>
+          <path d="M 170 110 Q 172 130, 170 150" stroke="#1f1410" stroke-width="3" fill="none" opacity="0.75"/>
+          <!-- Belly accent (lighter, no stripes) -->
+          <ellipse cx="130" cy="148" rx="40" ry="16" fill="url(#khonloyBelly)" opacity="0.95"/>
 
           <!-- Front legs -->
           <g class="leg-fl">
             <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#khonloyFur)"/>
-            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
-            <line x1="148" y1="150" x2="161" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="148" y1="160" x2="161" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="148" y1="170" x2="161" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
+            <line x1="148" y1="148" x2="161" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="148" y1="158" x2="161" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="148" y1="168" x2="161" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
           </g>
           <g class="leg-fr">
-            <rect x="167" y="138" width="13" height="42" rx="6" fill="#b88a5c"/>
-            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="#7a4a30"/>
-            <line x1="167" y1="150" x2="180" y2="150" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="167" y1="160" x2="180" y2="160" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
-            <line x1="167" y1="170" x2="180" y2="170" stroke="#7a4a30" stroke-width="1.5" opacity="0.6"/>
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="#6e5c44"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="#1f1410"/>
+            <line x1="167" y1="148" x2="180" y2="148" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="167" y1="158" x2="180" y2="158" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
+            <line x1="167" y1="168" x2="180" y2="168" stroke="#1f1410" stroke-width="2.2" opacity="0.85"/>
           </g>
 
           <!-- Head -->
           <circle cx="185" cy="95" r="36" fill="url(#khonloyFur)"/>
-          <!-- Forehead "M" tabby marking -->
-          <path d="M 170 72 L 175 80 L 180 72 L 185 80 L 190 72 L 195 80 L 200 72"
-                stroke="#7a4a30" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round"/>
+          <!-- Forehead "M" tabby marking (dark, prominent) -->
+          <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
+                stroke="#1f1410" stroke-width="2.6" fill="none" opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Forehead extra stripe between M and ears -->
+          <path d="M 175 65 L 185 70 L 195 65" stroke="#1f1410" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round"/>
           <!-- Cheek stripes -->
-          <path d="M 158 100 Q 162 105, 165 100" stroke="#7a4a30" stroke-width="1.8" fill="none" opacity="0.6"/>
-          <path d="M 205 100 Q 209 105, 212 100" stroke="#7a4a30" stroke-width="1.8" fill="none" opacity="0.6"/>
+          <path d="M 155 100 Q 160 104, 165 100" stroke="#1f1410" stroke-width="2.2" fill="none" opacity="0.8"/>
+          <path d="M 205 100 Q 210 104, 215 100" stroke="#1f1410" stroke-width="2.2" fill="none" opacity="0.8"/>
+          <path d="M 158 110 Q 162 113, 166 110" stroke="#1f1410" stroke-width="1.6" fill="none" opacity="0.6"/>
+          <path d="M 204 110 Q 208 113, 212 110" stroke="#1f1410" stroke-width="1.6" fill="none" opacity="0.6"/>
 
           <!-- Ears -->
-          <path d="M 162 75 L 164 48 L 178 70 Z" fill="#b88a5c"/>
-          <path d="M 195 70 L 209 48 L 211 75 Z" fill="#b88a5c"/>
-          <!-- Inner ears -->
+          <path d="M 162 75 L 164 48 L 178 70 Z" fill="#6e5c44"/>
+          <path d="M 195 70 L 209 48 L 211 75 Z" fill="#6e5c44"/>
+          <!-- Inner ears (pink) -->
           <path d="M 166 70 L 169 55 L 174 68 Z" fill="#d97757" opacity="0.85"/>
           <path d="M 199 68 L 206 55 L 209 72 Z" fill="#d97757" opacity="0.85"/>
 
@@ -2011,8 +2034,8 @@
           <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
           <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="#1a120a"/>
           <!-- Eye irises -->
-          <ellipse cx="174" cy="92" rx="3" ry="5" fill="#e8b04c"/>
-          <ellipse cx="198" cy="92" rx="3" ry="5" fill="#e8b04c"/>
+          <ellipse cx="174" cy="92" rx="3" ry="5" fill="#c8a040"/>
+          <ellipse cx="198" cy="92" rx="3" ry="5" fill="#c8a040"/>
           <!-- Pupils (thin slits) -->
           <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
           <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="#1a120a"/>
@@ -2024,9 +2047,9 @@
           <path d="M 183 105 L 187 105 L 185 108 Z" fill="#d97757"/>
 
           <!-- Mouth -->
-          <path d="M 185 108 L 185 112" stroke="#5a3a22" stroke-width="1" stroke-linecap="round"/>
-          <path d="M 185 112 Q 181 115, 178 113" stroke="#5a3a22" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-          <path d="M 185 112 Q 189 115, 192 113" stroke="#5a3a22" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 108 L 185 112" stroke="#1f1410" stroke-width="1" stroke-linecap="round"/>
+          <path d="M 185 112 Q 181 115, 178 113" stroke="#1f1410" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 112 Q 189 115, 192 113" stroke="#1f1410" stroke-width="1.2" fill="none" stroke-linecap="round"/>
 
           <!-- Whiskers -->
           <line x1="195" y1="108" x2="218" y2="105" stroke="#faf3e3" stroke-width="0.8" opacity="0.8"/>
