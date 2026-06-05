@@ -48,8 +48,10 @@ This means **don't suggest `gh pr ...` commands** in wrap-up messages — the us
 
 ```
 🚀 Ready for PR.
-  Branch: <branch-name>
+  Branch:  <branch-name>
   Commits: <count>, +<adds> / -<dels>
+  Bump:    MINOR | PATCH | MAJOR | none  (see Versioning section)
+  Next:    vX.Y.Z  (current latest tag: vA.B.C)
 
   Next (user does these on GitHub UI):
     1. Push:      git push -u origin <branch-name>
@@ -58,13 +60,13 @@ This means **don't suggest `gh pr ...` commands** in wrap-up messages — the us
     3. Paste this PR description:
        <ready-to-paste markdown body>
     4. Merge      via "Squash and merge" or "Merge pull request"
-    5. (Optional) Tag release after merge if it's MAJOR/MINOR:
+    5. Tag        (REQUIRED if Bump is MINOR/PATCH/MAJOR — skip only if "none"):
        git checkout main && git pull
        git tag -a vX.Y.Z -m "..."
-       git push --follow-tags
+       git push --tags
 ```
 
-Claude does NOT run push / PR / merge commands. The branch and a draft PR description are the deliverable.
+Claude does NOT run push / PR / merge / tag-push commands. The branch + draft PR description + suggested tag command are the deliverable.
 
 ### Branch naming
 
@@ -94,22 +96,58 @@ Types: `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `perf`
 
 Include scope when useful: `feat(music): ...`, `fix(onboarding): ...`
 
-### Versioning (SemVer)
+### Versioning (SemVer) — REQUIRED after every release-worthy merge
 
-Tag releases on `main` after merge:
+Every merged PR that contains a `feat:` or `fix:` commit MUST be tagged with a new
+SemVer version. This is non-negotiable — `main` is what GitHub Pages deploys, so
+every merge ships to users, and every shipped change deserves a version record.
 
-- **MAJOR** — breaking change (rare for this app)
-- **MINOR** — new feature
-- **PATCH** — bug fix / polish
+**Bump rules:**
 
-Always use annotated tags:
+| Commit type in PR | Bump | Example |
+|---|---|---|
+| `feat:` (new functionality) | **MINOR** — `v1.3.0 → v1.4.0` | new character, new music source, new UI affordance |
+| `fix:` (user-visible bug fix) | **PATCH** — `v1.4.0 → v1.4.1` | broken playback, layout bug, wrong color |
+| `feat:` with breaking change | **MAJOR** — `v1.4.0 → v2.0.0` | rename of settings key, removal of feature, URL format change |
+| Mixed `feat:` + `fix:` in one PR | Take the highest bump (MINOR wins over PATCH) | |
+| `refactor:` / `style:` / `perf:` (no behavior change) | No version bump required | tag only if the user wants a checkpoint |
+| `docs:` / `chore:` only | **No tag** | these don't ship behavior |
 
-```bash
-git tag -a v1.3.0 -m "Add keyboard shortcuts"
-git push --follow-tags
+**Workflow Claude must follow:**
+
+After commits land on a feature branch, Claude's wrap-up message must include the
+next version number + a `git tag` command line, ready for the user to run after
+they merge the PR:
+
+```
+🏷  Suggested next tag (run after merging the PR):
+  Bump:    MINOR (feat:)
+  Version: vX.Y.Z  (current: vA.B.C)
+
+  git tag -a vX.Y.Z <merge-commit-sha> -m "..."
+  git push --tags
 ```
 
-Current state: check with `git tag -l` and `git log --oneline --decorate -5` before suggesting next steps.
+Claude is responsible for:
+1. Reading the current tag with `git tag -l --sort=-v:refname | head -1`.
+2. Picking the correct bump based on commit types in the PR.
+3. Drafting an annotation message that summarises the user-facing change
+   (not the implementation detail). Same tone as a GitHub release note.
+
+If a release-worthy change ships without a tag, that's a process failure — flag it
+on the next session: "noticed v1.4.0 → v1.5.0 was merged but never tagged, tag it now?"
+
+**Tag annotation style** (always annotated, never lightweight):
+
+```bash
+git tag -a v1.5.0 <sha> -m "<one-line summary>
+
+<2-4 bullet highlights of what's new, written for the end user>
+
+<optional: notes on architecture changes if relevant>"
+```
+
+Current state: check `git tag -l --sort=-v:refname` and `git log --oneline --decorate -5` before suggesting next steps.
 
 ## File structure
 

@@ -84,24 +84,42 @@ fix(onboarding): correct spacing between section title and presets
 docs: establish branch + PR workflow
 ```
 
-## Versioning — SemVer
+## Versioning — SemVer (required for every behavior-changing merge)
 
 ```
 vMAJOR.MINOR.PATCH
 ```
 
-- **MAJOR** — breaking change (rare)
-- **MINOR** — new feature
-- **PATCH** — bug fix or small polish
+| Commit type in PR | Bump | Example |
+|---|---|---|
+| `feat:` — new functionality | **MINOR** — `v1.3.0 → v1.4.0` | new character, new music source |
+| `fix:` — user-visible bug fix | **PATCH** — `v1.4.0 → v1.4.1` | broken playback, layout glitch |
+| `feat:` with breaking change | **MAJOR** — `v1.4.0 → v2.0.0` | rename of localStorage key, removed feature |
+| Mixed `feat:` + `fix:` | Highest bump (MINOR) | |
+| `refactor:` / `style:` / `perf:` | No bump required | optional checkpoint tag if I want |
+| `docs:` / `chore:` only | **No tag** | these don't ship behavior |
 
-Tag a release after merging to `main`:
+**Tag every release-worthy merge.** `main` is what GitHub Pages deploys, so every merge ships to users — every shipped change deserves a version record.
 
 ```bash
-git tag -a v1.3.0 -m "Add keyboard shortcuts"
-git push --follow-tags
+# After merging the PR + git pull on main:
+git tag -a v1.4.1 -m "Fix playlist auto-skip on region-blocked tracks
+
+Some YouTube tracks region-block embed silently — the player would stall
+instead of advancing. Now the onError handler treats 101/150 as a skip
+signal in playlist mode.
+"
+git push --tags
 ```
 
-Tags become GitHub Releases automatically.
+Tags become GitHub Releases automatically — clean portfolio history.
+
+Claude must:
+- Track the current latest tag and suggest the next version number
+- Draft the annotation message (user-facing summary, not implementation detail)
+- Include the tag command in the wrap-up handoff so I can paste + run
+
+If I forget to tag a release, Claude will notice on the next session ("v1.4.0 was merged but never tagged, want to add it now?").
 
 ## PR description template
 
