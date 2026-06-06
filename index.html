@@ -2314,11 +2314,12 @@
     <div class="settings-section">
       <h3 class="settings-section-title">Music source</h3>
       <div class="source-tabs">
-        <button class="source-tab active" data-source="soundcloud">SoundCloud</button>
-        <button class="source-tab" data-source="youtube">YouTube</button>
+        <button class="source-tab" data-source="soundcloud">SoundCloud</button>
+        <button class="source-tab active" data-source="youtube">YouTube</button>
       </div>
       <input type="text" class="url-input settings-url-input" id="urlInput"
-             value="https://soundcloud.com/concernedape" placeholder="วาง URL...">
+             value="https://www.youtube.com/watch?v=UJ6RvIom9ws&amp;list=PLR1fRgBlHMylqNB3I8DSEK1dlLUMckzKF"
+             placeholder="วาง URL...">
     </div>
   </div>
 </div>
@@ -2374,13 +2375,13 @@
       <div class="onboarding-section">
         <h3 class="onboarding-section-title">Choose your soundtrack</h3>
         <div class="onboarding-music-options" role="radiogroup" aria-label="Music source">
-          <button class="onboarding-music is-selected" data-music-source="soundcloud" data-music-url="https://soundcloud.com/concernedape" role="radio" aria-checked="true">
+          <button class="onboarding-music is-selected" data-music-source="youtube" data-music-url="https://www.youtube.com/watch?v=UJ6RvIom9ws&amp;list=PLR1fRgBlHMylqNB3I8DSEK1dlLUMckzKF" role="radio" aria-checked="true">
+            <span class="music-name">Amie's list</span>
+            <span class="music-detail">handpicked focus mix · YouTube</span>
+          </button>
+          <button class="onboarding-music" data-music-source="soundcloud" data-music-url="https://soundcloud.com/concernedape" role="radio" aria-checked="false">
             <span class="music-name">Stardew Valley OST</span>
             <span class="music-detail">cozy farm vibes · SoundCloud</span>
-          </button>
-          <button class="onboarding-music" data-music-source="youtube" data-music-url="https://www.youtube.com/playlist?list=PLOzDu-MXXLliO9fBNZOQTBDddoA3FzZUo" role="radio" aria-checked="false">
-            <span class="music-name">Lofi Girl Mix</span>
-            <span class="music-detail">chill beats for focus · YouTube</span>
           </button>
           <button class="onboarding-music" data-music-source="soundcloud" data-music-url="https://soundcloud.com/chillhopdotcom" role="radio" aria-checked="false">
             <span class="music-name">Chillhop Essentials</span>
@@ -3128,7 +3129,9 @@
   });
 
   // ===== Music (hidden player, controlled by timer) =====
-  let currentSource = (savedSettings.source === 'youtube') ? 'youtube' : 'soundcloud';
+  // Default source is YouTube — page-load URL is "Amie's list". User can
+  // switch to SoundCloud (Stardew default) via the source toggle in Settings.
+  let currentSource = (savedSettings.source === 'soundcloud') ? 'soundcloud' : 'youtube';
   let scWidget = null;   // SoundCloud widget instance
   let ytPlayer = null;   // YouTube IFrame Player instance
   let ytReady = false;   // YT IFrame API script ready
@@ -3156,9 +3159,10 @@
 
   // Remember the last URL the user had for each source so switching back restores it.
   // Hydrate the active source's slot from saved settings so the URL persists too.
+  // Defaults: YouTube → Amie's list (page-load default), SoundCloud → Stardew Valley OST.
   const lastUrlBySource = {
     soundcloud: 'https://soundcloud.com/concernedape',
-    youtube: ''
+    youtube:    'https://www.youtube.com/watch?v=UJ6RvIom9ws&list=PLR1fRgBlHMylqNB3I8DSEK1dlLUMckzKF',
   };
   if (savedSettings.url) lastUrlBySource[currentSource] = savedSettings.url;
 
