@@ -887,6 +887,16 @@
   }
   body.fullscreen-mode .pip-btn svg { width: 18px; height: 18px; }
 
+  /* Settings button mirrors PiP's fullscreen size on the right edge */
+  body.fullscreen-mode .settings-btn {
+    top: 20px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    z-index: 100;
+  }
+  body.fullscreen-mode .settings-btn svg { width: 18px; height: 18px; }
+
   /* === Action bar — fullscreen layout: vertical stack (primary top, secondary bottom row) === */
   body.fullscreen-mode .action-bar {
     flex: 0 0 auto;       /* sized by its own content (no grow/shrink) */
