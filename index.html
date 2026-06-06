@@ -1767,6 +1767,108 @@
   body.time-night .tree-crown {
     opacity: 0.55;            /* dims the crown to ~brightness(0.5) effect without filter cost */
   }
+
+  /* ===================================================================
+     RESPONSIVE — phone & tablet adjustments.
+     The app's vh-anchored layout already scales well vertically; these
+     overrides handle the things that don't auto-scale: modal padding,
+     character grid density, timer font, and touch-target sizes.
+     =================================================================== */
+
+  /* Fluid timer font — never bigger than 88px, never smaller than 56px.
+     Scales with viewport width so it stays proportional on tablets/phones
+     without needing a hard breakpoint per size. */
+  body.fullscreen-mode .ab-timer {
+    font-size: clamp(56px, 14vw, 88px);
+  }
+
+  /* Touch devices: bump icon-button hit targets to 44px (Apple HIG minimum)
+     while keeping the small visual size by inflating the click area via
+     padding. We add a sibling rule rather than expanding the actual size
+     so the desktop visuals don't change. */
+  @media (hover: none) and (pointer: coarse) {
+    .collapse-btn,
+    .pip-btn,
+    .settings-btn {
+      width: 32px;
+      height: 32px;
+    }
+    .collapse-btn svg { width: 12px; height: 12px; }
+    .pip-btn svg      { width: 14px; height: 14px; }
+    .settings-btn svg { width: 16px; height: 16px; }
+  }
+
+  /* ===== Tablet & smaller (≤ 768px) ===== */
+  @media (max-width: 768px) {
+    /* Slightly tighter modal padding so content breathes without dominating */
+    .settings-panel    { padding: 28px; }
+    .onboarding-card   { padding: 28px; }
+    /* Character grid: minmax floor down so 3 cards fit per row at 768px */
+    .settings-characters { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+  }
+
+  /* ===== Phone (≤ 600px) ===== */
+  @media (max-width: 600px) {
+    /* Modals fill the screen tightly */
+    .settings-popover,
+    .onboarding         { padding: 16px; }
+    .settings-panel,
+    .onboarding-card    { padding: 22px; border-radius: 16px; }
+
+    /* Compact spacing inside settings */
+    .settings-header    { margin-bottom: 20px; }
+    .settings-section   { margin-bottom: 22px; }
+    .settings-title     { font-size: 19px; }
+
+    /* Character cards: horizontal layout — swatch left, text right.
+       Much friendlier to thumb scrolling than vertical cards. */
+    .settings-characters {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .settings-character {
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+    .char-swatch { width: 36px; height: 36px; margin-bottom: 0; flex-shrink: 0; }
+    .char-name   { font-size: 14px; }
+    .char-detail { font-size: 9px; }
+
+    /* Onboarding tweaks */
+    .onboarding-title       { font-size: 22px; }
+    .onboarding-tagline     { font-size: 11px; margin-bottom: 28px; }
+    .onboarding-step-header { margin-bottom: 22px; }
+    .onboarding-section     { margin-bottom: 22px; }
+    .onboarding-section:last-of-type { margin-bottom: 26px; }
+    .onboarding-presets,
+    .onboarding-music-options { gap: 10px; }
+    .onboarding-preset,
+    .onboarding-music         { padding: 12px 14px; }
+
+    /* Action-bar: a touch less vertical room */
+    body.fullscreen-mode .action-bar { padding: 16px 16px 12px; }
+    body.fullscreen-mode .ab-controls .btn { padding: 10px 22px; font-size: 11px; }
+  }
+
+  /* ===== Tiny phone (≤ 380px — iPhone SE width) ===== */
+  @media (max-width: 380px) {
+    .settings-panel,
+    .onboarding-card { padding: 18px; }
+    .ab-timer        { font-size: clamp(52px, 16vw, 70px) !important; }
+  }
+
+  /* ===== Landscape phones / very short viewports ===== */
+  /* Scene becomes tiny when height is small — shrink action-bar so the
+     cat doesn't get squashed into nothing. */
+  @media (max-height: 500px) and (orientation: landscape) {
+    body.fullscreen-mode .ab-timer { font-size: clamp(40px, 9vh, 64px); }
+    body.fullscreen-mode .action-bar { padding: 10px 16px 8px; }
+    body.fullscreen-mode .ab-controls { gap: 10px; }
+    body.fullscreen-mode .ab-controls .btn { padding: 8px 18px; font-size: 10px; }
+    body.fullscreen-mode .ab-mode-row { display: none; }   /* save vertical space */
+  }
 </style>
 </head>
 <body>
