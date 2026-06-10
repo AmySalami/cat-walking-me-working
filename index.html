@@ -2002,7 +2002,9 @@
           <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
           <line class="tail" x1="6" y1="18" x2="8" y2="20" stroke="var(--stripe-color)" stroke-width="1" style="opacity: var(--stripe-opacity)"/>
           <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           <ellipse cx="28" cy="30" rx="16" ry="9" fill="var(--fur-side-flat)"/>
           <!-- Body stripes (stripe layer) -->
           <path d="M 18 27 Q 19 31, 19 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
@@ -2016,17 +2018,11 @@
           <line x1="21" y1="36" x2="24" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
           <line x1="21" y1="39" x2="24" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
           <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
-          <line x1="36" y1="36" x2="39" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
-          <line x1="36" y1="39" x2="39" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
-          <line x1="41" y1="36" x2="44" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
-          <line x1="41" y1="39" x2="44" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
-          <!-- Bib layer (compact) — small chest patch + sock tips -->
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+          <!-- Bib chest patch (body layer) -->
           <ellipse cx="35" cy="33" rx="9" ry="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="16" y="39" width="3" height="4" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="21" y="39" width="3" height="4" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="36" y="39" width="3" height="4" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="41" y="39" width="3" height="4" rx="1.5" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           <circle cx="44" cy="22" r="8" fill="var(--fur-side-flat)"/>
           <!-- Forehead "M" stripes -->
           <path d="M 40 16 L 42 19 L 44 16 L 46 19 L 48 16" stroke="var(--stripe-color)" stroke-width="0.9" fill="none" style="opacity: var(--stripe-opacity)"/>
@@ -2076,13 +2072,15 @@
           <path class="tail" d="M 26 108 Q 30 110, 34 105" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
           <path class="tail" d="M 38 120 Q 43 124, 48 119" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
 
-          <!-- Back legs -->
+          <!-- Back legs (bib sock + paw tip overlays live inside the group so they swing with the leg) -->
           <g class="leg-bl">
             <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
             <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
             <line x1="68" y1="148" x2="81" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="68" y1="158" x2="81" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="68" y1="168" x2="81" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <rect x="68" y="138" width="13" height="42" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           </g>
           <g class="leg-br">
             <rect x="87" y="138" width="13" height="42" rx="6" fill="var(--fur-side)"/>
@@ -2090,6 +2088,8 @@
             <line x1="87" y1="148" x2="100" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="87" y1="158" x2="100" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="87" y1="168" x2="100" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           </g>
 
           <!-- Body main -->
@@ -2106,13 +2106,15 @@
           <!-- Belly accent (no stripes) -->
           <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.85"/>
 
-          <!-- Front legs -->
+          <!-- Front legs (bib sock + paw tip overlays live inside the group so they swing with the leg) -->
           <g class="leg-fl">
             <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#catFur)"/>
             <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
             <line x1="148" y1="148" x2="161" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="148" y1="158" x2="161" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="148" y1="168" x2="161" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <rect x="148" y="138" width="13" height="42" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           </g>
           <g class="leg-fr">
             <rect x="167" y="138" width="13" height="42" rx="6" fill="var(--fur-side)"/>
@@ -2120,20 +2122,12 @@
             <line x1="167" y1="148" x2="180" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="167" y1="158" x2="180" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="167" y1="168" x2="180" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           </g>
 
-          <!-- Bib layer — white chest patch + 4 leg socks. Hidden via
-               --bib-opacity: 0 for solid-color cats; shown for bi-color cats. -->
+          <!-- Bib chest patch — body layer (doesn't move with legs) -->
           <ellipse cx="148" cy="150" rx="34" ry="22" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="68"  y="160" width="13" height="20" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="87"  y="160" width="13" height="20" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="148" y="160" width="13" height="20" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <rect x="167" y="160" width="13" height="20" rx="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <!-- White paw tips (cover paw ellipses with bib color) -->
-          <ellipse cx="74.5"  cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <ellipse cx="93.5"  cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
-          <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
 
           <!-- Head -->
           <circle cx="185" cy="95" r="36" fill="url(#catFur)"/>
