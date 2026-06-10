@@ -324,7 +324,9 @@
     --stripe-opacity: 0;
     --mark-opacity:   0.85;
     --bib-color:     #fffbf0;
-    --bib-opacity:   1;
+    --bib-opacity:   1;          /* chin patch on the face */
+    --chest-opacity: 0;          /* hide the body chest patch — belly does the white */
+    --belly-opacity: 1;          /* white belly is fully opaque, not faded */
     --eye-sclera:    #1a120a;
     --eye-iris:      #a8c574;
     --eye-pupil:     #1a120a;
@@ -2130,8 +2132,9 @@
           <path d="M 140 96 Q 142 130, 140 162" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 155 100 Q 157 130, 155 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 170 110 Q 172 130, 170 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
-          <!-- Belly accent (no stripes) -->
-          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.85"/>
+          <!-- Belly accent (no stripes). Opacity controllable per character —
+               bi-color cats can crank it to 1 to make a pure-white belly. -->
+          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" style="opacity: var(--belly-opacity, 0.85)"/>
 
           <!-- Front legs — front-leg-fill / front-paw can be overridden per character -->
           <g class="leg-fl">
@@ -2149,8 +2152,11 @@
             <line x1="167" y1="168" x2="180" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
-          <!-- Bib chest patch — body layer (doesn't move with legs) -->
-          <ellipse cx="148" cy="150" rx="34" ry="22" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+          <!-- Bib chest patch — body layer (doesn't move with legs).
+               --chest-opacity defaults to --bib-opacity so existing bib cats stay
+               unchanged; can be set independently when a character wants the chin
+               patch without the chest patch (or vice versa). -->
+          <ellipse cx="148" cy="150" rx="34" ry="22" fill="var(--bib-color)" style="opacity: var(--chest-opacity, var(--bib-opacity))"/>
 
           <!-- Head -->
           <circle cx="185" cy="95" r="36" fill="url(#catFur)"/>
