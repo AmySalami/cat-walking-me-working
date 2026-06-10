@@ -298,27 +298,32 @@
     --mouth-stroke:  #1a120a;
   }
 
-  /* Coco (brown tabby + white) — flat-style bi-color cat:
-     - Brown body/head, no gradient
-     - Front legs WHITE, back legs same brown as body
+  /* Coco (brown tabby + white) — bi-color cat:
+     - Body / tail / back legs use the warm brown GRADIENT (depth)
+     - Head + cheeks use --head-fill flat — face reads cleaner without
+       a gradient running down the cheek
+     - Front legs WHITE, back legs match body
      - All body/leg/tail stripes hidden; only the forehead M marking stays
-     - Big white chest + chin */
+     - White belly + chin */
   [data-character="coco"] {
-    /* Flat brown — set base and shadow to the same value so the gradient is solid */
-    --fur-base:      #b89060;
-    --fur-shadow:    #b89060;
-    --fur-side:      #b89060;
-    --fur-side-flat: #b89060;
+    /* Warm brown gradient for body — base (light top) → shadow (darker bottom) */
+    --fur-base:      #c5a572;
+    --fur-shadow:    #8b6a3f;
+    --fur-side:      #8b6a3f;
+    --fur-side-flat: #8b6a3f;
+    /* Flat fill for the face — keeps the head clean even though body has depth */
+    --head-fill:     #b89060;
     --belly-light:   #fffbf0;
     --belly-dark:    #fffbf0;
-    /* Per-leg control: front white, back matches body */
+    /* Per-leg control: front white, back legs use the body gradient so they
+       blend with the body's depth */
     --front-leg-fill:     #fffbf0;
     --front-leg-fill-alt: #fffbf0;
-    --back-leg-fill:      #b89060;
-    --back-leg-fill-alt:  #b89060;
+    --back-leg-fill:      url(#catFur);
+    --back-leg-fill-alt:  var(--fur-side);
     --front-paw:          #fffbf0;
-    --back-paw:           #b89060;
-    --paw:                #b89060;
+    --back-paw:           #8b6a3f;
+    --paw:                #8b6a3f;
     /* Stripes off (body/legs/tail/cheek) — M stays via --mark-opacity */
     --stripe-color:   #5a3f24;
     --stripe-opacity: 0;
@@ -2158,8 +2163,9 @@
                patch without the chest patch (or vice versa). -->
           <ellipse cx="148" cy="150" rx="34" ry="22" fill="var(--bib-color)" style="opacity: var(--chest-opacity, var(--bib-opacity))"/>
 
-          <!-- Head -->
-          <circle cx="185" cy="95" r="36" fill="url(#catFur)"/>
+          <!-- Head — fill via --head-fill so a character can flatten the face
+               (e.g. Coco) while keeping body/tail/legs gradient -->
+          <circle cx="185" cy="95" r="36" fill="var(--head-fill, url(#catFur))"/>
           <!-- Forehead "M" tabby marking — kept separate via --mark-opacity
                so bi-color cats can show just the M without all the body stripes -->
           <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
@@ -2185,15 +2191,15 @@
           <path d="M 166 70 L 169 55 L 174 68 Z" fill="var(--inner-ear)" opacity="0.85"/>
           <path d="M 199 68 L 206 55 L 209 72 Z" fill="var(--inner-ear)" opacity="0.85"/>
           <!-- Ear tufts (longhair fluff layer — wispy tips at ear apex) -->
-          <ellipse cx="164" cy="46" rx="3" ry="6" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
-          <ellipse cx="209" cy="46" rx="3" ry="6" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <ellipse cx="164" cy="46" rx="3" ry="6" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
+          <ellipse cx="209" cy="46" rx="3" ry="6" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
 
-          <!-- Cheek fluff -->
-          <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.8"/>
-          <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.8"/>
+          <!-- Cheek fluff (face — uses --head-fill so it matches the head's flatness) -->
+          <circle cx="158" cy="105" r="6" fill="var(--head-fill, url(#catFur))" opacity="0.8"/>
+          <circle cx="212" cy="103" r="6" fill="var(--head-fill, url(#catFur))" opacity="0.8"/>
           <!-- Bigger cheek tufts (longhair fluff layer — overlay larger circles) -->
-          <circle cx="154" cy="108" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
-          <circle cx="216" cy="106" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="154" cy="108" r="10" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="216" cy="106" r="10" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Eyes -->
           <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
