@@ -270,6 +270,11 @@
   body[data-species="cat"] .species-svg[data-species="dog"],
   body[data-species="dog"] .species-svg[data-species="cat"] { display: none; }
 
+  /* Subspecies — controls opt-in flair like longhair fluff (ear tufts,
+     neck ruff, tail puff). Shorthair cats and small/large dogs use 0. */
+  :root { --fluff-opacity: 0; }
+  body[data-subspecies="longhair"] { --fluff-opacity: 1; }
+
   /* Khonloy (brown mackerel tabby) */
   [data-character="khonloy"] {
     --fur-base:      #a89070;
@@ -1329,6 +1334,20 @@
     font-weight: 600;
     color: var(--ink);
   }
+  /* Subspecies pill — small uppercase tag beside character name */
+  .char-sub {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 2px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(45, 36, 23, 0.08);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.4px;
+    color: rgba(45, 36, 23, 0.7);
+    text-transform: uppercase;
+  }
   .char-detail {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
@@ -2065,6 +2084,9 @@
           <!-- Tail (curls up, animates) -->
           <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
                 stroke="url(#catFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
+          <!-- Tail puff (longhair fluff layer — plumed tail tip + base puff) -->
+          <ellipse class="tail" cx="49" cy="64" rx="13" ry="11" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <ellipse class="tail" cx="32" cy="78" rx="11" ry="8"  fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
           <!-- Tail rings (stripe layer) -->
           <path class="tail" d="M 48 65 Q 51 68, 54 65" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
           <path class="tail" d="M 32 73 Q 36 78, 41 72" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
@@ -2134,16 +2156,28 @@
           <path d="M 158 110 Q 162 113, 166 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 204 110 Q 208 113, 212 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
 
+          <!-- Neck ruff (longhair fluff layer — fluffy collar between head and body) -->
+          <circle cx="150" cy="118" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="165" cy="125" r="9"  fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="205" cy="125" r="9"  fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="220" cy="118" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+
           <!-- Ears -->
           <path d="M 162 75 L 164 48 L 178 70 Z" fill="var(--fur-side)"/>
           <path d="M 195 70 L 209 48 L 211 75 Z" fill="var(--fur-side)"/>
           <!-- Inner ears -->
           <path d="M 166 70 L 169 55 L 174 68 Z" fill="var(--inner-ear)" opacity="0.85"/>
           <path d="M 199 68 L 206 55 L 209 72 Z" fill="var(--inner-ear)" opacity="0.85"/>
+          <!-- Ear tufts (longhair fluff layer — wispy tips at ear apex) -->
+          <ellipse cx="164" cy="46" rx="3" ry="6" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <ellipse cx="209" cy="46" rx="3" ry="6" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Cheek fluff -->
           <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.8"/>
           <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.8"/>
+          <!-- Bigger cheek tufts (longhair fluff layer — overlay larger circles) -->
+          <circle cx="154" cy="108" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="216" cy="106" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Eyes -->
           <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
@@ -2469,31 +2503,43 @@
 
   // ===== Character registry =====
   // To add a new character:
-  //   * Same species as an existing character (e.g. another cat or another dog):
+  //   * Same species + same subspecies as an existing character:
   //       1. Add `[data-character="<id>"] { ... }` palette block in the CSS section.
-  //       2. Add an entry below with the existing `species` value.
+  //       2. Add an entry below with the existing `species` + `subspecies` values.
   //   * New species entirely (e.g. rabbit, bird):
   //       1. Draw a new pair of SVGs inside `.cat-walker`, wrapped in
   //          `<div class="species-svg" data-species="<species>">`.
-  //       2. Add palette block + character entry as above with the new species.
-  // The picker renders from this array; the unified SVGs + species visibility
-  // CSS handle the rest. No new selectors needed.
+  //       2. Add palette block + character entry with the new species.
+  // `subspecies` is a finer-grained tag — currently used both for the picker
+  // label and for visual flair (e.g. cat longhair opts into a fluff layer via
+  // --fluff-opacity). Cat values: 'shorthair' | 'longhair'.
+  // Dog values: 'small' | 'large' (label-only until a large-breed SVG exists).
   const CHARACTERS = [
-    { id: 'khuntong', species: 'cat', name: 'Khuntong', detail: 'black cat · classic'      },
-    { id: 'khonloy',  species: 'cat', name: 'Khonloy',  detail: 'brown tabby · warm'       },
-    { id: 'coco',     species: 'cat', name: 'Coco',     detail: 'tabby & white · fluffy'   },
-    { id: 'merlin',   species: 'dog', name: 'Merlin',   detail: 'fluffy maltese · soft'    },
+    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', name: 'Khuntong', detail: 'black · classic'        },
+    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', name: 'Khonloy',  detail: 'brown tabby · warm'     },
+    { id: 'coco',     species: 'cat', subspecies: 'longhair',  name: 'Coco',     detail: 'tabby & white · fluffy' },
+    { id: 'merlin',   species: 'dog', subspecies: 'small',     name: 'Merlin',   detail: 'maltese · soft'         },
   ];
   const DEFAULT_CHARACTER = 'khuntong';
 
+  // Subspecies labels shown in the picker (short pill text)
+  const SUBSPECIES_LABELS = {
+    shorthair: 'shorthair',
+    longhair:  'longhair',
+    small:     'small breed',
+    large:     'large breed',
+  };
+
   // Apply saved character to <body> ASAP so the correct palette + species
-  // are active for the first paint. Unknown saved values fall back to default.
+  // + subspecies are active for the first paint. Unknown saved values fall
+  // back to default.
   (() => {
     const saved = savedSettings.character;
     const char = CHARACTERS.find(c => c.id === saved)
               || CHARACTERS.find(c => c.id === DEFAULT_CHARACTER);
     document.body.setAttribute('data-character', char.id);
     document.body.setAttribute('data-species', char.species);
+    document.body.setAttribute('data-subspecies', char.subspecies);
   })();
 
   // PiP window reference — declared at top so applyTimeOfDay can reference safely
@@ -3725,6 +3771,7 @@
       <button class="settings-character" data-character-pick="${char.id}" role="radio" aria-checked="false">
         <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
         <span class="char-name">${char.name}</span>
+        <span class="char-sub" aria-hidden="true">${SUBSPECIES_LABELS[char.subspecies] || char.subspecies}</span>
         <span class="char-detail">${char.detail}</span>
       </button>
     `).join('');
@@ -3738,6 +3785,7 @@
     if (!char) return;
     document.body.setAttribute('data-character', char.id);
     document.body.setAttribute('data-species', char.species);
+    document.body.setAttribute('data-subspecies', char.subspecies);
     saveSettings({ character: char.id });
     syncCharacterCards();
   }
