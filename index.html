@@ -2083,11 +2083,17 @@
       <!-- Detailed cat for fullscreen — palette + stripe layer driven by CSS vars -->
       <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
         <defs>
-          <linearGradient id="catFur" x1="0%" y1="0%" x2="0%" y2="100%">
+          <!-- gradientUnits="userSpaceOnUse" anchors the gradient to absolute
+               SVG coordinates instead of each shape's bounding box. With the
+               default (objectBoundingBox) every ellipse / circle / leg had
+               its own 0→100% mapping, so the body looked chunky where shapes
+               met. Now all fur shapes share the same y=50→180 gradient and
+               the depth flows smoothly from head down to paws. -->
+          <linearGradient id="catFur" x1="0" y1="50" x2="0" y2="180" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stop-color="var(--fur-base)"/>
             <stop offset="100%" stop-color="var(--fur-shadow)"/>
           </linearGradient>
-          <linearGradient id="catBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="catBelly" x1="0" y1="130" x2="0" y2="170" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stop-color="var(--belly-light)"/>
             <stop offset="100%" stop-color="var(--belly-dark)"/>
           </linearGradient>
