@@ -1147,6 +1147,15 @@
     font-size: 9px;
   }
 
+  /* Music row — mute button + status text laid out inline at the action bar's
+     base. Centred via the row's own flex so the row visually replaces the
+     previous solitary status line. */
+  .ab-music-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
   .ab-music-status {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
@@ -1158,6 +1167,43 @@
     color: var(--rose);
     opacity: 1;
     animation: pulse 2s ease-in-out infinite;
+  }
+  /* Speaker mute toggle next to the music status. The slash + waves inside
+     the inline SVG flip visibility based on the .is-muted class. */
+  .music-mute-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--moss);
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .music-mute-btn:hover { opacity: 1; }
+  .music-mute-btn.is-muted { color: rgba(45, 36, 23, 0.55); opacity: 1; }
+  .music-mute-btn .mute-slash { display: none; }
+  .music-mute-btn.is-muted .wave { display: none; }
+  .music-mute-btn.is-muted .mute-slash { display: inline; }
+  /* Tooltip — borrow the icon-button tooltip system */
+  .music-mute-btn[data-tooltip]:hover::after,
+  .music-mute-btn[data-tooltip]:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    transform: translate(-50%, -130%);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
   }
 
   /* ===================================================================
@@ -2419,7 +2465,23 @@
       <div class="ab-status" id="abStatus" aria-live="polite"></div>
     </div>
 
-    <div class="ab-music-status" id="musicStatus">♪ ready · plays with timer</div>
+    <div class="ab-music-row">
+      <button class="music-mute-btn" id="muteBtn" type="button"
+              aria-label="Mute music" data-tooltip="Mute music"
+              aria-pressed="false">
+        <!-- Speaker icon — waves shown when unmuted, slash shown when muted -->
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <!-- speaker body -->
+          <path d="M3 6 L6 6 L9 3 L9 13 L6 10 L3 10 Z" fill="currentColor"/>
+          <!-- sound waves (hidden when .is-muted) -->
+          <path class="wave wave-1" d="M10.5 6.5 Q12 8, 10.5 9.5" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path class="wave wave-2" d="M12 5 Q14.5 8, 12 11" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <!-- mute slash (shown only when .is-muted) -->
+          <line class="mute-slash" x1="10" y1="4" x2="15" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="ab-music-status" id="musicStatus">♪ ready · plays with timer</div>
+    </div>
   </div>
 </div>
 
@@ -3302,18 +3364,51 @@
   let ytPendingLoad = null; // {videoId, listId} to load once YT API is ready
   let ytEmbedSkipCount = 0; // how many embed-blocked tracks we auto-skipped in a row
   let musicReady = false;
+  // Mute state — when true, playMusic() is a no-op. Bell chimes (playTick /
+  // playStartChime / playEndChime) are NOT affected — those still ring at
+  // every transition so the user can hear their session boundaries even
+  // when background music is off.
+  let musicMuted = !!savedSettings.musicMuted;
   const urlInput = document.getElementById('urlInput');
   const hiddenPlayer = document.getElementById('hiddenPlayer');
   const musicStatus = document.getElementById('musicStatus');
+  const muteBtn = document.getElementById('muteBtn');
 
   // Apply hydrated source to URL input + toggle state before any user interaction
   if (savedSettings.url) urlInput.value = savedSettings.url;
   // Source tab UI is synced inside the IIFE below since `.source-tab` exists in the DOM at this point
 
+  // Sync mute button visual to hydrated state on first paint
+  muteBtn.classList.toggle('is-muted', musicMuted);
+  muteBtn.setAttribute('aria-pressed', musicMuted ? 'true' : 'false');
+  muteBtn.setAttribute('data-tooltip', musicMuted ? 'Unmute music' : 'Mute music');
+  muteBtn.setAttribute('aria-label', musicMuted ? 'Unmute music' : 'Mute music');
+
   function setStatus(text, playing = false) {
     musicStatus.textContent = text;
     musicStatus.classList.toggle('playing', playing);
   }
+
+  function setMusicMuted(muted) {
+    musicMuted = muted;
+    muteBtn.classList.toggle('is-muted', muted);
+    muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    muteBtn.setAttribute('data-tooltip', muted ? 'Unmute music' : 'Mute music');
+    muteBtn.setAttribute('aria-label', muted ? 'Unmute music' : 'Mute music');
+    saveSettings({ musicMuted: muted });
+    // Apply immediately based on current timer state
+    if (muted) {
+      // Pause whichever player is active
+      try { if (scWidget) scWidget.pause(); } catch (_) {}
+      try { if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); } catch (_) {}
+      setStatus('♪ muted');
+    } else if (state.running && state.mode === 'focus') {
+      // Unmuting during a running focus session — resume music
+      playMusic();
+    }
+  }
+
+  muteBtn.addEventListener('click', () => setMusicMuted(!musicMuted));
 
   function syncSourceTabs(source) {
     document.querySelectorAll('.source-tab').forEach(t => {
@@ -3708,6 +3803,13 @@
 
   function playMusic() {
     if (!musicReady) return;
+    if (musicMuted) {
+      // User muted background music — keep status visible but don't start playback.
+      // Bell chimes for session transitions are separate (Web Audio API) and
+      // continue to fire regardless of this flag.
+      setStatus('♪ muted');
+      return;
+    }
     if (currentSource === 'soundcloud' && scWidget) {
       scWidget.play();
       nudgePlayback(scWidget);
