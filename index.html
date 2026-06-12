@@ -327,7 +327,7 @@
     --bib-opacity:   1;          /* chin patch on the face */
     --chest-opacity: 0;          /* hide the body chest patch — belly does the white */
     --belly-opacity: 1;          /* white belly is fully opaque, not faded */
-    --brow-opacity:  1;          /* fierce brow wedge — gives Coco an angry look */
+    --brow-opacity:  1;          /* "focus" eye style — brow wedge + slash for the fierce look */
     --eye-sclera:    #1a120a;
     --eye-iris:      #a8c574;
     --eye-pupil:     #1a120a;
@@ -2576,11 +2576,18 @@
   // label and for visual flair (e.g. cat longhair opts into a fluff layer via
   // --fluff-opacity). Cat values: 'shorthair' | 'longhair'.
   // Dog values: 'small' | 'large' (label-only until a large-breed SVG exists).
+  //
+  // `eyeStyle` documents the eye look — flips on the corresponding face-marking
+  // CSS vars (currently --brow-opacity for 'focus' eyes; 'round' = neutral
+  // default; 'button' = dog SVG's simple black circles).
+  //   round  — neutral cat eye, full iris with shine (Khuntong, Khonloy)
+  //   focus  — half-moon fierce eye with brow wedge + slash (Coco)
+  //   button — small black round, no iris (Merlin / dog SVG)
   const CHARACTERS = [
-    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', name: 'Khuntong', detail: 'black · classic'        },
-    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', name: 'Khonloy',  detail: 'brown tabby · warm'     },
-    { id: 'coco',     species: 'cat', subspecies: 'longhair',  name: 'Coco',     detail: 'tabby & white · fluffy' },
-    { id: 'merlin',   species: 'dog', subspecies: 'small',     name: 'Merlin',   detail: 'maltese · soft'         },
+    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', detail: 'black · classic'        },
+    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  detail: 'brown tabby · warm'     },
+    { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     detail: 'tabby & white · fluffy' },
+    { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   detail: 'maltese · soft'         },
   ];
   const DEFAULT_CHARACTER = 'khuntong';
 
