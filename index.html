@@ -2188,8 +2188,6 @@
                so bi-color cats can show just the M without all the body stripes -->
           <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
                 stroke="var(--stripe-color)" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: var(--mark-opacity, var(--stripe-opacity))"/>
-          <!-- Forehead extra stripe between M and ears -->
-          <path d="M 175 65 L 185 70 L 195 65" stroke="var(--stripe-color)" stroke-width="2" fill="none" stroke-linecap="round" style="opacity: var(--mark-opacity, var(--stripe-opacity))"/>
           <!-- Cheek stripes -->
           <path d="M 155 100 Q 160 104, 165 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 205 100 Q 210 104, 215 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
@@ -2242,14 +2240,13 @@
           <path d="M 188 84 L 205 84 L 204 88 L 193 92 Z"
                 fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
           <!-- Brow slash — single diagonal stroke per brow forming a "\/"
-               pattern when both eyes are seen together. Each stroke is
-               PARALLEL to its wedge's slanted lower edge (slope 4/11) so
-               the hatching reads as a natural fur line continuing the
-               wedge's direction. Stroke width matches the forehead M (2.6)
-               so all face markings share one weight. Reuses --stripe-color
+               pattern when both eyes are seen together. Sits along the lower
+               edge of the wedge (slope 4/11), so the slash hugs the top of
+               the eye and reads like a sharp brow line right above the iris.
+               Stroke width matches the forehead M (2.6). Reuses --stripe-color
                and ties opacity to --brow-opacity. -->
-          <line x1="170" y1="86" x2="178" y2="89" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
-          <line x1="202" y1="86" x2="194" y2="89" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="170" y1="88" x2="178" y2="91" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="202" y1="88" x2="194" y2="91" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
 
           <!-- Chin patch (bib layer on face — white under nose for bi-color cats).
                Wider + deeper so it sweeps along the natural jawline and reaches
