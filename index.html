@@ -2213,12 +2213,16 @@
           <ellipse cx="164" cy="46" rx="3" ry="6" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
           <ellipse cx="209" cy="46" rx="3" ry="6" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
 
-          <!-- Cheek fluff (head extension) -->
+          <!-- Cheek fluff (head extension — small bumps for shorthair cats) -->
           <circle cx="158" cy="105" r="6" fill="url(#catFurHead)" opacity="0.8"/>
           <circle cx="212" cy="103" r="6" fill="url(#catFurHead)" opacity="0.8"/>
-          <!-- Bigger cheek tufts (longhair fluff — share head gradient) -->
-          <circle cx="154" cy="108" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
-          <circle cx="216" cy="106" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <!-- Bigger cheek tufts (longhair fluff). Pushed further out + larger
+               so the face silhouette gains real volume on the sides; second
+               tuft below adds a layered "double puff" look. -->
+          <circle cx="148" cy="106" r="13" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="222" cy="104" r="13" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="152" cy="120" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="218" cy="118" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Eyes -->
           <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
@@ -2230,11 +2234,12 @@
           <circle cx="175" cy="89" r="1" fill="var(--eye-shine)"/>
           <circle cx="199" cy="89" r="1" fill="var(--eye-shine)"/>
           <!-- Fierce brow overlays — wedge in head color covers the upper half
-               of each eye, angling DOWN toward the centre. Visible only when
-               --brow-opacity > 0 (default 0 = neutral eyes). -->
-          <path d="M 167 80 L 180 80 L 179 91 L 168 88 Z"
+               of each eye, angling DOWN toward the centre. Starts at y=84 so
+               it stays clear of the forehead M (which reaches down to y=82).
+               Visible only when --brow-opacity > 0 (default 0 = neutral eyes). -->
+          <path d="M 167 84 L 180 84 L 179 92 L 168 88 Z"
                 fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
-          <path d="M 188 80 L 205 80 L 204 88 L 193 91 Z"
+          <path d="M 188 84 L 205 84 L 204 88 L 193 92 Z"
                 fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
 
           <!-- Chin patch (bib layer on face — white under nose for bi-color cats).
