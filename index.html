@@ -2242,12 +2242,14 @@
           <path d="M 188 84 L 205 84 L 204 88 L 193 92 Z"
                 fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
           <!-- Brow slash — single diagonal stroke per brow forming a "\/"
-               pattern when both eyes are seen together. Outer-top → inner-
-               bottom on each side, so the two strokes lean toward the
-               nose-bridge and converge below — the angry-eye signature.
-               Reuses --stripe-color and ties opacity to --brow-opacity. -->
-          <line x1="170" y1="84" x2="177" y2="92" stroke="var(--stripe-color)" stroke-width="1.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
-          <line x1="202" y1="84" x2="195" y2="92" stroke="var(--stripe-color)" stroke-width="1.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+               pattern when both eyes are seen together. Each stroke is
+               PARALLEL to its wedge's slanted lower edge (slope 4/11) so
+               the hatching reads as a natural fur line continuing the
+               wedge's direction. Stroke width matches the forehead M (2.6)
+               so all face markings share one weight. Reuses --stripe-color
+               and ties opacity to --brow-opacity. -->
+          <line x1="170" y1="86" x2="178" y2="89" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="202" y1="86" x2="194" y2="89" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
 
           <!-- Chin patch (bib layer on face — white under nose for bi-color cats).
                Wider + deeper so it sweeps along the natural jawline and reaches
