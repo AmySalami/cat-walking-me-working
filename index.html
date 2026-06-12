@@ -306,24 +306,19 @@
      - All body/leg/tail stripes hidden; only the forehead M marking stays
      - White belly + chin */
   [data-character="coco"] {
-    /* Warm brown gradient for body — base (light top) → shadow (darker bottom) */
+    /* Warm brown gradient — used for head / body / tail / back legs */
     --fur-base:      #c5a572;
     --fur-shadow:    #8b6a3f;
     --fur-side:      #8b6a3f;
     --fur-side-flat: #8b6a3f;
-    /* Flat fill for the face — keeps the head clean even though body has depth */
-    --head-fill:     #b89060;
+    /* Belly: subtle white gradient (keeps depth, not flat) */
     --belly-light:   #fffbf0;
-    --belly-dark:    #fffbf0;
-    /* Per-leg control: front white, back legs use the body gradient so they
-       blend with the body's depth */
-    --front-leg-fill:     #fffbf0;
-    --front-leg-fill-alt: #fffbf0;
-    --back-leg-fill:      url(#catFur);
-    --back-leg-fill-alt:  var(--fur-side);
-    --front-paw:          #fffbf0;
-    --back-paw:           #8b6a3f;
-    --paw:                #8b6a3f;
+    --belly-dark:    #f4e5c8;
+    /* Front legs: subtle white→cream gradient (their own coordinate space) */
+    --front-leg-base:   #fffbf0;
+    --front-leg-shadow: #f4e5c8;
+    /* Head / body / tail / back legs inherit --fur-base / --fur-shadow via
+       the per-part gradient fallback chain — no override needed */
     /* Stripes off (body/legs/tail/cheek) — M stays via --mark-opacity */
     --stripe-color:   #5a3f24;
     --stripe-opacity: 0;
@@ -2040,8 +2035,8 @@
           <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
           <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
           <line class="tail" x1="6" y1="18" x2="8" y2="20" stroke="var(--stripe-color)" stroke-width="1" style="opacity: var(--stripe-opacity)"/>
-          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill, var(--fur-side-flat))"/>
-          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill-alt, var(--fur-shadow))"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--back-leg-base, var(--fur-side-flat))"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--back-leg-base, var(--fur-shadow))"/>
           <ellipse cx="28" cy="30" rx="16" ry="9" fill="var(--fur-side-flat)"/>
           <!-- Body stripes (stripe layer) -->
           <path d="M 18 27 Q 19 31, 19 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
@@ -2054,8 +2049,8 @@
           <line x1="16" y1="39" x2="19" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
           <line x1="21" y1="36" x2="24" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
           <line x1="21" y1="39" x2="24" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
-          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill, var(--fur-side-flat))"/>
-          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill-alt, var(--fur-shadow))"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--front-leg-base, var(--fur-side-flat))"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--front-leg-base, var(--fur-shadow))"/>
           <!-- Bib chest patch (body layer) -->
           <ellipse cx="35" cy="33" rx="9" ry="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           <circle cx="44" cy="22" r="8" fill="var(--fur-side-flat)"/>
@@ -2083,15 +2078,32 @@
       <!-- Detailed cat for fullscreen — palette + stripe layer driven by CSS vars -->
       <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
         <defs>
-          <!-- gradientUnits="userSpaceOnUse" anchors the gradient to absolute
-               SVG coordinates instead of each shape's bounding box. With the
-               default (objectBoundingBox) every ellipse / circle / leg had
-               its own 0→100% mapping, so the body looked chunky where shapes
-               met. Now all fur shapes share the same y=50→180 gradient and
-               the depth flows smoothly from head down to paws. -->
-          <linearGradient id="catFur" x1="0" y1="50" x2="0" y2="180" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="var(--fur-base)"/>
-            <stop offset="100%" stop-color="var(--fur-shadow)"/>
+          <!-- Per-body-part gradients. Each uses userSpaceOnUse + coordinates
+               tuned for ITS bounding box, so every shape in that body part
+               (e.g. tail stroke + tail puff) shares one continuous gradient.
+               Stops fall back to --fur-base/--fur-shadow so most characters
+               only need to set those two; per-part overrides exist when a
+               character wants a body part in a different color (e.g. Coco's
+               white front legs use a subtle cream gradient). -->
+          <linearGradient id="catFurHead" x1="0" y1="40" x2="0" y2="131" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--head-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--head-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catFurBody" x1="0" y1="92" x2="0" y2="170" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--body-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--body-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catFurTail" x1="0" y1="53" x2="0" y2="130" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--tail-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--tail-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catFurFrontLeg" x1="0" y1="138" x2="0" y2="182" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--front-leg-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--front-leg-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catFurBackLeg" x1="0" y1="138" x2="0" y2="182" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--back-leg-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--back-leg-shadow, var(--fur-shadow))"/>
           </linearGradient>
           <linearGradient id="catBelly" x1="0" y1="130" x2="0" y2="170" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stop-color="var(--belly-light)"/>
@@ -2103,12 +2115,12 @@
           <!-- Shadow under cat -->
           <ellipse cx="120" cy="180" rx="70" ry="6" fill="rgba(0,0,0,0.15)"/>
 
-          <!-- Tail (curls up, animates) -->
+          <!-- Tail (curls up, animates) — uses its own gradient so the curl flows smoothly -->
           <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
-                stroke="url(#catFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
-          <!-- Tail puff (longhair fluff layer — plumed tail tip + base puff) -->
-          <ellipse class="tail" cx="49" cy="64" rx="13" ry="11" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
-          <ellipse class="tail" cx="32" cy="78" rx="11" ry="8"  fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+                stroke="url(#catFurTail)" stroke-width="14" stroke-linecap="round" fill="none"/>
+          <!-- Tail puff (longhair fluff layer) — shares the tail gradient -->
+          <ellipse class="tail" cx="49" cy="64" rx="13" ry="11" fill="url(#catFurTail)" style="opacity: var(--fluff-opacity)"/>
+          <ellipse class="tail" cx="32" cy="78" rx="11" ry="8"  fill="url(#catFurTail)" style="opacity: var(--fluff-opacity)"/>
           <!-- Tail rings (stripe layer) -->
           <path class="tail" d="M 48 65 Q 51 68, 54 65" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
           <path class="tail" d="M 32 73 Q 36 78, 41 72" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
@@ -2116,24 +2128,24 @@
           <path class="tail" d="M 26 108 Q 30 110, 34 105" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
           <path class="tail" d="M 38 120 Q 43 124, 48 119" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
 
-          <!-- Back legs — back-leg-fill / back-paw can be overridden per character -->
+          <!-- Back legs — share the back-leg gradient so leg + paw blend smoothly -->
           <g class="leg-bl">
-            <rect x="68" y="138" width="13" height="42" rx="6" fill="var(--back-leg-fill, var(--leg-fill, url(#catFur)))"/>
-            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--back-paw, var(--paw))"/>
+            <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#catFurBackLeg)"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="url(#catFurBackLeg)"/>
             <line x1="68" y1="148" x2="81" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="68" y1="158" x2="81" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="68" y1="168" x2="81" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-br">
-            <rect x="87" y="138" width="13" height="42" rx="6" fill="var(--back-leg-fill-alt, var(--leg-fill-alt, var(--fur-side)))"/>
-            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="var(--back-paw, var(--paw))"/>
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="url(#catFurBackLeg)"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="url(#catFurBackLeg)"/>
             <line x1="87" y1="148" x2="100" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="87" y1="158" x2="100" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="87" y1="168" x2="100" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
           <!-- Body main -->
-          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#catFur)"/>
+          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#catFurBody)"/>
           <!-- Body stripes (mackerel pattern — vertical, evenly spaced) -->
           <path d="M 65 110 Q 67 130, 65 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 80 100 Q 82 130, 80 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
@@ -2147,17 +2159,17 @@
                bi-color cats can crank it to 1 to make a pure-white belly. -->
           <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" style="opacity: var(--belly-opacity, 0.85)"/>
 
-          <!-- Front legs — front-leg-fill / front-paw can be overridden per character -->
+          <!-- Front legs — share the front-leg gradient so leg + paw blend smoothly -->
           <g class="leg-fl">
-            <rect x="148" y="138" width="13" height="42" rx="6" fill="var(--front-leg-fill, var(--leg-fill, url(#catFur)))"/>
-            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--front-paw, var(--paw))"/>
+            <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#catFurFrontLeg)"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="url(#catFurFrontLeg)"/>
             <line x1="148" y1="148" x2="161" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="148" y1="158" x2="161" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="148" y1="168" x2="161" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-fr">
-            <rect x="167" y="138" width="13" height="42" rx="6" fill="var(--front-leg-fill-alt, var(--leg-fill-alt, var(--fur-side)))"/>
-            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--front-paw, var(--paw))"/>
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="url(#catFurFrontLeg)"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="url(#catFurFrontLeg)"/>
             <line x1="167" y1="148" x2="180" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="167" y1="158" x2="180" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="167" y1="168" x2="180" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
@@ -2169,9 +2181,8 @@
                patch without the chest patch (or vice versa). -->
           <ellipse cx="148" cy="150" rx="34" ry="22" fill="var(--bib-color)" style="opacity: var(--chest-opacity, var(--bib-opacity))"/>
 
-          <!-- Head — fill via --head-fill so a character can flatten the face
-               (e.g. Coco) while keeping body/tail/legs gradient -->
-          <circle cx="185" cy="95" r="36" fill="var(--head-fill, url(#catFur))"/>
+          <!-- Head — its own gradient so the face has smooth depth top-to-chin -->
+          <circle cx="185" cy="95" r="36" fill="url(#catFurHead)"/>
           <!-- Forehead "M" tabby marking — kept separate via --mark-opacity
                so bi-color cats can show just the M without all the body stripes -->
           <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
@@ -2184,11 +2195,12 @@
           <path d="M 158 110 Q 162 113, 166 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 204 110 Q 208 113, 212 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
 
-          <!-- Neck ruff (longhair fluff layer — fluffy collar between head and body) -->
-          <circle cx="150" cy="118" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
-          <circle cx="165" cy="125" r="9"  fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
-          <circle cx="205" cy="125" r="9"  fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
-          <circle cx="220" cy="118" r="10" fill="url(#catFur)" style="opacity: var(--fluff-opacity)"/>
+          <!-- Neck ruff (longhair fluff layer — shares the body gradient so it
+               looks like an extension of the body, not a floating piece) -->
+          <circle cx="150" cy="118" r="10" fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="165" cy="125" r="9"  fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="205" cy="125" r="9"  fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="220" cy="118" r="10" fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Ears -->
           <path d="M 162 75 L 164 48 L 178 70 Z" fill="var(--fur-side)"/>
@@ -2196,16 +2208,16 @@
           <!-- Inner ears -->
           <path d="M 166 70 L 169 55 L 174 68 Z" fill="var(--inner-ear)" opacity="0.85"/>
           <path d="M 199 68 L 206 55 L 209 72 Z" fill="var(--inner-ear)" opacity="0.85"/>
-          <!-- Ear tufts (longhair fluff layer — wispy tips at ear apex) -->
-          <ellipse cx="164" cy="46" rx="3" ry="6" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
-          <ellipse cx="209" cy="46" rx="3" ry="6" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
+          <!-- Ear tufts (longhair fluff — share the head gradient) -->
+          <ellipse cx="164" cy="46" rx="3" ry="6" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <ellipse cx="209" cy="46" rx="3" ry="6" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
 
-          <!-- Cheek fluff (face — uses --head-fill so it matches the head's flatness) -->
-          <circle cx="158" cy="105" r="6" fill="var(--head-fill, url(#catFur))" opacity="0.8"/>
-          <circle cx="212" cy="103" r="6" fill="var(--head-fill, url(#catFur))" opacity="0.8"/>
-          <!-- Bigger cheek tufts (longhair fluff layer — overlay larger circles) -->
-          <circle cx="154" cy="108" r="10" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
-          <circle cx="216" cy="106" r="10" fill="var(--head-fill, url(#catFur))" style="opacity: var(--fluff-opacity)"/>
+          <!-- Cheek fluff (head extension) -->
+          <circle cx="158" cy="105" r="6" fill="url(#catFurHead)" opacity="0.8"/>
+          <circle cx="212" cy="103" r="6" fill="url(#catFurHead)" opacity="0.8"/>
+          <!-- Bigger cheek tufts (longhair fluff — share head gradient) -->
+          <circle cx="154" cy="108" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="216" cy="106" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Eyes -->
           <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
