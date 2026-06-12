@@ -327,6 +327,7 @@
     --bib-opacity:   1;          /* chin patch on the face */
     --chest-opacity: 0;          /* hide the body chest patch — belly does the white */
     --belly-opacity: 1;          /* white belly is fully opaque, not faded */
+    --brow-opacity:  1;          /* fierce brow wedge — gives Coco an angry look */
     --eye-sclera:    #1a120a;
     --eye-iris:      #a8c574;
     --eye-pupil:     #1a120a;
@@ -2228,9 +2229,18 @@
           <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
           <circle cx="175" cy="89" r="1" fill="var(--eye-shine)"/>
           <circle cx="199" cy="89" r="1" fill="var(--eye-shine)"/>
+          <!-- Fierce brow overlays — wedge in head color covers the upper half
+               of each eye, angling DOWN toward the centre. Visible only when
+               --brow-opacity > 0 (default 0 = neutral eyes). -->
+          <path d="M 167 80 L 180 80 L 179 91 L 168 88 Z"
+                fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
+          <path d="M 188 80 L 205 80 L 204 88 L 193 91 Z"
+                fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
 
-          <!-- Chin patch (bib layer on face — white under nose for bi-color cats) -->
-          <ellipse cx="186" cy="118" rx="20" ry="9" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+          <!-- Chin patch (bib layer on face — white under nose for bi-color cats).
+               Wider rx so it sweeps along the jaw and covers the lower cheek
+               area, no visible head-color notch between cheek fluff and chin. -->
+          <ellipse cx="186" cy="118" rx="26" ry="10" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
 
           <!-- Nose -->
           <path d="M 183 105 L 187 105 L 185 108 Z" fill="var(--nose)"/>
