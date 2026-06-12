@@ -270,6 +270,11 @@
   body[data-species="cat"] .species-svg[data-species="dog"],
   body[data-species="dog"] .species-svg[data-species="cat"] { display: none; }
 
+  /* Subspecies — controls opt-in flair like longhair fluff (ear tufts,
+     neck ruff, tail puff). Shorthair cats and small/large dogs use 0. */
+  :root { --fluff-opacity: 0; }
+  body[data-subspecies="longhair"] { --fluff-opacity: 1; }
+
   /* Khonloy (brown mackerel tabby) */
   [data-character="khonloy"] {
     --fur-base:      #a89070;
@@ -294,29 +299,41 @@
   }
 
   /* Coco (brown tabby + white) — bi-color cat:
-     warm golden-brown back/head with stripes, white chest/belly/legs.
-     Legs use --leg-fill override (no overlay socks — kept simple to
-     avoid de-sync with the leg-swing walk animation). */
+     - Body / tail / back legs use the warm brown GRADIENT (depth)
+     - Head + cheeks use --head-fill flat — face reads cleaner without
+       a gradient running down the cheek
+     - Front legs WHITE, back legs match body
+     - All body/leg/tail stripes hidden; only the forehead M marking stays
+     - White belly + chin */
   [data-character="coco"] {
-    --fur-base:      #c5a572;   /* warm golden-brown back */
+    /* Warm brown gradient — used for head / body / tail / back legs */
+    --fur-base:      #c5a572;
     --fur-shadow:    #8b6a3f;
     --fur-side:      #8b6a3f;
     --fur-side-flat: #8b6a3f;
-    --belly-light:   #fffbf0;   /* white belly */
+    /* Belly: subtle white gradient (keeps depth, not flat) */
+    --belly-light:   #fffbf0;
     --belly-dark:    #f4e5c8;
-    --paw:           #fffbf0;   /* white paw pads (continues from white legs) */
-    --leg-fill:      #fffbf0;   /* primary legs solid white */
-    --leg-fill-alt:  #f4e5c8;   /* shaded side legs a touch off-white for depth */
-    --stripe-color:  #5a3f24;   /* mid-brown stripes — softer than Khonloy */
-    --stripe-opacity: 0.75;
-    --bib-color:     #fffbf0;   /* still used for chest patch + chin */
-    --bib-opacity:   1;
+    /* Front legs: subtle white→cream gradient (their own coordinate space) */
+    --front-leg-base:   #fffbf0;
+    --front-leg-shadow: #f4e5c8;
+    /* Head / body / tail / back legs inherit --fur-base / --fur-shadow via
+       the per-part gradient fallback chain — no override needed */
+    /* Stripes off (body/legs/tail/cheek) — M stays via --mark-opacity */
+    --stripe-color:   #5a3f24;
+    --stripe-opacity: 0;
+    --mark-opacity:   0.85;
+    --bib-color:     #fffbf0;
+    --bib-opacity:   1;          /* chin patch on the face */
+    --chest-opacity: 0;          /* hide the body chest patch — belly does the white */
+    --belly-opacity: 1;          /* white belly is fully opaque, not faded */
+    --brow-opacity:  1;          /* "focus" eye style — brow wedge + slash for the fierce look */
     --eye-sclera:    #1a120a;
-    --eye-iris:      #a8c574;   /* green to match the cat family */
+    --eye-iris:      #a8c574;
     --eye-pupil:     #1a120a;
     --eye-shine:     #faf3e3;
-    --inner-ear:     #f0a89a;   /* soft pink */
-    --nose:          #e8a59a;   /* pink */
+    --inner-ear:     #f0a89a;
+    --nose:          #e8a59a;
     --whisker:       #faf3e3;
     --mouth-stroke:  #4a3520;
   }
@@ -1329,6 +1346,20 @@
     font-weight: 600;
     color: var(--ink);
   }
+  /* Subspecies pill — small uppercase tag beside character name */
+  .char-sub {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 2px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(45, 36, 23, 0.08);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.4px;
+    color: rgba(45, 36, 23, 0.7);
+    text-transform: uppercase;
+  }
   .char-detail {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
@@ -2005,8 +2036,8 @@
           <line class="tail" x1="9" y1="27" x2="11" y2="29" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
           <line class="tail" x1="6" y1="22" x2="8" y2="24" stroke="var(--stripe-color)" stroke-width="1.1" style="opacity: var(--stripe-opacity)"/>
           <line class="tail" x1="6" y1="18" x2="8" y2="20" stroke="var(--stripe-color)" stroke-width="1" style="opacity: var(--stripe-opacity)"/>
-          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill, var(--fur-side-flat))"/>
-          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill-alt, var(--fur-shadow))"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--back-leg-base, var(--fur-side-flat))"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--back-leg-base, var(--fur-shadow))"/>
           <ellipse cx="28" cy="30" rx="16" ry="9" fill="var(--fur-side-flat)"/>
           <!-- Body stripes (stripe layer) -->
           <path d="M 18 27 Q 19 31, 19 35" stroke="var(--stripe-color)" stroke-width="1.2" fill="none" style="opacity: var(--stripe-opacity)"/>
@@ -2019,8 +2050,8 @@
           <line x1="16" y1="39" x2="19" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
           <line x1="21" y1="36" x2="24" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
           <line x1="21" y1="39" x2="24" y2="39" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
-          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill, var(--fur-side-flat))"/>
-          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--leg-fill-alt, var(--fur-shadow))"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--front-leg-base, var(--fur-side-flat))"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--front-leg-base, var(--fur-shadow))"/>
           <!-- Bib chest patch (body layer) -->
           <ellipse cx="35" cy="33" rx="9" ry="6" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
           <circle cx="44" cy="22" r="8" fill="var(--fur-side-flat)"/>
@@ -2048,11 +2079,34 @@
       <!-- Detailed cat for fullscreen — palette + stripe layer driven by CSS vars -->
       <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
         <defs>
-          <linearGradient id="catFur" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="var(--fur-base)"/>
-            <stop offset="100%" stop-color="var(--fur-shadow)"/>
+          <!-- Per-body-part gradients. Each uses userSpaceOnUse + coordinates
+               tuned for ITS bounding box, so every shape in that body part
+               (e.g. tail stroke + tail puff) shares one continuous gradient.
+               Stops fall back to --fur-base/--fur-shadow so most characters
+               only need to set those two; per-part overrides exist when a
+               character wants a body part in a different color (e.g. Coco's
+               white front legs use a subtle cream gradient). -->
+          <linearGradient id="catFurHead" x1="0" y1="40" x2="0" y2="131" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--head-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--head-shadow, var(--fur-shadow))"/>
           </linearGradient>
-          <linearGradient id="catBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="catFurBody" x1="0" y1="92" x2="0" y2="170" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--body-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--body-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catFurTail" x1="0" y1="53" x2="0" y2="130" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--tail-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--tail-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catFurFrontLeg" x1="0" y1="138" x2="0" y2="182" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--front-leg-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--front-leg-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catFurBackLeg" x1="0" y1="138" x2="0" y2="182" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="var(--back-leg-base, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--back-leg-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="catBelly" x1="0" y1="130" x2="0" y2="170" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stop-color="var(--belly-light)"/>
             <stop offset="100%" stop-color="var(--belly-dark)"/>
           </linearGradient>
@@ -2062,9 +2116,12 @@
           <!-- Shadow under cat -->
           <ellipse cx="120" cy="180" rx="70" ry="6" fill="rgba(0,0,0,0.15)"/>
 
-          <!-- Tail (curls up, animates) -->
+          <!-- Tail (curls up, animates) — uses its own gradient so the curl flows smoothly -->
           <path class="tail" d="M 55 130 Q 20 110, 30 75 Q 35 60, 50 65"
-                stroke="url(#catFur)" stroke-width="14" stroke-linecap="round" fill="none"/>
+                stroke="url(#catFurTail)" stroke-width="14" stroke-linecap="round" fill="none"/>
+          <!-- Tail puff (longhair fluff layer) — shares the tail gradient -->
+          <ellipse class="tail" cx="49" cy="64" rx="13" ry="11" fill="url(#catFurTail)" style="opacity: var(--fluff-opacity)"/>
+          <ellipse class="tail" cx="32" cy="78" rx="11" ry="8"  fill="url(#catFurTail)" style="opacity: var(--fluff-opacity)"/>
           <!-- Tail rings (stripe layer) -->
           <path class="tail" d="M 48 65 Q 51 68, 54 65" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
           <path class="tail" d="M 32 73 Q 36 78, 41 72" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
@@ -2072,24 +2129,24 @@
           <path class="tail" d="M 26 108 Q 30 110, 34 105" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
           <path class="tail" d="M 38 120 Q 43 124, 48 119" stroke="var(--stripe-color)" stroke-width="3.5" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
 
-          <!-- Back legs — fill driven by --leg-fill (defaults to fur gradient) -->
+          <!-- Back legs — share the back-leg gradient so leg + paw blend smoothly -->
           <g class="leg-bl">
-            <rect x="68" y="138" width="13" height="42" rx="6" fill="var(--leg-fill, url(#catFur))"/>
-            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#catFurBackLeg)"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="url(#catFurBackLeg)"/>
             <line x1="68" y1="148" x2="81" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="68" y1="158" x2="81" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="68" y1="168" x2="81" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-br">
-            <rect x="87" y="138" width="13" height="42" rx="6" fill="var(--leg-fill-alt, var(--fur-side))"/>
-            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="url(#catFurBackLeg)"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="url(#catFurBackLeg)"/>
             <line x1="87" y1="148" x2="100" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="87" y1="158" x2="100" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="87" y1="168" x2="100" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
           <!-- Body main -->
-          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#catFur)"/>
+          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#catFurBody)"/>
           <!-- Body stripes (mackerel pattern — vertical, evenly spaced) -->
           <path d="M 65 110 Q 67 130, 65 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 80 100 Q 82 130, 80 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
@@ -2099,40 +2156,50 @@
           <path d="M 140 96 Q 142 130, 140 162" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 155 100 Q 157 130, 155 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 170 110 Q 172 130, 170 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
-          <!-- Belly accent (no stripes) -->
-          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" opacity="0.85"/>
+          <!-- Belly accent (no stripes). Opacity controllable per character —
+               bi-color cats can crank it to 1 to make a pure-white belly. -->
+          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" style="opacity: var(--belly-opacity, 0.85)"/>
 
-          <!-- Front legs — fill driven by --leg-fill -->
+          <!-- Front legs — share the front-leg gradient so leg + paw blend smoothly -->
           <g class="leg-fl">
-            <rect x="148" y="138" width="13" height="42" rx="6" fill="var(--leg-fill, url(#catFur))"/>
-            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#catFurFrontLeg)"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="url(#catFurFrontLeg)"/>
             <line x1="148" y1="148" x2="161" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="148" y1="158" x2="161" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="148" y1="168" x2="161" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-fr">
-            <rect x="167" y="138" width="13" height="42" rx="6" fill="var(--leg-fill-alt, var(--fur-side))"/>
-            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="url(#catFurFrontLeg)"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="url(#catFurFrontLeg)"/>
             <line x1="167" y1="148" x2="180" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="167" y1="158" x2="180" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="167" y1="168" x2="180" y2="168" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
-          <!-- Bib chest patch — body layer (doesn't move with legs) -->
-          <ellipse cx="148" cy="150" rx="34" ry="22" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+          <!-- Bib chest patch — body layer (doesn't move with legs).
+               --chest-opacity defaults to --bib-opacity so existing bib cats stay
+               unchanged; can be set independently when a character wants the chin
+               patch without the chest patch (or vice versa). -->
+          <ellipse cx="148" cy="150" rx="34" ry="22" fill="var(--bib-color)" style="opacity: var(--chest-opacity, var(--bib-opacity))"/>
 
-          <!-- Head -->
-          <circle cx="185" cy="95" r="36" fill="url(#catFur)"/>
-          <!-- Forehead "M" tabby marking -->
+          <!-- Head — its own gradient so the face has smooth depth top-to-chin -->
+          <circle cx="185" cy="95" r="36" fill="url(#catFurHead)"/>
+          <!-- Forehead "M" tabby marking — kept separate via --mark-opacity
+               so bi-color cats can show just the M without all the body stripes -->
           <path d="M 168 72 L 174 82 L 180 72 L 185 82 L 190 72 L 196 82 L 202 72"
-                stroke="var(--stripe-color)" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: var(--stripe-opacity)"/>
-          <!-- Forehead extra stripe between M and ears -->
-          <path d="M 175 65 L 185 70 L 195 65" stroke="var(--stripe-color)" stroke-width="2" fill="none" stroke-linecap="round" style="opacity: var(--stripe-opacity)"/>
+                stroke="var(--stripe-color)" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: var(--mark-opacity, var(--stripe-opacity))"/>
           <!-- Cheek stripes -->
           <path d="M 155 100 Q 160 104, 165 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 205 100 Q 210 104, 215 100" stroke="var(--stripe-color)" stroke-width="2.2" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 158 110 Q 162 113, 166 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 204 110 Q 208 113, 212 110" stroke="var(--stripe-color)" stroke-width="1.6" fill="none" style="opacity: var(--stripe-opacity)"/>
+
+          <!-- Neck ruff (longhair fluff layer — shares the body gradient so it
+               looks like an extension of the body, not a floating piece) -->
+          <circle cx="150" cy="118" r="10" fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="165" cy="125" r="9"  fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="205" cy="125" r="9"  fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="220" cy="118" r="10" fill="url(#catFurBody)" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Ears -->
           <path d="M 162 75 L 164 48 L 178 70 Z" fill="var(--fur-side)"/>
@@ -2140,10 +2207,20 @@
           <!-- Inner ears -->
           <path d="M 166 70 L 169 55 L 174 68 Z" fill="var(--inner-ear)" opacity="0.85"/>
           <path d="M 199 68 L 206 55 L 209 72 Z" fill="var(--inner-ear)" opacity="0.85"/>
+          <!-- Ear tufts (longhair fluff — share the head gradient) -->
+          <ellipse cx="164" cy="46" rx="3" ry="6" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <ellipse cx="209" cy="46" rx="3" ry="6" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
 
-          <!-- Cheek fluff -->
-          <circle cx="158" cy="105" r="6" fill="url(#catFur)" opacity="0.8"/>
-          <circle cx="212" cy="103" r="6" fill="url(#catFur)" opacity="0.8"/>
+          <!-- Cheek fluff (head extension — small bumps for shorthair cats) -->
+          <circle cx="158" cy="105" r="6" fill="url(#catFurHead)" opacity="0.8"/>
+          <circle cx="212" cy="103" r="6" fill="url(#catFurHead)" opacity="0.8"/>
+          <!-- Bigger cheek tufts (longhair fluff). Pushed further out + larger
+               so the face silhouette gains real volume on the sides; second
+               tuft sits a bit higher so it doesn't poke below the chin patch. -->
+          <circle cx="148" cy="106" r="13" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="222" cy="104" r="13" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="152" cy="116" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
+          <circle cx="218" cy="114" r="10" fill="url(#catFurHead)" style="opacity: var(--fluff-opacity)"/>
 
           <!-- Eyes -->
           <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
@@ -2154,9 +2231,28 @@
           <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
           <circle cx="175" cy="89" r="1" fill="var(--eye-shine)"/>
           <circle cx="199" cy="89" r="1" fill="var(--eye-shine)"/>
+          <!-- Fierce brow overlays — wedge in head color covers the upper half
+               of each eye, angling DOWN toward the centre. Starts at y=84 so
+               it stays clear of the forehead M (which reaches down to y=82).
+               Visible only when --brow-opacity > 0 (default 0 = neutral eyes). -->
+          <path d="M 167 84 L 180 84 L 179 92 L 168 88 Z"
+                fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
+          <path d="M 188 84 L 205 84 L 204 88 L 193 92 Z"
+                fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
+          <!-- Brow slash — single diagonal stroke per brow forming a "\/"
+               pattern when both eyes are seen together. Sits along the lower
+               edge of the wedge (slope 4/11), so the slash hugs the top of
+               the eye and reads like a sharp brow line right above the iris.
+               Stroke width matches the forehead M (2.6). Reuses --stripe-color
+               and ties opacity to --brow-opacity. -->
+          <line x1="170" y1="88" x2="178" y2="91" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="202" y1="88" x2="194" y2="91" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
 
-          <!-- Chin patch (bib layer on face — white under nose for bi-color cats) -->
-          <ellipse cx="186" cy="118" rx="20" ry="9" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+          <!-- Chin patch (bib layer on face — white under nose for bi-color cats).
+               Wider + deeper so it sweeps along the natural jawline and reaches
+               the cheek fluff on both sides — no visible head-color notch
+               between cheek fluff and chin. -->
+          <ellipse cx="186" cy="117" rx="30" ry="12" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
 
           <!-- Nose -->
           <path d="M 183 105 L 187 105 L 185 108 Z" fill="var(--nose)"/>
@@ -2469,31 +2565,50 @@
 
   // ===== Character registry =====
   // To add a new character:
-  //   * Same species as an existing character (e.g. another cat or another dog):
+  //   * Same species + same subspecies as an existing character:
   //       1. Add `[data-character="<id>"] { ... }` palette block in the CSS section.
-  //       2. Add an entry below with the existing `species` value.
+  //       2. Add an entry below with the existing `species` + `subspecies` values.
   //   * New species entirely (e.g. rabbit, bird):
   //       1. Draw a new pair of SVGs inside `.cat-walker`, wrapped in
   //          `<div class="species-svg" data-species="<species>">`.
-  //       2. Add palette block + character entry as above with the new species.
-  // The picker renders from this array; the unified SVGs + species visibility
-  // CSS handle the rest. No new selectors needed.
+  //       2. Add palette block + character entry with the new species.
+  // `subspecies` is a finer-grained tag — currently used both for the picker
+  // label and for visual flair (e.g. cat longhair opts into a fluff layer via
+  // --fluff-opacity). Cat values: 'shorthair' | 'longhair'.
+  // Dog values: 'small' | 'large' (label-only until a large-breed SVG exists).
+  //
+  // `eyeStyle` documents the eye look — flips on the corresponding face-marking
+  // CSS vars (currently --brow-opacity for 'focus' eyes; 'round' = neutral
+  // default; 'button' = dog SVG's simple black circles).
+  //   round  — neutral cat eye, full iris with shine (Khuntong, Khonloy)
+  //   focus  — half-moon fierce eye with brow wedge + slash (Coco)
+  //   button — small black round, no iris (Merlin / dog SVG)
   const CHARACTERS = [
-    { id: 'khuntong', species: 'cat', name: 'Khuntong', detail: 'black cat · classic'      },
-    { id: 'khonloy',  species: 'cat', name: 'Khonloy',  detail: 'brown tabby · warm'       },
-    { id: 'coco',     species: 'cat', name: 'Coco',     detail: 'tabby & white · fluffy'   },
-    { id: 'merlin',   species: 'dog', name: 'Merlin',   detail: 'fluffy maltese · soft'    },
+    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', detail: 'black · classic'        },
+    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  detail: 'brown tabby · warm'     },
+    { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     detail: 'tabby & white · fluffy' },
+    { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   detail: 'maltese · soft'         },
   ];
   const DEFAULT_CHARACTER = 'khuntong';
 
+  // Subspecies labels shown in the picker (short pill text)
+  const SUBSPECIES_LABELS = {
+    shorthair: 'shorthair',
+    longhair:  'longhair',
+    small:     'small breed',
+    large:     'large breed',
+  };
+
   // Apply saved character to <body> ASAP so the correct palette + species
-  // are active for the first paint. Unknown saved values fall back to default.
+  // + subspecies are active for the first paint. Unknown saved values fall
+  // back to default.
   (() => {
     const saved = savedSettings.character;
     const char = CHARACTERS.find(c => c.id === saved)
               || CHARACTERS.find(c => c.id === DEFAULT_CHARACTER);
     document.body.setAttribute('data-character', char.id);
     document.body.setAttribute('data-species', char.species);
+    document.body.setAttribute('data-subspecies', char.subspecies);
   })();
 
   // PiP window reference — declared at top so applyTimeOfDay can reference safely
@@ -3725,6 +3840,7 @@
       <button class="settings-character" data-character-pick="${char.id}" role="radio" aria-checked="false">
         <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
         <span class="char-name">${char.name}</span>
+        <span class="char-sub" aria-hidden="true">${SUBSPECIES_LABELS[char.subspecies] || char.subspecies}</span>
         <span class="char-detail">${char.detail}</span>
       </button>
     `).join('');
@@ -3738,6 +3854,7 @@
     if (!char) return;
     document.body.setAttribute('data-character', char.id);
     document.body.setAttribute('data-species', char.species);
+    document.body.setAttribute('data-subspecies', char.subspecies);
     saveSettings({ character: char.id });
     syncCharacterCards();
   }
