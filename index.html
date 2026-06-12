@@ -2241,6 +2241,17 @@
                 fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
           <path d="M 188 84 L 205 84 L 204 88 L 193 92 Z"
                 fill="url(#catFurHead)" style="opacity: var(--brow-opacity, 0)"/>
+          <!-- Brow hatching — short diagonal strokes on each brow that lean
+               INWARD (toward the centre between the eyes). Reads like the
+               cross-hatched eyebrows in the reference photo: angry/fierce.
+               Reuses --stripe-color + ties opacity to --brow-opacity so the
+               whole brow layer toggles together. -->
+          <line x1="171" y1="84" x2="174" y2="91" stroke="var(--stripe-color)" stroke-width="0.9" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="174" y1="84" x2="177" y2="91" stroke="var(--stripe-color)" stroke-width="0.9" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="177" y1="84" x2="179" y2="91" stroke="var(--stripe-color)" stroke-width="0.9" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="201" y1="84" x2="198" y2="91" stroke="var(--stripe-color)" stroke-width="0.9" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="198" y1="84" x2="195" y2="91" stroke="var(--stripe-color)" stroke-width="0.9" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
+          <line x1="195" y1="84" x2="193" y2="91" stroke="var(--stripe-color)" stroke-width="0.9" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
 
           <!-- Chin patch (bib layer on face — white under nose for bi-color cats).
                Wider + deeper so it sweeps along the natural jawline and reaches
