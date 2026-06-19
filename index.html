@@ -338,13 +338,14 @@
     --mouth-stroke:  #4a3520;
   }
 
-  /* Bubble (golden cream longhair) — plush British-style cat:
+  /* Bubble (golden cream shorthair) — plush British-style cat:
      - Soft warm-grey → cream gradient (darker top, lighter bottom — like
        the photo's shaded coat)
-     - White belly + chin
+     - White belly + chin with FEATHERED edges (--soft-edge-blur) so the
+       cream fades organically into the body, not as a hard ellipse
      - Solid coat (no body stripes, no forehead M)
      - Round yellow/amber eyes
-     - Longhair fluff layer (cheek tufts, ear tufts, etc.) via subspecies */
+     - Shorthair (sleek, no fluff layer) */
   [data-character="bubble"] {
     /* Reversed-tone gradient: top is the warm taupe, bottom fades to cream */
     --fur-base:      #9a8870;   /* top — warm grey-brown */
@@ -363,6 +364,9 @@
     --bib-opacity:   1;
     --chest-opacity: 0;          /* belly gradient does the white — no chest patch */
     --belly-opacity: 1;
+    /* Soft, feathered edges on the chin patch + belly accent so the cream
+       fades into the body rather than reading as hard ellipses */
+    --soft-edge-blur: 2px;
     /* Round yellow eyes */
     --eye-sclera:    #1a120a;
     --eye-iris:      #e8c14c;    /* golden yellow */
@@ -2244,8 +2248,11 @@
           <path d="M 155 100 Q 157 130, 155 158" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <path d="M 170 110 Q 172 130, 170 150" stroke="var(--stripe-color)" stroke-width="3" fill="none" style="opacity: var(--stripe-opacity)"/>
           <!-- Belly accent (no stripes). Opacity controllable per character —
-               bi-color cats can crank it to 1 to make a pure-white belly. -->
-          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)" style="opacity: var(--belly-opacity, 0.85)"/>
+               bi-color cats can crank it to 1 to make a pure-white belly.
+               --soft-edge-blur (default 0) feathers the boundary; useful for
+               shaded coats where the belly fades organically into the body. -->
+          <ellipse cx="130" cy="148" rx="40" ry="18" fill="url(#catBelly)"
+                   style="opacity: var(--belly-opacity, 0.85); filter: blur(var(--soft-edge-blur, 0px))"/>
 
           <!-- Front legs — share the front-leg gradient so leg + paw blend smoothly -->
           <g class="leg-fl">
@@ -2336,10 +2343,11 @@
           <line x1="202" y1="88" x2="194" y2="91" stroke="var(--stripe-color)" stroke-width="2.6" stroke-linecap="round" style="opacity: var(--brow-opacity, 0)"/>
 
           <!-- Chin patch (bib layer on face — white under nose for bi-color cats).
-               Wider + deeper so it sweeps along the natural jawline and reaches
-               the cheek fluff on both sides — no visible head-color notch
-               between cheek fluff and chin. -->
-          <ellipse cx="186" cy="117" rx="30" ry="12" fill="var(--bib-color)" style="opacity: var(--bib-opacity)"/>
+               Wider + deeper so it sweeps along the natural jawline.
+               --soft-edge-blur (default 0) softens the boundary for shaded
+               cats; sharp edge for the rest. -->
+          <ellipse cx="186" cy="117" rx="30" ry="12" fill="var(--bib-color)"
+                   style="opacity: var(--bib-opacity); filter: blur(var(--soft-edge-blur, 0px))"/>
 
           <!-- Nose -->
           <path d="M 183 105 L 187 105 L 185 108 Z" fill="var(--nose)"/>
@@ -2690,7 +2698,7 @@
     { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', detail: 'black · classic'        },
     { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  detail: 'brown tabby · warm'     },
     { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     detail: 'tabby & white · fluffy' },
-    { id: 'bubble',   species: 'cat', subspecies: 'longhair',  eyeStyle: 'round',  name: 'Bubble',   detail: 'golden cream · plush'   },
+    { id: 'bubble',   species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Bubble',   detail: 'golden cream · plush'   },
     { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   detail: 'maltese · soft'         },
   ];
   const DEFAULT_CHARACTER = 'khuntong';
