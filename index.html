@@ -1379,45 +1379,47 @@
     margin: 0 0 14px 0;
   }
 
-  /* Character picker — two cards side by side */
+  /* ===== Character picker — Avatar Row (Option A) =====
+     A single row of colour swatches; hovering one reveals a rich tooltip
+     with name + style + owner + short bio. Below the row, a live label
+     shows whoever is currently selected. */
   .settings-characters {
-    display: grid;
-    /* Scales to any number of characters: 1 row for 2-3 chars, wraps after */
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
+    display: flex;
+    gap: 14px;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    /* Tooltips need to escape the row without being clipped */
+    overflow: visible;
   }
   .settings-character {
-    background: rgba(45, 36, 23, 0.04);
-    border: 1.5px solid transparent;
-    border-radius: 12px;
-    padding: 14px;
+    background: none;
+    border: none;
+    padding: 0;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 6px;
-    text-align: left;
-    transition: background 0.15s, border-color 0.15s;
+    flex: 1;
+    position: relative;
+    transition: transform 0.15s;
     font-family: inherit;
+    color: inherit;
   }
-  .settings-character:hover { background: rgba(45, 36, 23, 0.08); }
-  .settings-character.is-selected {
-    background: rgba(45, 36, 23, 0.06);
-    border-color: var(--ink);
-  }
+  .settings-character:hover { transform: translateY(-2px); }
+  .settings-character:focus { outline: none; }
+
+  /* Swatch — same fur-gradient + stripe recipe as before */
   .char-swatch {
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    margin-bottom: 4px;
     box-shadow: inset 0 -2px 6px rgba(0,0,0,0.18);
-  }
-  /* Swatch uses the character palette via data-character on the swatch.
-     The diagonal-stripe overlay is always present, but `--stripe-opacity`
-     hides it for characters that don't have stripes. */
-  .char-swatch {
     position: relative;
     background: radial-gradient(circle at 35% 30%, var(--fur-base) 0%, var(--fur-shadow) 70%);
+    transition: box-shadow 0.15s;
+    flex-shrink: 0;
   }
   .char-swatch::after {
     content: '';
@@ -1425,37 +1427,129 @@
     inset: 0;
     border-radius: 50%;
     background: repeating-linear-gradient(45deg,
-      transparent 0px,
-      transparent 4px,
-      var(--stripe-color) 4px,
-      var(--stripe-color) 5px);
+      transparent 0px, transparent 4px,
+      var(--stripe-color) 4px, var(--stripe-color) 5px);
     opacity: var(--stripe-opacity);
   }
-  .char-name {
-    font-family: 'Fraunces', serif;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ink);
+  /* Selected ring around swatch — uses cream as the inner gap so it reads
+     as a halo separate from the swatch edge */
+  .settings-character.is-selected .char-swatch {
+    box-shadow:
+      inset 0 -2px 6px rgba(0,0,0,0.18),
+      0 0 0 2px var(--cream-soft, var(--cream)),
+      0 0 0 3.5px var(--ink);
   }
-  /* Subspecies pill — small uppercase tag beside character name */
-  .char-sub {
-    display: inline-block;
-    align-self: flex-start;
-    margin-top: 2px;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: rgba(45, 36, 23, 0.08);
+
+  /* Small "active" dot underneath the selected swatch */
+  .char-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--ink);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .settings-character.is-selected .char-dot { opacity: 1; }
+
+  /* Tooltip — ink-coloured bg (same as primary text), cream type.
+     Reveals on hover or keyboard focus. */
+  .char-tooltip {
+    position: absolute;
+    bottom: calc(100% + 14px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: 200px;
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 10;
+  }
+  .char-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--ink);
+  }
+  .settings-character:hover .char-tooltip,
+  .settings-character:focus-visible .char-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  /* Edge-aware: nudge first/last tooltip so they don't overflow the popover */
+  .settings-character:first-child .char-tooltip {
+    left: 0;
+    transform: translateX(0) translateY(4px);
+  }
+  .settings-character:first-child:hover .char-tooltip,
+  .settings-character:first-child:focus-visible .char-tooltip {
+    transform: translateX(0) translateY(0);
+  }
+  .settings-character:first-child .char-tooltip::after { left: 18px; transform: none; }
+  .settings-character:last-child .char-tooltip {
+    left: auto; right: 0;
+    transform: translateX(0) translateY(4px);
+  }
+  .settings-character:last-child:hover .char-tooltip,
+  .settings-character:last-child:focus-visible .char-tooltip {
+    transform: translateX(0) translateY(0);
+  }
+  .settings-character:last-child .char-tooltip::after { left: auto; right: 18px; transform: none; }
+
+  .char-tt-name {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--cream);
+    margin-bottom: 2px;
+  }
+  .char-tt-meta {
     font-family: 'DM Mono', monospace;
     font-size: 9px;
-    letter-spacing: 0.4px;
-    color: rgba(45, 36, 23, 0.7);
     text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: rgba(245, 236, 217, 0.65);
+    margin-bottom: 8px;
   }
-  .char-detail {
+  .char-tt-bio {
+    font-family: 'Fraunces', serif;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: rgba(245, 236, 217, 0.92);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  /* Always-visible "currently selected" label below the row */
+  .char-selected-meta {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(45, 36, 23, 0.08);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .char-selected-name {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .char-selected-detail {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
     color: rgba(45, 36, 23, 0.6);
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
+    text-transform: lowercase;
   }
 
   /* Session preset dropdown — full-width inside popover */
@@ -1969,8 +2063,8 @@
     /* Slightly tighter modal padding so content breathes without dominating */
     .settings-panel    { padding: 28px; }
     .onboarding-card   { padding: 28px; }
-    /* Character grid: minmax floor down so 3 cards fit per row at 768px */
-    .settings-characters { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+    /* Avatar row already fits — just tighten the gap a touch on tablets */
+    .settings-characters { gap: 10px; }
   }
 
   /* ===== Phone (≤ 600px) ===== */
@@ -1986,21 +2080,13 @@
     .settings-section   { margin-bottom: 22px; }
     .settings-title     { font-size: 19px; }
 
-    /* Character cards: horizontal layout — swatch left, text right.
-       Much friendlier to thumb scrolling than vertical cards. */
-    .settings-characters {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    .settings-character {
-      flex-direction: row;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-    }
-    .char-swatch { width: 36px; height: 36px; margin-bottom: 0; flex-shrink: 0; }
-    .char-name   { font-size: 14px; }
-    .char-detail { font-size: 9px; }
+    /* Avatar row stays horizontal but tightens up; tooltips narrow a touch
+       so they don't bleed past the modal edge on narrow phones */
+    .settings-characters  { gap: 8px; }
+    .char-swatch          { width: 34px; height: 34px; }
+    .char-tooltip         { width: 170px; padding: 10px 12px; }
+    .char-tt-bio          { font-size: 11px; }
+    .char-selected-name   { font-size: 15px; }
 
     /* Onboarding tweaks */
     .onboarding-title       { font-size: 22px; }
@@ -2546,10 +2632,15 @@
       </button>
     </div>
 
-    <!-- Character — populated from the JS CHARACTERS registry -->
+    <!-- Character — populated from the JS CHARACTERS registry.
+         Avatar Row layout: swatch row + selected-meta line below. -->
     <div class="settings-section">
       <h3 class="settings-section-title">Choose your companion</h3>
       <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
+      <div class="char-selected-meta">
+        <span class="char-selected-name"   id="charSelectedName">—</span>
+        <span class="char-selected-detail" id="charSelectedDetail">—</span>
+      </div>
     </div>
 
     <!-- Session -->
@@ -2694,22 +2785,23 @@
   //   round  — neutral cat eye, full iris with shine (Khuntong, Khonloy)
   //   focus  — half-moon fierce eye with brow wedge + slash (Coco)
   //   button — small black round, no iris (Merlin / dog SVG)
+  // Each entry powers the picker, the body palette, and the hover tooltip.
+  // `owner` + `bio` show up only in the tooltip — keep bios short, in English.
   const CHARACTERS = [
-    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', detail: 'black · classic'        },
-    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  detail: 'brown tabby · warm'     },
-    { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     detail: 'tabby & white · fluffy' },
-    { id: 'bubble',   species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Bubble',   detail: 'golden cream · plush'   },
-    { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   detail: 'maltese · soft'         },
+    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', owner: 'Amie', bio: "A tiny mischievous black cat — Amie's pocket-sized troublemaker." },
+    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  owner: 'Amie', bio: "A wary brown tabby who guards his quiet — Amie's private soul." },
+    { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     owner: 'Maya', bio: "A fluffy little loner who keeps to himself — Maya's quiet companion." },
+    { id: 'bubble',   species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Bubble',   owner: 'Muay', bio: "A plush little princess in golden cream — Muay's chubby darling." },
+    { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   owner: 'J',    bio: "A joyful little pup who's always smiling — J's pocket of sunshine." },
   ];
-  const DEFAULT_CHARACTER = 'khuntong';
 
-  // Subspecies labels shown in the picker (short pill text)
-  const SUBSPECIES_LABELS = {
-    shorthair: 'shorthair',
-    longhair:  'longhair',
-    small:     'small breed',
-    large:     'large breed',
-  };
+  // Capitalises subspecies + species into a one-line label, e.g.
+  // {subspecies: 'shorthair', species: 'cat'}  →  "Shorthair cat"
+  function styleLabel(char) {
+    const sub = (char.subspecies || '').replace(/^./, c => c.toUpperCase());
+    return `${sub} ${char.species}`.trim();
+  }
+  const DEFAULT_CHARACTER = 'khuntong';
 
   // Apply saved character to <body> ASAP so the correct palette + species
   // + subspecies are active for the first paint. Unknown saved values fall
@@ -3984,18 +4076,35 @@
     if (e.key === 'Escape' && !settingsPopover.hidden) closeSettings();
   });
 
-  // ===== Character switcher (rendered from the CHARACTERS registry) =====
+  // ===== Character switcher — Avatar Row layout (Option A) =====
+  // A single row of swatches; the selected one shows its name + style/owner
+  // in the meta line below the row, and every swatch reveals a tooltip on
+  // hover/focus with the full character bio.
   const charactersContainer = settingsPopover.querySelector('.settings-characters');
+  const charSelectedName    = document.getElementById('charSelectedName');
+  const charSelectedDetail  = document.getElementById('charSelectedDetail');
 
   function renderCharacterPicker() {
-    charactersContainer.innerHTML = CHARACTERS.map(char => `
-      <button class="settings-character" data-character-pick="${char.id}" role="radio" aria-checked="false">
-        <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
-        <span class="char-name">${char.name}</span>
-        <span class="char-sub" aria-hidden="true">${SUBSPECIES_LABELS[char.subspecies] || char.subspecies}</span>
-        <span class="char-detail">${char.detail}</span>
-      </button>
-    `).join('');
+    charactersContainer.innerHTML = CHARACTERS.map(char => {
+      const style = styleLabel(char);
+      // aria-label gives screen readers the same information the tooltip
+      // shows sighted users — name, style, owner.
+      const ariaLabel = `${char.name} — ${style} · ${char.owner}`;
+      return `
+        <button class="settings-character"
+                data-character-pick="${char.id}"
+                role="radio" aria-checked="false"
+                aria-label="${ariaLabel}">
+          <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
+          <span class="char-dot" aria-hidden="true"></span>
+          <div class="char-tooltip" role="tooltip" aria-hidden="true">
+            <div class="char-tt-name">${char.name}</div>
+            <div class="char-tt-meta">${style} · ${char.owner}</div>
+            <p class="char-tt-bio">${char.bio}</p>
+          </div>
+        </button>
+      `;
+    }).join('');
     charactersContainer.querySelectorAll('.settings-character').forEach(btn => {
       btn.addEventListener('click', () => setCharacter(btn.dataset.characterPick));
     });
@@ -4018,6 +4127,12 @@
       btn.classList.toggle('is-selected', isActive);
       btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
     });
+    // Also refresh the meta line beneath the row
+    const activeChar = CHARACTERS.find(c => c.id === active) || CHARACTERS[0];
+    if (activeChar && charSelectedName && charSelectedDetail) {
+      charSelectedName.textContent   = activeChar.name;
+      charSelectedDetail.textContent = `${styleLabel(activeChar).toLowerCase()} · ${activeChar.owner}`;
+    }
   }
 
   renderCharacterPicker();
