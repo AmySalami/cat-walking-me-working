@@ -338,6 +338,42 @@
     --mouth-stroke:  #4a3520;
   }
 
+  /* Bubble (golden cream longhair) — plush British-style cat:
+     - Soft warm-grey → cream gradient (darker top, lighter bottom — like
+       the photo's shaded coat)
+     - White belly + chin
+     - Solid coat (no body stripes, no forehead M)
+     - Round yellow/amber eyes
+     - Longhair fluff layer (cheek tufts, ear tufts, etc.) via subspecies */
+  [data-character="bubble"] {
+    /* Reversed-tone gradient: top is the warm taupe, bottom fades to cream */
+    --fur-base:      #9a8870;   /* top — warm grey-brown */
+    --fur-shadow:    #d8c5a0;   /* bottom — light cream */
+    --fur-side:      #b8a282;   /* mid-tone for ears + small flat parts */
+    --fur-side-flat: #b8a282;
+    /* Soft white belly with the slightest cream tint at the bottom */
+    --belly-light:   #fffbf0;
+    --belly-dark:    #faf0d8;
+    /* Solid coat — kill stripes AND the forehead M */
+    --stripe-color:  #6a5a40;
+    --stripe-opacity: 0;
+    --mark-opacity:  0;
+    /* Chin patch white (matches the photo's lighter lower face) */
+    --bib-color:     #fffbf0;
+    --bib-opacity:   1;
+    --chest-opacity: 0;          /* belly gradient does the white — no chest patch */
+    --belly-opacity: 1;
+    /* Round yellow eyes */
+    --eye-sclera:    #1a120a;
+    --eye-iris:      #e8c14c;    /* golden yellow */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #f0a89a;    /* soft pink */
+    --nose:          #e8a59a;    /* pink */
+    --whisker:       #faf3e3;
+    --mouth-stroke:  #4a3520;
+  }
+
   /* Merlin (white maltese dog) — dog species, fluffy white coat */
   [data-character="merlin"] {
     --fur-base:      #fff5e1;   /* warm cream-white */
@@ -2654,6 +2690,7 @@
     { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', detail: 'black · classic'        },
     { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  detail: 'brown tabby · warm'     },
     { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     detail: 'tabby & white · fluffy' },
+    { id: 'bubble',   species: 'cat', subspecies: 'longhair',  eyeStyle: 'round',  name: 'Bubble',   detail: 'golden cream · plush'   },
     { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   detail: 'maltese · soft'         },
   ];
   const DEFAULT_CHARACTER = 'khuntong';
