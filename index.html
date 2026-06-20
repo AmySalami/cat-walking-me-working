@@ -1471,7 +1471,12 @@
   /* Tooltip — ink-coloured bg (same as primary text), cream type.
      Reveals on hover or keyboard focus. Renders BELOW the swatch; high
      z-index keeps it above the Session-rhythm / Music-source sections
-     it momentarily overlays during hover. */
+     it momentarily overlays during hover.
+
+     The arrow lives on .settings-character::after (the BUTTON), not on
+     the tooltip body — so it's always anchored at the swatch's centre
+     regardless of where the tooltip body shifts horizontally to dodge
+     the popover edges. */
   .char-tooltip {
     position: absolute;
     top: calc(100% + 14px);
@@ -1489,22 +1494,30 @@
     transition: opacity 0.18s ease, transform 0.18s ease;
     z-index: 100;
   }
-  /* Arrow points UP at the swatch */
-  .char-tooltip::after {
+  /* Arrow — owned by the BUTTON so it sits at button-centre = swatch-centre */
+  .settings-character::after {
     content: '';
     position: absolute;
-    bottom: 100%;
+    top: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
     border-bottom-color: var(--ink);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    z-index: 101;
   }
   .settings-character:hover .char-tooltip,
   .settings-character:focus-visible .char-tooltip {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
-  /* Edge-aware: nudge first/last tooltip so they don't overflow the popover */
+  .settings-character:hover::after,
+  .settings-character:focus-visible::after { opacity: 1; }
+
+  /* Edge-aware: shift only the tooltip BODY for first/last items so it
+     stays inside the popover. The arrow stays put under the swatch. */
   .settings-character:first-child .char-tooltip {
     left: 0;
     transform: translateX(0) translateY(-4px);
@@ -1513,7 +1526,6 @@
   .settings-character:first-child:focus-visible .char-tooltip {
     transform: translateX(0) translateY(0);
   }
-  .settings-character:first-child .char-tooltip::after { left: 18px; transform: none; }
   .settings-character:last-child .char-tooltip {
     left: auto; right: 0;
     transform: translateX(0) translateY(-4px);
@@ -1522,7 +1534,6 @@
   .settings-character:last-child:focus-visible .char-tooltip {
     transform: translateX(0) translateY(0);
   }
-  .settings-character:last-child .char-tooltip::after { left: auto; right: 18px; transform: none; }
 
   .char-tt-name {
     font-family: 'Fraunces', serif;
