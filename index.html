@@ -1558,18 +1558,17 @@
      Tooltip on swatch hover still shows OTHER characters' bios. */
   .char-preview-card {
     display: grid;
-    grid-template-columns: 160px 140px 1fr;
+    grid-template-columns: 120px 140px 1fr;
     align-items: center;
     gap: 16px;
     margin-bottom: 20px;
   }
-  /* Preview thumb — wide landscape card holding the SVG portrait of
-     the currently selected companion. Wider than tall so the cat/dog
-     SVG (which is itself landscape) reads at a better aspect ratio.
-     Bg uses the same neutral grey as dropdowns. */
+  /* Preview thumb — square card holding the SVG portrait of the
+     currently selected companion. Bg uses the same neutral grey as
+     dropdowns so the thumb rhymes with the rest of the panel. */
   .char-preview-thumb {
-    width: 160px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     border-radius: 14px;
     background: var(--dropdown-bg);
     display: flex;
