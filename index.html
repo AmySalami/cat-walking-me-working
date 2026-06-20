@@ -4162,9 +4162,18 @@
   settingsPopover.addEventListener('click', (e) => {
     if (e.target === settingsPopover) closeSettings();
   });
-  // Escape to dismiss (only if popover is open AND onboarding isn't capturing focus)
+  // Esc toggles the settings popover: opens it when closed, closes when
+  // open. The onboarding modal has its own Esc handler — defer to it
+  // while onboarding is showing so the global shortcut doesn't fight
+  // the welcome flow.
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !settingsPopover.hidden) closeSettings();
+    if (e.key !== 'Escape') return;
+    if (!onboarding.hidden) return; // onboarding handles its own Esc
+    if (settingsPopover.hidden) {
+      openSettings();
+    } else {
+      closeSettings();
+    }
   });
 
   // ===== Character switcher — Avatar Row layout (Option A) =====
