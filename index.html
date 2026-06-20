@@ -3491,6 +3491,14 @@
       pipWindow.document.body.classList.add('pip-mode');
       document.body.classList.remove('fullscreen-mode');
 
+      // Copy the active character's data-* attrs to the PiP body so
+      // per-character CSS variables (fur, eye, stripe, etc.) resolve
+      // correctly. Without this, the PiP body has no data-character
+      // attribute and the cat falls back to the default palette.
+      const activeId = document.body.getAttribute('data-character') || DEFAULT_CHARACTER;
+      const activeChar = CHARACTERS.find(c => c.id === activeId) || CHARACTERS[0];
+      applyCharacterToBody(pipWindow.document.body, activeChar);
+
       // Sync current time-of-day class to PiP window
       applyTimeOfDay();
 
@@ -4177,12 +4185,21 @@
     });
   }
 
+  // Apply a character's data-* attrs to a target body. Used for both
+  // the main document body and the PiP window's body so the per-
+  // character CSS variables resolve identically in both places.
+  function applyCharacterToBody(targetBody, char) {
+    targetBody.setAttribute('data-character',  char.id);
+    targetBody.setAttribute('data-species',    char.species);
+    targetBody.setAttribute('data-subspecies', char.subspecies);
+  }
+
   function setCharacter(id) {
     const char = CHARACTERS.find(c => c.id === id);
     if (!char) return;
-    document.body.setAttribute('data-character', char.id);
-    document.body.setAttribute('data-species', char.species);
-    document.body.setAttribute('data-subspecies', char.subspecies);
+    applyCharacterToBody(document.body, char);
+    // If the widget is currently in a PiP window, mirror the change there too.
+    if (pipWindow) applyCharacterToBody(pipWindow.document.body, char);
     saveSettings({ character: char.id });
     syncCharacterCards();
   }
