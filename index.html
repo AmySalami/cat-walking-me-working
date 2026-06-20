@@ -22,6 +22,19 @@
 
     /* Shape tokens — pill is reused for buttons, selects, tabs, inputs */
     --radius-pill: 999px;
+
+    /* Dropdown tokens — single source of truth for any <select> styled
+       as .preset-select. Per-context overrides can still change padding
+       or radius (e.g. pill in action-bar, rounded-rect in settings)
+       but the base look — bg, chevron, hover, focus — stays consistent. */
+    --dropdown-bg:           rgba(45, 36, 23, 0.06);
+    --dropdown-bg-hover:     rgba(45, 36, 23, 0.10);
+    --dropdown-bg-focus:     var(--cream);
+    --dropdown-border:       1.5px solid transparent;
+    --dropdown-border-focus: var(--ink);
+    --dropdown-chevron:      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1L7 7L13 1' stroke='%232d2417' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    --dropdown-chevron-pos:  right 14px center;
+    --dropdown-chevron-size: 14px 8px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -576,38 +589,33 @@
     position: relative;
   }
 
+  /* Base dropdown — uses dropdown-* tokens so every <select> on the
+     site looks the same. The chevron lives in --dropdown-chevron (a
+     single SVG); no pseudo-element duplicate. */
   .preset-select {
     appearance: none;
     -webkit-appearance: none;
     width: 100%;
-    padding: 7px 28px 7px 12px;
+    padding: 7px 32px 7px 12px;
     font-family: 'DM Mono', monospace;
     font-weight: 500;
     font-size: 11px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink);
-    background: rgba(45, 36, 23, 0.06);
-    border: none;
+    background-color: var(--dropdown-bg);
+    background-image: var(--dropdown-chevron);
+    background-repeat: no-repeat;
+    background-position: var(--dropdown-chevron-pos);
+    background-size: var(--dropdown-chevron-size);
+    border: var(--dropdown-border);
     border-radius: var(--radius-pill);
     cursor: pointer;
     outline: none;
+    transition: background-color 0.15s, border-color 0.15s;
   }
-  .preset-select:hover { background: rgba(45, 36, 23, 0.1); }
-
-  .preset-select-wrap::after {
-    content: "";
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    width: 6px;
-    height: 6px;
-    border-right: 1.5px solid var(--ink);
-    border-bottom: 1.5px solid var(--ink);
-    transform: translateY(-75%) rotate(45deg);
-    pointer-events: none;
-    opacity: 0.6;
-  }
+  .preset-select:hover { background-color: var(--dropdown-bg-hover); }
+  .preset-select:focus { border-color: var(--dropdown-border-focus); }
 
   /* ===== Music tabs + input (used by action bar) ===== */
   .source-tabs {
@@ -1595,30 +1603,16 @@
   }
 
   /* Session preset dropdown — full-width inside popover */
+  /* Settings popover overrides — same tokens (bg, chevron, border, etc.)
+     as the base; only padding + radius differ from the compact action-bar
+     pill so the dropdown sits as a rounded rectangle in the settings card. */
   .settings-section .preset-select-wrap { width: 100%; }
   .settings-section .preset-select {
-    width: 100%;
-    padding: 11px 14px;
+    padding: 11px 36px 11px 14px;
     border-radius: 10px;
-    background: rgba(45, 36, 23, 0.04);
-    border: 1.5px solid transparent;
-    font-family: 'DM Mono', monospace;
     font-size: 11px;
-    text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: var(--ink);
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    /* Larger chevron — the previous 10×6 SVG rendered as a chunky "W"
-       shape at low DPI. 14×8 with thinner stroke reads as a clean ∨ */
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1L7 7L13 1' stroke='%232d2417' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
   }
-  .settings-section .preset-select:hover { background: rgba(45, 36, 23, 0.08); }
-  .settings-section .preset-select:focus { outline: none; border-color: var(--ink); }
 
   /* Music source tabs — full-width segmented control */
   .settings-section .source-tabs {
