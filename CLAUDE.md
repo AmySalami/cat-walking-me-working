@@ -96,6 +96,46 @@ Types: `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `perf`
 
 Include scope when useful: `feat(music): ...`, `fix(onboarding): ...`
 
+### Amend safety — never amend pushed/merged commits
+
+`git commit --amend` **rewrites the SHA** — it replaces the existing
+commit with a brand-new one. Safe for unpushed local work, dangerous
+once the commit has reached `origin`.
+
+| Commit state                  | Amend? |
+|---|:---:|
+| Local only (never pushed)     | ✅ Safe |
+| Pushed but PR not merged      | ⚠️ Force-push only with explicit user OK |
+| **Merged to `main`**          | ❌ **Never** — make a NEW commit on a NEW branch |
+
+**Why it explodes after a merge:** `main` already has the original
+SHA's diff applied via the merge commit. The amended branch points at
+a new SHA that *re-applies* the same lines as if they were fresh
+changes. GitHub diffs the amended branch against current `main` and
+sees those lines as in conflict on both sides → merge conflict on the
+same hunks even though the content is identical.
+
+**When the user says "merged" / "push เสร็จ" / "PR ปิดแล้ว" / equivalent,
+Claude MUST:**
+
+1. Immediately sync local `main` before doing anything else:
+   ```
+   git fetch origin && git checkout main && git pull --ff-only
+   ```
+2. Treat the prior branch as **frozen**. Any further work on the same
+   topic becomes a **new commit on a new branch** off the updated
+   `main` — never amend, never force-push the merged branch.
+3. For follow-ups, rename or bump the branch
+   (`feature/<topic>-followup`, `feature/<topic>-v2`, or split the new
+   behaviour into its own descriptive name).
+
+**Recovery if amend-after-merge slips through:**
+- Pull updated `main` locally
+- Create a fresh branch off updated `main`
+- `git diff <old-merged-SHA>..<amended-SHA> | git apply` to bring just
+  the delta over
+- Commit as new work, push as new branch, open a new PR
+
 ### Versioning (SemVer) — REQUIRED after every release-worthy merge
 
 Every merged PR that contains a `feat:` or `fix:` commit MUST be tagged with a new
