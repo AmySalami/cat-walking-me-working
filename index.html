@@ -1469,14 +1469,14 @@
   .settings-character.is-selected .char-dot { opacity: 1; }
 
   /* Tooltip — ink-coloured bg (same as primary text), cream type.
-     Reveals on hover or keyboard focus. Renders ABOVE the swatch (room
-     to land in the preview-card area). High z-index keeps it above any
-     sibling sections. */
+     Reveals on hover or keyboard focus. Renders BELOW the swatch; high
+     z-index keeps it above the Session-rhythm / Music-source sections
+     it momentarily overlays during hover. */
   .char-tooltip {
     position: absolute;
-    bottom: calc(100% + 14px);
+    top: calc(100% + 14px);
     left: 50%;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateX(-50%) translateY(-4px);
     width: 200px;
     background: var(--ink);
     color: var(--cream);
@@ -1489,15 +1489,15 @@
     transition: opacity 0.18s ease, transform 0.18s ease;
     z-index: 100;
   }
-  /* Arrow points DOWN at the swatch */
+  /* Arrow points UP at the swatch */
   .char-tooltip::after {
     content: '';
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: var(--ink);
+    border-bottom-color: var(--ink);
   }
   .settings-character:hover .char-tooltip,
   .settings-character:focus-visible .char-tooltip {
@@ -1507,7 +1507,7 @@
   /* Edge-aware: nudge first/last tooltip so they don't overflow the popover */
   .settings-character:first-child .char-tooltip {
     left: 0;
-    transform: translateX(0) translateY(4px);
+    transform: translateX(0) translateY(-4px);
   }
   .settings-character:first-child:hover .char-tooltip,
   .settings-character:first-child:focus-visible .char-tooltip {
@@ -1516,7 +1516,7 @@
   .settings-character:first-child .char-tooltip::after { left: 18px; transform: none; }
   .settings-character:last-child .char-tooltip {
     left: auto; right: 0;
-    transform: translateX(0) translateY(4px);
+    transform: translateX(0) translateY(-4px);
   }
   .settings-character:last-child:hover .char-tooltip,
   .settings-character:last-child:focus-visible .char-tooltip {
