@@ -247,9 +247,8 @@
     pointer-events: none;
   }
 
-  /* Hide settings button during running/counting (consistent with lock-overlay behavior) */
-  .widget.running .settings-btn,
-  .widget.counting .settings-btn { display: none; }
+  /* Settings button stays visible during running/counting — clicking it
+     auto-pauses the session (see openSettings). */
 
   /* ===================================================================
      CHARACTER SYSTEM — palette as CSS variables.
@@ -3391,6 +3390,9 @@
     state.mode = 'focus';
     state.timeLeft = getDuration('focus');
     updateDisplay();
+    // Preset change resets the session — cancel any pending auto-resume
+    // so closing settings doesn't immediately restart the new preset.
+    resumeOnSettingsClose = false;
   }
 
   document.getElementById('presetSelect').addEventListener('change', (e) => handlePresetChange(e.target.value));
@@ -4124,16 +4126,32 @@
   const settingsPopover = document.getElementById('settingsPopover');
   const settingsClose = document.getElementById('settingsClose');
 
+  // Tracks whether we should auto-resume the session when the popover
+  // closes. Set true on open if a session was active, flipped back to
+  // false if the user resets the session (preset change) while editing.
+  let resumeOnSettingsClose = false;
+
   function openSettings() {
-    if (state.running || state.countingDown) return; // edit-lock during active session
+    // Auto-pause the session if the timer is running or counting down so
+    // the user doesn't lose seconds while they tweak settings.
+    //   - Character / playlist changes apply live without resetting
+    //   - Session preset changes still reset (handlePresetChange stops
+    //     the timer + clears the auto-resume flag)
+    resumeOnSettingsClose = state.running || state.countingDown;
+    if (resumeOnSettingsClose) pauseTimer();
     settingsPopover.hidden = false;
     settingsBtn.classList.add('active');
     // Make sure character cards reflect the current saved value when reopened
     syncCharacterCards();
   }
   function closeSettings() {
+    const shouldResume = resumeOnSettingsClose;
+    resumeOnSettingsClose = false;
     settingsPopover.hidden = true;
     settingsBtn.classList.remove('active');
+    // If the user opened settings DURING an active session and didn't
+    // reset it, resume right where they paused — no manual Start needed.
+    if (shouldResume) startTimer();
   }
 
   settingsBtn.addEventListener('click', () => {
