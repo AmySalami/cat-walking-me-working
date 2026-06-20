@@ -247,9 +247,8 @@
     pointer-events: none;
   }
 
-  /* Hide settings button during running/counting (consistent with lock-overlay behavior) */
-  .widget.running .settings-btn,
-  .widget.counting .settings-btn { display: none; }
+  /* Settings button stays visible during running/counting — clicking it
+     auto-pauses the session (see openSettings). */
 
   /* ===================================================================
      CHARACTER SYSTEM — palette as CSS variables.
@@ -4125,7 +4124,15 @@
   const settingsClose = document.getElementById('settingsClose');
 
   function openSettings() {
-    if (state.running || state.countingDown) return; // edit-lock during active session
+    // Auto-pause the session if the timer is running or counting down so
+    // the user doesn't lose seconds while they tweak settings. They can
+    // hit Start to resume after closing the popover.
+    //   - Character / playlist changes apply live without resetting
+    //   - Session preset changes still reset (handlePresetChange stops
+    //     the timer and rebuilds focus/break durations)
+    if (state.running || state.countingDown) {
+      pauseTimer();
+    }
     settingsPopover.hidden = false;
     settingsBtn.classList.add('active');
     // Make sure character cards reflect the current saved value when reopened
