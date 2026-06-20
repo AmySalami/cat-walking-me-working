@@ -1400,6 +1400,16 @@
      A single row of colour swatches; hovering one reveals a rich tooltip
      with name + style + owner + short bio. Below the row, a live label
      shows whoever is currently selected. */
+
+  /* Lift the picker's section into its own stacking context so the
+     hover tooltip overlays the Session-rhythm <select> + Music-source
+     content cleanly. Native form widgets (like <select>) otherwise
+     bleed text through even with a high z-index on the tooltip. */
+  .settings-section:has(.settings-characters) {
+    position: relative;
+    z-index: 2;
+  }
+
   .settings-characters {
     display: flex;
     gap: 14px;
