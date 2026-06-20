@@ -1553,9 +1553,12 @@
        Col 1: square SVG thumb of the selected companion
        Col 2: name + style/owner
        Col 3: bio of the selected companion (separated by a divider)
+     Uses CSS grid with FIXED column widths so the layout doesn't shift
+     when switching between characters with different name lengths.
      Tooltip on swatch hover still shows OTHER characters' bios. */
   .char-preview-card {
-    display: flex;
+    display: grid;
+    grid-template-columns: 120px 140px 1fr;
     align-items: center;
     gap: 16px;
     margin-bottom: 20px;
@@ -1564,10 +1567,9 @@
      currently selected companion. Bg uses the same neutral grey as
      dropdowns so the thumb rhymes with the rest of the panel. */
   .char-preview-thumb {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     border-radius: 14px;
-    flex-shrink: 0;
     background: var(--dropdown-bg);
     display: flex;
     align-items: center;
@@ -1584,7 +1586,6 @@
     flex-direction: column;
     gap: 3px;
     min-width: 0;
-    flex-shrink: 0;
   }
   .char-selected-name {
     font-family: 'Fraunces', serif;
