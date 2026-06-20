@@ -626,36 +626,9 @@
   .preset-select:hover { background-color: var(--dropdown-bg-hover); }
   .preset-select:focus { border-color: var(--dropdown-border-focus); }
 
-  /* ===== Music tabs + input (used by action bar) ===== */
-  .source-tabs {
-    display: flex;
-    gap: 2px;
-    background: rgba(45, 36, 23, 0.08);
-    border-radius: var(--radius-pill);
-    padding: 2px;
-  }
-
-  .source-tab {
-    font-family: 'DM Mono', monospace;
-    font-size: 8px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border: none;
-    background: transparent;
-    color: var(--ink);
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    opacity: 0.55;
-  }
-
-  /* Segmented control — active tab is filled ink + cream text (unmistakable) */
-  .source-tab.active {
-    background: var(--ink);
-    color: var(--cream);
-    opacity: 1;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-  }
+  /* (Music source toggle removed in v1.14.0 — source is auto-detected
+     from the URL pattern; the .music-source-tag rule below renders the
+     read-only badge that replaced the .source-tab segmented control.) */
 
   .url-input-row {
     display: flex;
@@ -1197,12 +1170,7 @@
     padding: 10px 32px 10px 16px;
     font-size: 9px;            /* match toggle + url-input */
   }
-  /* Music toggle: match the dropdown / URL input height in fullscreen */
-  body.fullscreen-mode .source-tabs { padding: 4px; }
-  body.fullscreen-mode .source-tab {
-    padding: 8px 14px;
-    font-size: 9px;
-  }
+  /* (Fullscreen overrides for .source-tabs removed — toggle no longer exists.) */
 
   /* Music row — mute button + status text laid out inline at the action bar's
      base. Centred via the row's own flex so the row visually replaces the
@@ -1292,7 +1260,6 @@
     padding-top: 10px;
     gap: 6px;
   }
-  body.pip-mode .ab-music-block .source-tabs { align-self: flex-end; }
   body.pip-mode .preset-select-wrap,
   body.pip-mode .ab-url-wrap { width: 100%; }
   body.pip-mode .preset-select { padding: 7px 28px 7px 12px; font-size: 9px; }
@@ -1634,33 +1601,19 @@
     letter-spacing: 0.8px;
   }
 
-  /* Music source tabs — full-width segmented control */
-  .settings-section .source-tabs {
-    display: flex;
-    gap: 4px;
-    background: rgba(45, 36, 23, 0.04);
-    border-radius: 10px;
-    padding: 4px;
-    margin-bottom: 12px;
-  }
-  .settings-section .source-tab {
-    flex: 1;
-    padding: 9px 12px;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    text-transform: uppercase;
+  /* Music source tag — small read-only badge under the URL input.
+     Auto-detected from the URL pattern; user can't toggle it directly. */
+  .music-source-tag {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--dropdown-bg);
+    font-family:    var(--meta-font);
+    font-size:      var(--meta-size);
+    color:          var(--meta-color);
     letter-spacing: 0.8px;
-    color: rgba(45, 36, 23, 0.55);
-    transition: background 0.15s, color 0.15s;
-  }
-  .settings-section .source-tab:hover { color: var(--ink); }
-  .settings-section .source-tab.active {
-    background: var(--ink);
-    color: var(--cream);
+    text-transform: uppercase;
   }
 
   /* URL input — full-width in popover */
@@ -2720,16 +2673,15 @@
       </div>
     </div>
 
-    <!-- Music -->
+    <!-- Music — paste any URL; source is detected from the URL pattern
+         and shown as a read-only tag below the input. No more
+         SoundCloud / YouTube toggle to flip manually. -->
     <div class="settings-section">
       <h3 class="settings-section-title">Music source</h3>
-      <div class="source-tabs">
-        <button class="source-tab" data-source="soundcloud">SoundCloud</button>
-        <button class="source-tab active" data-source="youtube">YouTube</button>
-      </div>
       <input type="text" class="url-input settings-url-input" id="urlInput"
              value="https://www.youtube.com/watch?v=UJ6RvIom9ws&amp;list=PLR1fRgBlHMylqNB3I8DSEK1dlLUMckzKF"
-             placeholder="วาง URL...">
+             placeholder="วาง SoundCloud หรือ YouTube URL...">
+      <span class="music-source-tag" id="musicSourceTag" aria-live="polite">—</span>
     </div>
   </div>
 </div>
@@ -3591,9 +3543,9 @@
   const musicStatus = document.getElementById('musicStatus');
   const muteBtn = document.getElementById('muteBtn');
 
-  // Apply hydrated source to URL input + toggle state before any user interaction
+  // Apply hydrated URL to the input before any user interaction. The
+  // source tag is synced below once the helper is defined.
   if (savedSettings.url) urlInput.value = savedSettings.url;
-  // Source tab UI is synced inside the IIFE below since `.source-tab` exists in the DOM at this point
 
   // Sync mute button visual to hydrated state on first paint
   muteBtn.classList.toggle('is-muted', musicMuted);
@@ -3627,10 +3579,13 @@
 
   muteBtn.addEventListener('click', () => setMusicMuted(!musicMuted));
 
-  function syncSourceTabs(source) {
-    document.querySelectorAll('.source-tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.source === source);
-    });
+  // Tag badge — read-only indicator of the auto-detected music source.
+  // Replaces the old SoundCloud / YouTube toggle. Shows "—" when the URL
+  // input is empty or doesn't match a supported pattern.
+  const musicSourceTag = document.getElementById('musicSourceTag');
+  function syncSourceTag(source) {
+    if (!musicSourceTag) return;
+    musicSourceTag.textContent = source ? source.toUpperCase() : '—';
   }
 
   // Remember the last URL the user had for each source so switching back restores it.
@@ -3642,8 +3597,8 @@
   };
   if (savedSettings.url) lastUrlBySource[currentSource] = savedSettings.url;
 
-  // Sync the source tab UI to the hydrated source (no event = no save)
-  syncSourceTabs(currentSource);
+  // Render the tag badge for the hydrated source (no event = no save)
+  syncSourceTag(currentSource);
 
   function handleSourceChange(source) {
     if (source === currentSource) return;
@@ -3659,10 +3614,10 @@
     hiddenPlayer.innerHTML = '';
 
     currentSource = source;
-    syncSourceTabs(source);
-    urlInput.placeholder = source === 'youtube'
-      ? 'วาง YouTube playlist หรือ video URL...'
-      : 'วาง SoundCloud URL...';
+    syncSourceTag(source);
+    // The placeholder hints at both supported services since the input
+    // is now the single point of entry (no toggle to flip).
+    urlInput.placeholder = 'วาง SoundCloud หรือ YouTube URL...';
     urlInput.value = lastUrlBySource[source];
     // Persist the new source + its current URL
     saveSettings({ source, url: urlInput.value });
@@ -3675,9 +3630,9 @@
     }
   }
 
-  document.querySelectorAll('.source-tab').forEach(tab => {
-    tab.addEventListener('click', () => handleSourceChange(tab.dataset.source));
-  });
+  // (No source-tab click handlers — the toggle UI was removed in
+  // favour of auto-detection. handleSourceChange is now called purely
+  // through maybeAutoSwitchSource() when the URL input value changes.)
 
   // SoundCloud widget event bindings — extracted so loadMusic and resetMusic both get the handlers
   // The widget does not reliably auto-advance for all URL types (user profile, /tracks), and FINISH may
@@ -4086,24 +4041,41 @@
   }
 
   // URL input: debounced auto-load + immediate load on Enter.
-  // Also auto-detect source from URL so pasting a YouTube link while on the SoundCloud
-  // tab silently switches the toggle (and vice-versa) — saves an extra click.
+  // Source is auto-detected from the URL pattern — no toggle to flip.
+  // If the URL belongs to a different supported service than the
+  // current one, route through handleSourceChange to swap players.
+  function detectSourceFromUrl(url) {
+    if (!url) return null;
+    if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
+    if (/soundcloud\.com/i.test(url))        return 'soundcloud';
+    return null;
+  }
   function maybeAutoSwitchSource() {
     const url = urlInput.value.trim();
-    if (!url) return false;
-    const detected = /youtube\.com|youtu\.be/i.test(url) ? 'youtube'
-                   : /soundcloud\.com/i.test(url) ? 'soundcloud'
-                   : null;
+    const detected = detectSourceFromUrl(url);
     if (detected && detected !== currentSource) {
-      // Stash this URL so handleSourceChange restores it as the new tab's value
+      // Stash this URL so handleSourceChange restores it as the new source's value
       lastUrlBySource[detected] = url;
       handleSourceChange(detected);
       return true; // handleSourceChange already called loadMusic
     }
     return false;
   }
+  // Repaint the source tag to match whatever the input currently holds.
+  // Falls back to the current source when the URL is empty so the badge
+  // doesn't flicker to "—" on every keystroke that briefly empties the
+  // field.
+  function refreshSourceTag() {
+    const url = urlInput.value.trim();
+    const detected = detectSourceFromUrl(url);
+    syncSourceTag(detected || (url ? null : currentSource));
+  }
   let urlDebounceTimer = null;
   urlInput.addEventListener('input', () => {
+    // Tag updates immediately as the user types (no debounce). Loading
+    // the music player still waits 800ms so we don't hit the network
+    // on every keystroke.
+    refreshSourceTag();
     clearTimeout(urlDebounceTimer);
     urlDebounceTimer = setTimeout(() => {
       // Persist URL on every commit. If we auto-switch source, that path saves too.
