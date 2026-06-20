@@ -1304,12 +1304,19 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 900;
     padding: 24px;
+    /* Scroll happens at the outer overlay level so the inner panel can
+       overflow visibly (tooltips need this). align-items uses flex-start
+       so the panel doesn't get cropped when it's taller than viewport. */
+    overflow-y: auto;
     animation: settingsFadeIn 0.2s ease;
   }
+  /* Center the panel vertically when it fits within the viewport, but
+     allow normal flow when it's taller (so the user can scroll). */
+  .settings-panel { margin: auto; }
   .settings-popover[hidden] { display: none; }
 
   @keyframes settingsFadeIn {
@@ -1323,8 +1330,10 @@
     padding: 32px;
     max-width: 520px;
     width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
+    /* overflow: visible so tooltips (positioned absolute inside the
+       picker) can escape the panel edge without being clipped. The
+       outer .settings-popover handles overflow scrolling instead. */
+    overflow: visible;
     box-shadow: 0 20px 60px rgba(45, 36, 23, 0.25);
     animation: settingsRiseIn 0.25s ease;
   }
@@ -1452,7 +1461,9 @@
   .settings-character.is-selected .char-dot { opacity: 1; }
 
   /* Tooltip — ink-coloured bg (same as primary text), cream type.
-     Reveals on hover or keyboard focus. */
+     Reveals on hover or keyboard focus. Renders ABOVE the swatch (room
+     to land in the preview-card area). High z-index keeps it above any
+     sibling sections. */
   .char-tooltip {
     position: absolute;
     bottom: calc(100% + 14px);
@@ -1464,12 +1475,13 @@
     border-radius: 10px;
     padding: 12px 14px;
     text-align: left;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.18s ease, transform 0.18s ease;
-    z-index: 10;
+    z-index: 100;
   }
+  /* Arrow points DOWN at the swatch */
   .char-tooltip::after {
     content: '';
     position: absolute;
@@ -1528,21 +1540,51 @@
     margin: 0;
   }
 
-  /* Always-visible "currently selected" label below the row */
-  .char-selected-meta {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(45, 36, 23, 0.08);
+  /* Preview card — sits above the swatch row, shows the currently
+     selected companion as a square thumb + name + style/owner line.
+     Bottom border doubles as the divider between the preview and the
+     row of pickable swatches. */
+  .char-preview-card {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 0 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(45, 36, 23, 0.08);
+  }
+  .char-preview-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 -3px 8px rgba(0,0,0,0.18);
+    background: radial-gradient(circle at 35% 30%, var(--fur-base) 0%, var(--fur-shadow) 75%);
+    transition: background 0.2s ease;
+  }
+  /* Same stripe overlay as the swatches — uses --stripe-opacity per character */
+  .char-preview-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(45deg,
+      transparent 0px, transparent 5px,
+      var(--stripe-color) 5px, var(--stripe-color) 6.5px);
+    opacity: var(--stripe-opacity);
+  }
+  .char-preview-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
   }
   .char-selected-name {
     font-family: 'Fraunces', serif;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 500;
     color: var(--ink);
+    line-height: 1.1;
   }
   .char-selected-detail {
     font-family: 'DM Mono', monospace;
@@ -1568,7 +1610,9 @@
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1L5 5L9 1' stroke='%232d2417' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    /* Larger chevron — the previous 10×6 SVG rendered as a chunky "W"
+       shape at low DPI. 14×8 with thinner stroke reads as a clean ∨ */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1L7 7L13 1' stroke='%232d2417' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
     background-repeat: no-repeat;
     background-position: right 14px center;
     padding-right: 36px;
@@ -2633,14 +2677,19 @@
     </div>
 
     <!-- Character — populated from the JS CHARACTERS registry.
-         Avatar Row layout: swatch row + selected-meta line below. -->
+         Avatar Row layout: preview card on top (square thumb + name +
+         detail of the currently selected companion), divider, then a
+         row of swatches to pick from. -->
     <div class="settings-section">
       <h3 class="settings-section-title">Choose your companion</h3>
-      <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
-      <div class="char-selected-meta">
-        <span class="char-selected-name"   id="charSelectedName">—</span>
-        <span class="char-selected-detail" id="charSelectedDetail">—</span>
+      <div class="char-preview-card">
+        <span class="char-preview-thumb" id="charPreviewThumb" data-character="khuntong" aria-hidden="true"></span>
+        <div class="char-preview-text">
+          <span class="char-selected-name"   id="charSelectedName">—</span>
+          <span class="char-selected-detail" id="charSelectedDetail">—</span>
+        </div>
       </div>
+      <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
     </div>
 
     <!-- Session -->
@@ -4083,6 +4132,7 @@
   const charactersContainer = settingsPopover.querySelector('.settings-characters');
   const charSelectedName    = document.getElementById('charSelectedName');
   const charSelectedDetail  = document.getElementById('charSelectedDetail');
+  const charPreviewThumb    = document.getElementById('charPreviewThumb');
 
   function renderCharacterPicker() {
     charactersContainer.innerHTML = CHARACTERS.map(char => {
@@ -4127,11 +4177,14 @@
       btn.classList.toggle('is-selected', isActive);
       btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
     });
-    // Also refresh the meta line beneath the row
+    // Also refresh the preview card above the row
     const activeChar = CHARACTERS.find(c => c.id === active) || CHARACTERS[0];
-    if (activeChar && charSelectedName && charSelectedDetail) {
+    if (activeChar && charSelectedName && charSelectedDetail && charPreviewThumb) {
       charSelectedName.textContent   = activeChar.name;
       charSelectedDetail.textContent = `${styleLabel(activeChar).toLowerCase()} · ${activeChar.owner}`;
+      // Re-point the preview's data-character so it picks up the right
+      // palette vars (fur-base, fur-shadow, stripe-color, stripe-opacity)
+      charPreviewThumb.setAttribute('data-character', activeChar.id);
     }
   }
 
