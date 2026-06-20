@@ -22,6 +22,29 @@
 
     /* Shape tokens — pill is reused for buttons, selects, tabs, inputs */
     --radius-pill: 999px;
+
+    /* Meta-text tokens — uppercase/lowercase mono caption style used for
+       secondary information (species + owner line, bio, footnotes, etc.).
+       Anywhere a text element should read as "small supporting detail"
+       rather than primary content, use these via shorthand .text-meta
+       or by referencing the tokens directly. */
+    --meta-font:    'DM Mono', monospace;
+    --meta-size:    10px;
+    --meta-color:   rgba(45, 36, 23, 0.6);
+    --meta-spacing: 0.4px;
+
+    /* Dropdown tokens — single source of truth for any <select> styled
+       as .preset-select. Per-context overrides can still change padding
+       or radius (e.g. pill in action-bar, rounded-rect in settings)
+       but the base look — bg, chevron, hover, focus — stays consistent. */
+    --dropdown-bg:           rgba(45, 36, 23, 0.06);
+    --dropdown-bg-hover:     rgba(45, 36, 23, 0.10);
+    --dropdown-bg-focus:     var(--cream);
+    --dropdown-border:       1.5px solid transparent;
+    --dropdown-border-focus: var(--ink);
+    --dropdown-chevron:      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1L7 7L13 1' stroke='%232d2417' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    --dropdown-chevron-pos:  right 14px center;
+    --dropdown-chevron-size: 14px 8px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -576,38 +599,33 @@
     position: relative;
   }
 
+  /* Base dropdown — uses dropdown-* tokens so every <select> on the
+     site looks the same. The chevron lives in --dropdown-chevron (a
+     single SVG); no pseudo-element duplicate. */
   .preset-select {
     appearance: none;
     -webkit-appearance: none;
     width: 100%;
-    padding: 7px 28px 7px 12px;
+    padding: 7px 32px 7px 12px;
     font-family: 'DM Mono', monospace;
     font-weight: 500;
     font-size: 11px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink);
-    background: rgba(45, 36, 23, 0.06);
-    border: none;
+    background-color: var(--dropdown-bg);
+    background-image: var(--dropdown-chevron);
+    background-repeat: no-repeat;
+    background-position: var(--dropdown-chevron-pos);
+    background-size: var(--dropdown-chevron-size);
+    border: var(--dropdown-border);
     border-radius: var(--radius-pill);
     cursor: pointer;
     outline: none;
+    transition: background-color 0.15s, border-color 0.15s;
   }
-  .preset-select:hover { background: rgba(45, 36, 23, 0.1); }
-
-  .preset-select-wrap::after {
-    content: "";
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    width: 6px;
-    height: 6px;
-    border-right: 1.5px solid var(--ink);
-    border-bottom: 1.5px solid var(--ink);
-    transform: translateY(-75%) rotate(45deg);
-    pointer-events: none;
-    opacity: 0.6;
-  }
+  .preset-select:hover { background-color: var(--dropdown-bg-hover); }
+  .preset-select:focus { border-color: var(--dropdown-border-focus); }
 
   /* ===== Music tabs + input (used by action bar) ===== */
   .source-tabs {
@@ -1304,12 +1322,19 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 900;
     padding: 24px;
+    /* Scroll happens at the outer overlay level so the inner panel can
+       overflow visibly (tooltips need this). align-items uses flex-start
+       so the panel doesn't get cropped when it's taller than viewport. */
+    overflow-y: auto;
     animation: settingsFadeIn 0.2s ease;
   }
+  /* Center the panel vertically when it fits within the viewport, but
+     allow normal flow when it's taller (so the user can scroll). */
+  .settings-panel { margin: auto; }
   .settings-popover[hidden] { display: none; }
 
   @keyframes settingsFadeIn {
@@ -1323,8 +1348,10 @@
     padding: 32px;
     max-width: 520px;
     width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
+    /* overflow: visible so tooltips (positioned absolute inside the
+       picker) can escape the panel edge without being clipped. The
+       outer .settings-popover handles overflow scrolling instead. */
+    overflow: visible;
     box-shadow: 0 20px 60px rgba(45, 36, 23, 0.25);
     animation: settingsRiseIn 0.25s ease;
   }
@@ -1379,45 +1406,57 @@
     margin: 0 0 14px 0;
   }
 
-  /* Character picker — two cards side by side */
+  /* ===== Character picker — Avatar Row (Option A) =====
+     A single row of colour swatches; hovering one reveals a rich tooltip
+     with name + style + owner + short bio. Below the row, a live label
+     shows whoever is currently selected. */
+
+  /* Lift the picker's section into its own stacking context so the
+     hover tooltip overlays the Session-rhythm <select> + Music-source
+     content cleanly. Native form widgets (like <select>) otherwise
+     bleed text through even with a high z-index on the tooltip. */
+  .settings-section:has(.settings-characters) {
+    position: relative;
+    z-index: 2;
+  }
+
   .settings-characters {
-    display: grid;
-    /* Scales to any number of characters: 1 row for 2-3 chars, wraps after */
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
+    display: flex;
+    gap: 14px;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    /* Tooltips need to escape the row without being clipped */
+    overflow: visible;
   }
   .settings-character {
-    background: rgba(45, 36, 23, 0.04);
-    border: 1.5px solid transparent;
-    border-radius: 12px;
-    padding: 14px;
+    background: none;
+    border: none;
+    padding: 0;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 6px;
-    text-align: left;
-    transition: background 0.15s, border-color 0.15s;
+    flex: 1;
+    position: relative;
+    transition: transform 0.15s;
     font-family: inherit;
+    color: inherit;
   }
-  .settings-character:hover { background: rgba(45, 36, 23, 0.08); }
-  .settings-character.is-selected {
-    background: rgba(45, 36, 23, 0.06);
-    border-color: var(--ink);
-  }
+  .settings-character:hover { transform: translateY(-2px); }
+  .settings-character:focus { outline: none; }
+
+  /* Swatch — same fur-gradient + stripe recipe as before */
   .char-swatch {
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    margin-bottom: 4px;
     box-shadow: inset 0 -2px 6px rgba(0,0,0,0.18);
-  }
-  /* Swatch uses the character palette via data-character on the swatch.
-     The diagonal-stripe overlay is always present, but `--stripe-opacity`
-     hides it for characters that don't have stripes. */
-  .char-swatch {
     position: relative;
     background: radial-gradient(circle at 35% 30%, var(--fur-base) 0%, var(--fur-shadow) 70%);
+    transition: box-shadow 0.15s;
+    flex-shrink: 0;
   }
   .char-swatch::after {
     content: '';
@@ -1425,62 +1464,176 @@
     inset: 0;
     border-radius: 50%;
     background: repeating-linear-gradient(45deg,
-      transparent 0px,
-      transparent 4px,
-      var(--stripe-color) 4px,
-      var(--stripe-color) 5px);
+      transparent 0px, transparent 4px,
+      var(--stripe-color) 4px, var(--stripe-color) 5px);
     opacity: var(--stripe-opacity);
   }
-  .char-name {
-    font-family: 'Fraunces', serif;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ink);
+  /* Selected ring around swatch — uses cream as the inner gap so it reads
+     as a halo separate from the swatch edge */
+  .settings-character.is-selected .char-swatch {
+    box-shadow:
+      inset 0 -2px 6px rgba(0,0,0,0.18),
+      0 0 0 2px var(--cream-soft, var(--cream)),
+      0 0 0 3.5px var(--ink);
   }
-  /* Subspecies pill — small uppercase tag beside character name */
-  .char-sub {
-    display: inline-block;
-    align-self: flex-start;
-    margin-top: 2px;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: rgba(45, 36, 23, 0.08);
+
+  /* Small "active" dot underneath the selected swatch */
+  .char-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--ink);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .settings-character.is-selected .char-dot { opacity: 1; }
+
+  /* Tooltip — ink-coloured bg (same as primary text), cream type.
+     Reveals on hover or keyboard focus. Renders BELOW the swatch; high
+     z-index keeps it above the Session-rhythm / Music-source sections
+     it momentarily overlays during hover. No arrow indicator — the
+     14px gap + drop shadow make the association clear enough. */
+  .char-tooltip {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    width: 200px;
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 100;
+  }
+  .settings-character:hover .char-tooltip,
+  .settings-character:focus-visible .char-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Edge-aware: shift the tooltip BODY for first/last items so it
+     stays inside the popover. */
+  .settings-character:first-child .char-tooltip {
+    left: 0;
+    transform: translateX(0) translateY(-4px);
+  }
+  .settings-character:first-child:hover .char-tooltip,
+  .settings-character:first-child:focus-visible .char-tooltip {
+    transform: translateX(0) translateY(0);
+  }
+  .settings-character:last-child .char-tooltip {
+    left: auto; right: 0;
+    transform: translateX(0) translateY(-4px);
+  }
+  .settings-character:last-child:hover .char-tooltip,
+  .settings-character:last-child:focus-visible .char-tooltip {
+    transform: translateX(0) translateY(0);
+  }
+
+  .char-tt-name {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--cream);
+    margin-bottom: 2px;
+  }
+  .char-tt-meta {
     font-family: 'DM Mono', monospace;
     font-size: 9px;
-    letter-spacing: 0.4px;
-    color: rgba(45, 36, 23, 0.7);
     text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: rgba(245, 236, 217, 0.65);
+    margin-bottom: 8px;
   }
-  .char-detail {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: rgba(45, 36, 23, 0.6);
-    letter-spacing: 0.3px;
+  .char-tt-bio {
+    font-family: 'Fraunces', serif;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: rgba(245, 236, 217, 0.92);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  /* Preview card — 3-column layout above the swatch row.
+       Col 1: square SVG thumb of the selected companion
+       Col 2: name + style/owner
+       Col 3: bio of the selected companion (separated by a divider)
+     Uses CSS grid with FIXED column widths so the layout doesn't shift
+     when switching between characters with different name lengths.
+     Tooltip on swatch hover still shows OTHER characters' bios. */
+  .char-preview-card {
+    display: grid;
+    grid-template-columns: 120px 140px 1fr;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  /* Preview thumb — square card holding the SVG portrait of the
+     currently selected companion. Bg uses the same neutral grey as
+     dropdowns so the thumb rhymes with the rest of the panel. */
+  .char-preview-thumb {
+    width: 120px;
+    height: 90px;
+    border-radius: 14px;
+    background: var(--dropdown-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .char-preview-thumb svg {
+    width: 88%;
+    height: 88%;
+    display: block;
+  }
+  .char-preview-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .char-selected-name {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  /* Both the species/owner line and the bio share the same "meta" type
+     scale — same family, size, colour, letter-spacing. */
+  .char-selected-detail,
+  .char-selected-bio {
+    font-family:    var(--meta-font);
+    font-size:      var(--meta-size);
+    color:          var(--meta-color);
+    letter-spacing: var(--meta-spacing);
+  }
+  .char-selected-detail { text-transform: lowercase; }
+  /* Column 3 — bio of the selected character, separated from the
+     name/owner column by a thin vertical hairline. */
+  .char-selected-bio {
+    margin: 0;
+    padding-left: 16px;
+    border-left: 1px solid rgba(45, 36, 23, 0.16);
+    line-height: 1.5;
   }
 
   /* Session preset dropdown — full-width inside popover */
+  /* Settings popover overrides — same tokens (bg, chevron, border, etc.)
+     as the base; only padding + radius differ from the compact action-bar
+     pill so the dropdown sits as a rounded rectangle in the settings card. */
   .settings-section .preset-select-wrap { width: 100%; }
   .settings-section .preset-select {
-    width: 100%;
-    padding: 11px 14px;
+    padding: 11px 36px 11px 14px;
     border-radius: 10px;
-    background: rgba(45, 36, 23, 0.04);
-    border: 1.5px solid transparent;
-    font-family: 'DM Mono', monospace;
     font-size: 11px;
-    text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: var(--ink);
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1L5 5L9 1' stroke='%232d2417' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
   }
-  .settings-section .preset-select:hover { background: rgba(45, 36, 23, 0.08); }
-  .settings-section .preset-select:focus { outline: none; border-color: var(--ink); }
 
   /* Music source tabs — full-width segmented control */
   .settings-section .source-tabs {
@@ -1969,8 +2122,8 @@
     /* Slightly tighter modal padding so content breathes without dominating */
     .settings-panel    { padding: 28px; }
     .onboarding-card   { padding: 28px; }
-    /* Character grid: minmax floor down so 3 cards fit per row at 768px */
-    .settings-characters { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+    /* Avatar row already fits — just tighten the gap a touch on tablets */
+    .settings-characters { gap: 10px; }
   }
 
   /* ===== Phone (≤ 600px) ===== */
@@ -1986,21 +2139,13 @@
     .settings-section   { margin-bottom: 22px; }
     .settings-title     { font-size: 19px; }
 
-    /* Character cards: horizontal layout — swatch left, text right.
-       Much friendlier to thumb scrolling than vertical cards. */
-    .settings-characters {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    .settings-character {
-      flex-direction: row;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-    }
-    .char-swatch { width: 36px; height: 36px; margin-bottom: 0; flex-shrink: 0; }
-    .char-name   { font-size: 14px; }
-    .char-detail { font-size: 9px; }
+    /* Avatar row stays horizontal but tightens up; tooltips narrow a touch
+       so they don't bleed past the modal edge on narrow phones */
+    .settings-characters  { gap: 8px; }
+    .char-swatch          { width: 34px; height: 34px; }
+    .char-tooltip         { width: 170px; padding: 10px 12px; }
+    .char-tt-bio          { font-size: 11px; }
+    .char-selected-name   { font-size: 15px; }
 
     /* Onboarding tweaks */
     .onboarding-title       { font-size: 22px; }
@@ -2546,9 +2691,20 @@
       </button>
     </div>
 
-    <!-- Character — populated from the JS CHARACTERS registry -->
+    <!-- Character — populated from the JS CHARACTERS registry.
+         Avatar Row layout: preview card on top (square thumb + name +
+         detail of the currently selected companion), then a row of
+         swatches to pick from. No section title or divider — the
+         preview card itself anchors the picker visually. -->
     <div class="settings-section">
-      <h3 class="settings-section-title">Choose your companion</h3>
+      <div class="char-preview-card">
+        <span class="char-preview-thumb" id="charPreviewThumb" data-character="khuntong" aria-hidden="true"></span>
+        <div class="char-preview-text">
+          <span class="char-selected-name"   id="charSelectedName">—</span>
+          <span class="char-selected-detail" id="charSelectedDetail">—</span>
+        </div>
+        <p class="char-selected-bio" id="charSelectedBio">—</p>
+      </div>
       <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
     </div>
 
@@ -2694,22 +2850,23 @@
   //   round  — neutral cat eye, full iris with shine (Khuntong, Khonloy)
   //   focus  — half-moon fierce eye with brow wedge + slash (Coco)
   //   button — small black round, no iris (Merlin / dog SVG)
+  // Each entry powers the picker, the body palette, and the hover tooltip.
+  // `owner` + `bio` show up only in the tooltip — keep bios short, in English.
   const CHARACTERS = [
-    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', detail: 'black · classic'        },
-    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  detail: 'brown tabby · warm'     },
-    { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     detail: 'tabby & white · fluffy' },
-    { id: 'bubble',   species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Bubble',   detail: 'golden cream · plush'   },
-    { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   detail: 'maltese · soft'         },
+    { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', owner: 'Amie', bio: "A tiny mischievous black cat — Amie's pocket-sized troublemaker." },
+    { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  owner: 'Amie', bio: "A wary brown tabby who guards his quiet — Amie's private soul." },
+    { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     owner: 'Maya', bio: "A fluffy little loner who keeps to himself — Maya's quiet companion." },
+    { id: 'bubble',   species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Bubble',   owner: 'Muay', bio: "A plush little princess in golden cream — Muay's chubby darling." },
+    { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   owner: 'J',    bio: "A joyful little pup who's always smiling — J's pocket of sunshine." },
   ];
-  const DEFAULT_CHARACTER = 'khuntong';
 
-  // Subspecies labels shown in the picker (short pill text)
-  const SUBSPECIES_LABELS = {
-    shorthair: 'shorthair',
-    longhair:  'longhair',
-    small:     'small breed',
-    large:     'large breed',
-  };
+  // Capitalises subspecies + species into a one-line label, e.g.
+  // {subspecies: 'shorthair', species: 'cat'}  →  "Shorthair cat"
+  function styleLabel(char) {
+    const sub = (char.subspecies || '').replace(/^./, c => c.toUpperCase());
+    return `${sub} ${char.species}`.trim();
+  }
+  const DEFAULT_CHARACTER = 'khuntong';
 
   // Apply saved character to <body> ASAP so the correct palette + species
   // + subspecies are active for the first paint. Unknown saved values fall
@@ -3984,18 +4141,37 @@
     if (e.key === 'Escape' && !settingsPopover.hidden) closeSettings();
   });
 
-  // ===== Character switcher (rendered from the CHARACTERS registry) =====
+  // ===== Character switcher — Avatar Row layout (Option A) =====
+  // A single row of swatches; the selected one shows its name + style/owner
+  // in the meta line below the row, and every swatch reveals a tooltip on
+  // hover/focus with the full character bio.
   const charactersContainer = settingsPopover.querySelector('.settings-characters');
+  const charSelectedName    = document.getElementById('charSelectedName');
+  const charSelectedDetail  = document.getElementById('charSelectedDetail');
+  const charSelectedBio     = document.getElementById('charSelectedBio');
+  const charPreviewThumb    = document.getElementById('charPreviewThumb');
 
   function renderCharacterPicker() {
-    charactersContainer.innerHTML = CHARACTERS.map(char => `
-      <button class="settings-character" data-character-pick="${char.id}" role="radio" aria-checked="false">
-        <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
-        <span class="char-name">${char.name}</span>
-        <span class="char-sub" aria-hidden="true">${SUBSPECIES_LABELS[char.subspecies] || char.subspecies}</span>
-        <span class="char-detail">${char.detail}</span>
-      </button>
-    `).join('');
+    charactersContainer.innerHTML = CHARACTERS.map(char => {
+      const style = styleLabel(char);
+      // aria-label gives screen readers the same information the tooltip
+      // shows sighted users — name, style, owner.
+      const ariaLabel = `${char.name} — ${style} · ${char.owner}`;
+      return `
+        <button class="settings-character"
+                data-character-pick="${char.id}"
+                role="radio" aria-checked="false"
+                aria-label="${ariaLabel}">
+          <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
+          <span class="char-dot" aria-hidden="true"></span>
+          <div class="char-tooltip" role="tooltip" aria-hidden="true">
+            <div class="char-tt-name">${char.name}</div>
+            <div class="char-tt-meta">${style} · ${char.owner}</div>
+            <p class="char-tt-bio">${char.bio}</p>
+          </div>
+        </button>
+      `;
+    }).join('');
     charactersContainer.querySelectorAll('.settings-character').forEach(btn => {
       btn.addEventListener('click', () => setCharacter(btn.dataset.characterPick));
     });
@@ -4018,6 +4194,33 @@
       btn.classList.toggle('is-selected', isActive);
       btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
     });
+    // Also refresh the preview card above the row
+    const activeChar = CHARACTERS.find(c => c.id === active) || CHARACTERS[0];
+    if (activeChar && charSelectedName && charSelectedDetail && charPreviewThumb) {
+      charSelectedName.textContent   = activeChar.name;
+      charSelectedDetail.textContent = `${styleLabel(activeChar).toLowerCase()} · ${activeChar.owner}`;
+      if (charSelectedBio) charSelectedBio.textContent = activeChar.bio;
+      // Re-point the preview's data-* attrs so CSS vars (fur, eye,
+      // stripe...) flow through to the cloned SVG inside.
+      charPreviewThumb.setAttribute('data-character',  activeChar.id);
+      charPreviewThumb.setAttribute('data-species',    activeChar.species);
+      charPreviewThumb.setAttribute('data-subspecies', activeChar.subspecies);
+      // Clone the matching species' compact SVG into the thumb so we
+      // see an actual portrait of the companion, not a flat colour.
+      const source = document.querySelector(
+        `.species-svg[data-species="${activeChar.species}"] .cat-simple`
+      );
+      if (source) {
+        const clone = source.cloneNode(true);
+        clone.removeAttribute('width');
+        clone.removeAttribute('height');
+        // Strip .cat-simple so the global "hide cat-simple in fullscreen"
+        // rule doesn't catch the clone inside the preview thumb.
+        clone.removeAttribute('class');
+        clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        charPreviewThumb.replaceChildren(clone);
+      }
+    }
   }
 
   renderCharacterPicker();
