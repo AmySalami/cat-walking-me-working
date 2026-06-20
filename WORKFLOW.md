@@ -161,3 +161,22 @@ Key implementation decisions, especially anything non-obvious.
 - Force-push to `main`
 - Commit secrets / API keys
 - Test by opening `index.html` via `file://` (always use the local server)
+- **Amend a commit that's already been merged to `main`.** `git commit
+  --amend` rewrites the SHA; once the original is in `main`, the
+  amended branch creates a conflict on the same lines on the next
+  push. For follow-up work: sync `main`, create a NEW branch, make a
+  NEW commit.
+
+## After every merge
+
+The moment a PR lands on `main`, run **before any further work**:
+
+```bash
+git checkout main && git pull
+```
+
+This guarantees the next branch starts from the actual deployed state
+and prevents the amend-after-merge trap above. If Claude is the one
+doing the next change, it should run this itself the moment you say
+"merged" / "PR ปิดแล้ว" / equivalent — and refuse to amend any commit
+whose content is now part of `main`.
