@@ -1560,26 +1560,24 @@
     margin-bottom: 16px;
     border-bottom: 1px solid rgba(45, 36, 23, 0.08);
   }
+  /* Preview thumb — square card holding the SVG portrait of the selected
+     companion. Bg uses the same neutral grey token as dropdowns so the
+     thumb visually rhymes with the rest of the settings panel. */
   .char-preview-thumb {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     border-radius: 10px;
     flex-shrink: 0;
-    position: relative;
+    background: var(--dropdown-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
-    box-shadow: inset 0 -3px 8px rgba(0,0,0,0.18);
-    background: radial-gradient(circle at 35% 30%, var(--fur-base) 0%, var(--fur-shadow) 75%);
-    transition: background 0.2s ease;
   }
-  /* Same stripe overlay as the swatches — uses --stripe-opacity per character */
-  .char-preview-thumb::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(45deg,
-      transparent 0px, transparent 5px,
-      var(--stripe-color) 5px, var(--stripe-color) 6.5px);
-    opacity: var(--stripe-opacity);
+  .char-preview-thumb svg {
+    width: 88%;
+    height: 88%;
+    display: block;
   }
   .char-preview-text {
     display: flex;
@@ -4176,9 +4174,26 @@
     if (activeChar && charSelectedName && charSelectedDetail && charPreviewThumb) {
       charSelectedName.textContent   = activeChar.name;
       charSelectedDetail.textContent = `${styleLabel(activeChar).toLowerCase()} · ${activeChar.owner}`;
-      // Re-point the preview's data-character so it picks up the right
-      // palette vars (fur-base, fur-shadow, stripe-color, stripe-opacity)
-      charPreviewThumb.setAttribute('data-character', activeChar.id);
+      // Re-point the preview's data-* attrs so CSS vars (fur, eye,
+      // stripe...) flow through to the cloned SVG inside.
+      charPreviewThumb.setAttribute('data-character',  activeChar.id);
+      charPreviewThumb.setAttribute('data-species',    activeChar.species);
+      charPreviewThumb.setAttribute('data-subspecies', activeChar.subspecies);
+      // Clone the matching species' compact SVG into the thumb so we
+      // see an actual portrait of the companion, not a flat colour.
+      const source = document.querySelector(
+        `.species-svg[data-species="${activeChar.species}"] .cat-simple`
+      );
+      if (source) {
+        const clone = source.cloneNode(true);
+        clone.removeAttribute('width');
+        clone.removeAttribute('height');
+        // Strip .cat-simple so the global "hide cat-simple in fullscreen"
+        // rule doesn't catch the clone inside the preview thumb.
+        clone.removeAttribute('class');
+        clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        charPreviewThumb.replaceChildren(clone);
+      }
     }
   }
 
