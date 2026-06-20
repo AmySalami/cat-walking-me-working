@@ -23,6 +23,16 @@
     /* Shape tokens — pill is reused for buttons, selects, tabs, inputs */
     --radius-pill: 999px;
 
+    /* Meta-text tokens — uppercase/lowercase mono caption style used for
+       secondary information (species + owner line, bio, footnotes, etc.).
+       Anywhere a text element should read as "small supporting detail"
+       rather than primary content, use these via shorthand .text-meta
+       or by referencing the tokens directly. */
+    --meta-font:    'DM Mono', monospace;
+    --meta-size:    10px;
+    --meta-color:   rgba(45, 36, 23, 0.6);
+    --meta-spacing: 0.4px;
+
     /* Dropdown tokens — single source of truth for any <select> styled
        as .preset-select. Per-context overrides can still change padding
        or radius (e.g. pill in action-bar, rounded-rect in settings)
@@ -1594,24 +1604,22 @@
     color: var(--ink);
     line-height: 1.1;
   }
-  .char-selected-detail {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: rgba(45, 36, 23, 0.6);
-    letter-spacing: 0.4px;
-    text-transform: lowercase;
+  /* Both the species/owner line and the bio share the same "meta" type
+     scale — same family, size, colour, letter-spacing. */
+  .char-selected-detail,
+  .char-selected-bio {
+    font-family:    var(--meta-font);
+    font-size:      var(--meta-size);
+    color:          var(--meta-color);
+    letter-spacing: var(--meta-spacing);
   }
+  .char-selected-detail { text-transform: lowercase; }
   /* Column 3 — bio of the selected character, separated from the
      name/owner column by a thin vertical hairline. */
   .char-selected-bio {
-    flex: 1;
     margin: 0;
     padding-left: 16px;
     border-left: 1px solid rgba(45, 36, 23, 0.16);
-    font-family: 'Fraunces', serif;
-    font-size: 12px;
-    font-weight: 400;
-    color: rgba(45, 36, 23, 0.72);
     line-height: 1.5;
   }
 
