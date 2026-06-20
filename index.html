@@ -1540,16 +1540,12 @@
   }
 
   /* Preview card — sits above the swatch row, shows the currently
-     selected companion as a square thumb + name + style/owner line.
-     Bottom border doubles as the divider between the preview and the
-     row of pickable swatches. */
+     selected companion as a square thumb + name + style/owner line. */
   .char-preview-card {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 4px 0 16px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid rgba(45, 36, 23, 0.08);
+    margin-bottom: 20px;
   }
   /* Preview thumb — square card holding the SVG portrait of the selected
      companion. Bg uses the same neutral grey token as dropdowns so the
@@ -2661,10 +2657,10 @@
 
     <!-- Character — populated from the JS CHARACTERS registry.
          Avatar Row layout: preview card on top (square thumb + name +
-         detail of the currently selected companion), divider, then a
-         row of swatches to pick from. -->
+         detail of the currently selected companion), then a row of
+         swatches to pick from. No section title or divider — the
+         preview card itself anchors the picker visually. -->
     <div class="settings-section">
-      <h3 class="settings-section-title">Choose your companion</h3>
       <div class="char-preview-card">
         <span class="char-preview-thumb" id="charPreviewThumb" data-character="khuntong" aria-hidden="true"></span>
         <div class="char-preview-text">
