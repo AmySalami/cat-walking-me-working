@@ -1635,6 +1635,90 @@
     background: var(--cream);
   }
 
+  /* URL preset dropdown — floats below the input on focus / click.
+     Contains curated presets + the user's most recent custom URL. */
+  .url-presets-wrap {
+    position: relative;
+  }
+  .url-presets {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--cream);
+    border: 1px solid rgba(45, 36, 23, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(45, 36, 23, 0.18);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 200;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .url-presets[hidden] { display: none; }
+  .url-preset {
+    background: none;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 12px;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 10px;
+    text-align: left;
+    font-family: inherit;
+    color: inherit;
+    transition: background 0.12s;
+  }
+  .url-preset:hover,
+  .url-preset:focus-visible { background: rgba(45, 36, 23, 0.06); outline: none; }
+  .url-preset.is-active { background: rgba(45, 36, 23, 0.08); }
+  .url-preset-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .url-preset-name {
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .url-preset-detail {
+    font-family:    var(--meta-font);
+    font-size:      var(--meta-size);
+    color:          var(--meta-color);
+    letter-spacing: var(--meta-spacing);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Per-row source badge — same look as .music-source-tag but smaller */
+  .url-preset-source {
+    font-family:    var(--meta-font);
+    font-size: 8.5px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: rgba(45, 36, 23, 0.5);
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: var(--dropdown-bg);
+  }
+  /* Section header inside the dropdown (e.g. "Recent", "Presets") */
+  .url-preset-group-label {
+    font-family:    var(--meta-font);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(45, 36, 23, 0.45);
+    padding: 8px 12px 4px;
+  }
+
   /* ===================================================================
      ONBOARDING — first-visit welcome modal
      =================================================================== */
@@ -2674,13 +2758,19 @@
     </div>
 
     <!-- Music — paste any URL; source is detected from the URL pattern
-         and shown as a read-only tag below the input. No more
-         SoundCloud / YouTube toggle to flip manually. -->
+         and shown as a read-only tag below the input. Clicking the
+         input opens a dropdown of curated presets + the user's most
+         recent custom URL (if any). -->
     <div class="settings-section">
       <h3 class="settings-section-title">Music source</h3>
-      <input type="text" class="url-input settings-url-input" id="urlInput"
-             value="https://www.youtube.com/watch?v=UJ6RvIom9ws&amp;list=PLR1fRgBlHMylqNB3I8DSEK1dlLUMckzKF"
-             placeholder="วาง SoundCloud หรือ YouTube URL...">
+      <div class="url-presets-wrap">
+        <input type="text" class="url-input settings-url-input" id="urlInput"
+               value="https://www.youtube.com/watch?v=UJ6RvIom9ws&amp;list=PLR1fRgBlHMylqNB3I8DSEK1dlLUMckzKF"
+               placeholder="วาง SoundCloud หรือ YouTube URL..."
+               autocomplete="off" spellcheck="false"
+               role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="urlPresets">
+        <div class="url-presets" id="urlPresets" role="listbox" hidden></div>
+      </div>
       <span class="music-source-tag" id="musicSourceTag" aria-live="polite">—</span>
     </div>
   </div>
@@ -3588,6 +3678,16 @@
     musicSourceTag.textContent = source ? source.toUpperCase() : '—';
   }
 
+  // Single source of truth for the curated music presets. Used by both
+  // the onboarding picker AND the URL-input dropdown in Settings. Add
+  // a new entry here and both lists pick it up.
+  const MUSIC_PRESETS = [
+    { id: 'amie',     name: "Amie's list",         detail: "handpicked focus mix", url: "https://www.youtube.com/watch?v=UJ6RvIom9ws&list=PLR1fRgBlHMylqNB3I8DSEK1dlLUMckzKF" },
+    { id: 'stardew',  name: "Stardew Valley OST",  detail: "cozy farm vibes",      url: "https://soundcloud.com/concernedape" },
+    { id: 'chillhop', name: "Chillhop Essentials", detail: "jazzy chill",          url: "https://soundcloud.com/chillhopdotcom" },
+  ];
+  const isPresetUrl = (url) => MUSIC_PRESETS.some(p => p.url === url);
+
   // Remember the last URL the user had for each source so switching back restores it.
   // Hydrate the active source's slot from saved settings so the URL persists too.
   // Defaults: YouTube → Amie's list (page-load default), SoundCloud → Stardew Valley OST.
@@ -4076,10 +4176,18 @@
     // the music player still waits 800ms so we don't hit the network
     // on every keystroke.
     refreshSourceTag();
+    renderUrlPresets(); // re-highlight the active row as user types
     clearTimeout(urlDebounceTimer);
     urlDebounceTimer = setTimeout(() => {
+      const trimmed = urlInput.value.trim();
       // Persist URL on every commit. If we auto-switch source, that path saves too.
-      saveSettings({ url: urlInput.value.trim() });
+      saveSettings({ url: trimmed });
+      // If the user typed something that isn't a curated preset, stash
+      // it as "lastCustomUrl" so it appears as the Recent row in the
+      // dropdown next time they open it.
+      if (trimmed && !isPresetUrl(trimmed)) {
+        saveSettings({ lastCustomUrl: trimmed });
+      }
       if (!maybeAutoSwitchSource()) loadMusic();
     }, 800);
   });
@@ -4087,7 +4195,78 @@
     if (e.key === 'Enter') {
       clearTimeout(urlDebounceTimer);
       if (!maybeAutoSwitchSource()) loadMusic();
+      closeUrlPresets();
+    } else if (e.key === 'Escape' && !urlPresetsBox.hidden) {
+      // Eat the Esc so the settings popover doesn't also close.
+      e.stopPropagation();
+      closeUrlPresets();
     }
+  });
+
+  // ===== URL preset dropdown =====
+  // Curated presets + the user's most recent custom URL are rendered
+  // into #urlPresets on focus / click of the URL input. Selecting a row
+  // fills the input and re-uses the existing input → load + detect
+  // pipeline (no special-casing).
+  const urlPresetsBox = document.getElementById('urlPresets');
+  function renderUrlPresets() {
+    const current = urlInput.value.trim();
+    const recent  = (loadSettings().lastCustomUrl || '').trim();
+    const showRecent = recent && !isPresetUrl(recent);
+
+    const row = (url, name, detail, source, isRecent) => `
+      <button type="button" class="url-preset${url === current ? ' is-active' : ''}"
+              role="option" aria-selected="${url === current ? 'true' : 'false'}"
+              data-url="${url.replace(/"/g, '&quot;')}">
+        <span class="url-preset-main">
+          <span class="url-preset-name">${isRecent ? 'Recent' : name}</span>
+          <span class="url-preset-detail">${isRecent ? url : detail}</span>
+        </span>
+        <span class="url-preset-source">${source}</span>
+      </button>`;
+
+    const parts = [];
+    if (showRecent) {
+      parts.push('<div class="url-preset-group-label">Your last paste</div>');
+      const detectedSource = (detectSourceFromUrl(recent) || '—').toUpperCase();
+      parts.push(row(recent, 'Recent', recent, detectedSource, true));
+      parts.push('<div class="url-preset-group-label">Presets</div>');
+    }
+    MUSIC_PRESETS.forEach(p => {
+      const src = (detectSourceFromUrl(p.url) || '—').toUpperCase();
+      parts.push(row(p.url, p.name, p.detail, src, false));
+    });
+    urlPresetsBox.innerHTML = parts.join('');
+  }
+
+  function openUrlPresets() {
+    renderUrlPresets();
+    urlPresetsBox.hidden = false;
+    urlInput.setAttribute('aria-expanded', 'true');
+  }
+  function closeUrlPresets() {
+    urlPresetsBox.hidden = true;
+    urlInput.setAttribute('aria-expanded', 'false');
+  }
+
+  urlInput.addEventListener('focus', openUrlPresets);
+  urlInput.addEventListener('click', openUrlPresets);
+  // Pick a preset → fill the input and let the existing 'input' listener
+  // handle load + detection. mousedown (not click) so we update before
+  // the input loses focus to a blur outside the wrap.
+  urlPresetsBox.addEventListener('mousedown', (e) => {
+    const btn = e.target.closest('.url-preset');
+    if (!btn) return;
+    e.preventDefault(); // keep focus on the input
+    urlInput.value = btn.dataset.url;
+    urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+    closeUrlPresets();
+  });
+  // Click anywhere outside the wrap → close
+  document.addEventListener('click', (e) => {
+    if (urlPresetsBox.hidden) return;
+    if (e.target.closest('.url-presets-wrap')) return;
+    closeUrlPresets();
   });
 
   updateDisplay();
@@ -4121,6 +4300,9 @@
     resumeOnSettingsClose = false;
     settingsPopover.hidden = true;
     settingsBtn.classList.remove('active');
+    // Also tear down the URL preset dropdown so it doesn't reappear
+    // open the next time the popover is summoned.
+    closeUrlPresets();
     // If the user opened settings DURING an active session and didn't
     // reset it, resume right where they paused — no manual Start needed.
     if (shouldResume) startTimer();
