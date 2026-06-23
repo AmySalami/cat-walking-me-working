@@ -1386,15 +1386,35 @@
     z-index: 2;
   }
 
+  /* Wrapper holds the swatch row + the chevron nav buttons. */
+  .settings-characters-scroller {
+    position: relative;
+  }
   .settings-characters {
     display: flex;
     gap: 14px;
-    justify-content: space-between;
     align-items: center;
     position: relative;
-    /* Tooltips need to escape the row without being clipped */
-    overflow: visible;
+    /* Horizontal scroll kicks in only when items overflow (>5 chars
+       given current min-width). Tooltips render via position:absolute
+       inside each swatch; while no overflow, overflow:visible behaves
+       normally. Once overflow happens, browsers compute this as
+       auto/auto — tooltips will clip slightly past the row bounds, an
+       acceptable trade for keeping the scroll working. */
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;             /* Firefox */
+    -ms-overflow-style: none;          /* IE/Edge legacy */
+    /* Inline + block padding give breathing room for the selected
+       swatch's ring halo (box-shadow that extends 3.5px in every
+       direction). Without enough block padding the ring's top/bottom
+       arcs get clipped by the scroll container; without inline
+       padding the leftmost / rightmost arcs do. */
+    padding: 8px 6px;
+    scroll-padding-inline: 6px;
   }
+  .settings-characters::-webkit-scrollbar { display: none; }
+
   .settings-character {
     background: none;
     border: none;
@@ -1404,7 +1424,11 @@
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    flex: 1;
+    /* Items share the row when there's room (5 chars fit), but each
+       reserves at least 64px so adding a 6th+ character triggers
+       horizontal scroll instead of crushing the swatch widths. */
+    flex: 1 1 64px;
+    min-width: 64px;
     position: relative;
     transition: transform 0.15s;
     font-family: inherit;
@@ -1454,16 +1478,18 @@
   }
   .settings-character.is-selected .char-dot { opacity: 1; }
 
-  /* Tooltip — ink-coloured bg (same as primary text), cream type.
-     Reveals on hover or keyboard focus. Renders BELOW the swatch; high
-     z-index keeps it above the Session-rhythm / Music-source sections
-     it momentarily overlays during hover. No arrow indicator — the
-     14px gap + drop shadow make the association clear enough. */
+  /* Tooltip — single shared element placed outside the scroll
+     container so it can render above the row without being clipped.
+     Position is set by JS on hover (top/left in pixels), not via CSS
+     :hover. The .is-visible class fades it in.
+
+     ink-coloured bg matches the primary text colour; high z-index
+     keeps it above the Session-rhythm / Music-source sections during
+     a hover. */
   .char-tooltip {
     position: absolute;
-    top: calc(100% + 14px);
-    left: 50%;
-    transform: translateX(-50%) translateY(-4px);
+    top: 0;
+    left: 0;
     width: 200px;
     background: var(--ink);
     color: var(--cream);
@@ -1473,33 +1499,11 @@
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
+    transition: opacity 0.18s ease;
     z-index: 100;
   }
-  .settings-character:hover .char-tooltip,
-  .settings-character:focus-visible .char-tooltip {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* Edge-aware: shift the tooltip BODY for first/last items so it
-     stays inside the popover. */
-  .settings-character:first-child .char-tooltip {
-    left: 0;
-    transform: translateX(0) translateY(-4px);
-  }
-  .settings-character:first-child:hover .char-tooltip,
-  .settings-character:first-child:focus-visible .char-tooltip {
-    transform: translateX(0) translateY(0);
-  }
-  .settings-character:last-child .char-tooltip {
-    left: auto; right: 0;
-    transform: translateX(0) translateY(-4px);
-  }
-  .settings-character:last-child:hover .char-tooltip,
-  .settings-character:last-child:focus-visible .char-tooltip {
-    transform: translateX(0) translateY(0);
-  }
+  .char-tooltip[hidden] { display: none; }
+  .char-tooltip.is-visible { opacity: 1; }
 
   .char-tt-name {
     font-family: 'Fraunces', serif;
@@ -1524,6 +1528,43 @@
     line-height: 1.45;
     margin: 0;
   }
+
+  /* Chevron nav buttons — overlay the left/right edge of the swatch
+     row. Only visible when the row overflows (JS toggles [hidden]).
+     Clicking shifts the scroll position by ~5 swatches at a time. */
+  .char-chevron {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: var(--cream);
+    color: var(--ink);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(45, 36, 23, 0.20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    padding: 0;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.12s;
+  }
+  .char-chevron[hidden] { display: none; }
+  .char-chevron-left  { left: -10px; }
+  .char-chevron-right { right: -10px; }
+  .char-chevron:hover {
+    background: var(--cream-soft, var(--cream));
+    transform: translateY(-50%) scale(1.06);
+  }
+  .char-chevron:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+  .char-chevron svg { display: block; }
 
   /* Preview card — 3-column layout above the swatch row.
        Col 1: square SVG thumb of the selected companion
@@ -2741,7 +2782,31 @@
         </div>
         <p class="char-selected-bio" id="charSelectedBio">—</p>
       </div>
-      <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
+      <!-- Avatar row + chevron nav. Chevrons only render when the row
+           overflows (e.g. when >5 characters live in CHARACTERS). -->
+      <div class="settings-characters-scroller">
+        <button class="char-chevron char-chevron-left" id="charChevronLeft"
+                type="button" aria-label="Show previous characters" tabindex="-1" hidden>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M9 2 L4 7 L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </button>
+        <div class="settings-characters" role="radiogroup" aria-label="Character"></div>
+        <button class="char-chevron char-chevron-right" id="charChevronRight"
+                type="button" aria-label="Show more characters" tabindex="-1" hidden>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M5 2 L10 7 L5 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </button>
+        <!-- Shared hover tooltip — sits outside the scroll container
+             so it can render above the row without being clipped. JS
+             populates content + position when a swatch is hovered. -->
+        <div class="char-tooltip" id="charHoverTooltip" role="tooltip" hidden>
+          <div class="char-tt-name" id="charTtName">—</div>
+          <div class="char-tt-meta" id="charTtMeta">—</div>
+          <p class="char-tt-bio" id="charTtBio">—</p>
+        </div>
+      </div>
     </div>
 
     <!-- Session -->
@@ -4346,18 +4411,19 @@
       // aria-label gives screen readers the same information the tooltip
       // shows sighted users — name, style, owner.
       const ariaLabel = `${char.name} — ${style} · ${char.owner}`;
+      // Per-character bio used by the hover tooltip — stored on the
+      // button so the shared floating tooltip can read it on mouseenter
+      // without keeping its own registry lookup.
       return `
         <button class="settings-character"
                 data-character-pick="${char.id}"
+                data-tt-name="${char.name.replace(/"/g, '&quot;')}"
+                data-tt-meta="${(style + ' · ' + char.owner).replace(/"/g, '&quot;')}"
+                data-tt-bio="${char.bio.replace(/"/g, '&quot;')}"
                 role="radio" aria-checked="false"
                 aria-label="${ariaLabel}">
           <span class="char-swatch" data-character="${char.id}" aria-hidden="true"></span>
           <span class="char-dot" aria-hidden="true"></span>
-          <div class="char-tooltip" role="tooltip" aria-hidden="true">
-            <div class="char-tt-name">${char.name}</div>
-            <div class="char-tt-meta">${style} · ${char.owner}</div>
-            <p class="char-tt-bio">${char.bio}</p>
-          </div>
         </button>
       `;
     }).join('');
@@ -4423,6 +4489,148 @@
 
   renderCharacterPicker();
   syncCharacterCards();
+
+  // ===== Picker scroll + chevron nav =====
+  // The row of swatches scrolls horizontally when CHARACTERS grows
+  // past what fits in the popover width. Chevrons appear on the edges
+  // to slide by ~5 items at a time; mouse wheel also pans horizontally
+  // while hovering the row. With ≤5 chars the row fits and chevrons
+  // stay hidden.
+  const charScroller    = settingsPopover.querySelector('.settings-characters-scroller');
+  const charChevronLeft  = document.getElementById('charChevronLeft');
+  const charChevronRight = document.getElementById('charChevronRight');
+
+  // How far one click of a chevron moves the row — width of 5 swatches
+  // (incl. gaps), computed at runtime so font-size or gap changes don't
+  // drift the math.
+  function pageSlideDistance() {
+    const items = charactersContainer.querySelectorAll('.settings-character');
+    if (items.length < 2) return charactersContainer.clientWidth;
+    // Step = distance between item starts (covers width + gap). Multiply
+    // by 5 so each chevron click pages through 5 swatches.
+    const a = items[0].getBoundingClientRect().left;
+    const b = items[1].getBoundingClientRect().left;
+    return (b - a) * 5;
+  }
+
+  function refreshChevrons() {
+    const max = charactersContainer.scrollWidth - charactersContainer.clientWidth;
+    const overflows = max > 1; // 1px slop for sub-pixel rounding
+    const x = charactersContainer.scrollLeft;
+    // A chevron is shown only when there's somewhere to slide in that
+    // direction. Hides entirely (not just disabled) the moment we hit
+    // an edge — nothing to click means nothing to render.
+    charChevronLeft.hidden  = !overflows || x <= 0;
+    charChevronRight.hidden = !overflows || x >= max - 1;
+  }
+
+  charChevronLeft.addEventListener('click', () => {
+    charactersContainer.scrollBy({ left: -pageSlideDistance(), behavior: 'smooth' });
+  });
+  charChevronRight.addEventListener('click', () => {
+    charactersContainer.scrollBy({ left:  pageSlideDistance(), behavior: 'smooth' });
+  });
+
+  // Mouse wheel — translate vertical wheel into horizontal scroll while
+  // hovering the row. Only consume the event when there's actually
+  // somewhere to go in that direction; otherwise let the page scroll
+  // through normally.
+  charactersContainer.addEventListener('wheel', (e) => {
+    const dy = e.deltaY;
+    if (!dy) return;
+    const max = charactersContainer.scrollWidth - charactersContainer.clientWidth;
+    if (max <= 0) return;
+    const x = charactersContainer.scrollLeft;
+    if ((dy > 0 && x >= max - 1) || (dy < 0 && x <= 0)) return;
+    e.preventDefault();
+    charactersContainer.scrollLeft += dy;
+  }, { passive: false });
+
+  charactersContainer.addEventListener('scroll', refreshChevrons, { passive: true });
+  window.addEventListener('resize', refreshChevrons);
+
+  // Initial paint + re-evaluate whenever the popover transitions from
+  // hidden to visible (panel size may differ between page loads, esp.
+  // after a resize). MutationObserver on the `hidden` attribute fires
+  // any time it flips so we don't have to hook into openSettings.
+  refreshChevrons();
+  new MutationObserver(() => {
+    if (!settingsPopover.hidden) requestAnimationFrame(refreshChevrons);
+  }).observe(settingsPopover, { attributes: true, attributeFilter: ['hidden'] });
+
+  // ===== Shared hover tooltip =====
+  // One tooltip element for the whole row, positioned over the
+  // hovered swatch via JS. Lives OUTSIDE the scroll container so the
+  // tooltip body can extend above the row without being clipped by
+  // overflow-x: auto's implicit vertical clipping.
+  const charHoverTooltip = document.getElementById('charHoverTooltip');
+  const charTtName = document.getElementById('charTtName');
+  const charTtMeta = document.getElementById('charTtMeta');
+  const charTtBio  = document.getElementById('charTtBio');
+
+  function positionCharTooltip(btn) {
+    const scrollerRect = charScroller.getBoundingClientRect();
+    const btnRect      = btn.getBoundingClientRect();
+    // Center of the swatch button, relative to the scroller's coord space
+    const center = (btnRect.left - scrollerRect.left) + btnRect.width / 2;
+    // Tooltip sits 14px BELOW the swatch's bottom edge
+    const top    = (btnRect.bottom - scrollerRect.top) + 14;
+    // Clamp horizontal so the body stays inside the scroller width
+    const w   = charHoverTooltip.offsetWidth;
+    const max = charScroller.clientWidth - w;
+    let left  = center - w / 2;
+    if (left < 0)   left = 0;
+    if (left > max) left = max;
+    charHoverTooltip.style.top  = `${top}px`;
+    charHoverTooltip.style.left = `${left}px`;
+  }
+
+  function showCharTooltip(btn) {
+    charTtName.textContent = btn.dataset.ttName || '';
+    charTtMeta.textContent = btn.dataset.ttMeta || '';
+    charTtBio.textContent  = btn.dataset.ttBio  || '';
+    charHoverTooltip.hidden = false;
+    // Two RAF dance: paint hidden=false first (offsetWidth needs layout),
+    // then position + fade in next frame.
+    requestAnimationFrame(() => {
+      positionCharTooltip(btn);
+      charHoverTooltip.classList.add('is-visible');
+    });
+  }
+  function hideCharTooltip() {
+    charHoverTooltip.classList.remove('is-visible');
+    // Wait for fade out before hiding so the transition runs
+    setTimeout(() => {
+      if (!charHoverTooltip.classList.contains('is-visible')) {
+        charHoverTooltip.hidden = true;
+      }
+    }, 180);
+  }
+
+  // Delegate to the row so the handlers survive re-render
+  charactersContainer.addEventListener('mouseover', (e) => {
+    const btn = e.target.closest('.settings-character');
+    if (!btn) return;
+    showCharTooltip(btn);
+  });
+  charactersContainer.addEventListener('mouseout', (e) => {
+    const btn = e.target.closest('.settings-character');
+    if (!btn) return;
+    // Only hide if leaving the button entirely (not just moving over a child)
+    const related = e.relatedTarget;
+    if (related && btn.contains(related)) return;
+    hideCharTooltip();
+  });
+  charactersContainer.addEventListener('focusin', (e) => {
+    const btn = e.target.closest('.settings-character');
+    if (btn) showCharTooltip(btn);
+  });
+  charactersContainer.addEventListener('focusout', (e) => {
+    const btn = e.target.closest('.settings-character');
+    if (btn) hideCharTooltip();
+  });
+  // Hide while scrolling — position would be stale
+  charactersContainer.addEventListener('scroll', hideCharTooltip, { passive: true });
 
   // ===== Onboarding modal — first-visit 2-step flow (session → music) =====
   const onboarding = document.getElementById('onboarding');
