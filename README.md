@@ -1,4 +1,4 @@
-# 🐾 Pomodoro Meadow
+# 🐾 Cat Walking Me Working
 
 > A cozy Pomodoro timer with a walking cat, a living meadow, and ambient music — built as a single self-contained HTML file.
 
