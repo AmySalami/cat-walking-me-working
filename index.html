@@ -302,6 +302,12 @@
   :root { --fluff-opacity: 0; }
   body[data-subspecies="longhair"] { --fluff-opacity: 1; }
 
+  /* Per-character opt-in shapes — geometry that only a specific character
+     wants (e.g. Coco's white blaze/bib and fierce brow). Hidden by default
+     inside the shared cat-longhair SVG; enabled per body[data-character]. */
+  .coco-only { display: none; }
+  body[data-character="coco"] .coco-only { display: inline; }
+
   /* Khonloy (brown mackerel tabby) */
   [data-character="khonloy"] {
     --fur-base:      #a89070;
@@ -333,24 +339,26 @@
      - All body/leg/tail stripes hidden; only the forehead M marking stays
      - White belly + chin */
   [data-character="coco"] {
-    /* NOTE: Coco was refactored to share the cat-longhair SVG with Ponsu.
-       That SVG is a radial-gradient shaded form (no bib / no M marking /
-       no brow wedge / no separate front-leg gradient), so several vars
-       that used to be visible on the old shared cat SVG are now dormant
-       for Coco. They're kept below (commented) as a paper trail — safe
-       to delete once we're sure Coco doesn't move back. */
-    --fur-base:      #c5a572;   /* warm-brown body / edge of head radial */
-    --fur-shadow:    #8b6a3f;   /* deeper brown / center of head radial */
+    /* Bicolour brown-and-white longhair with a fierce brow, from the
+       user-authored Assests/Coco.svg. The shared cat-longhair SVG hosts
+       Coco's extras behind an opt-in `.coco-only` class (blaze/bib,
+       brow wedge + slashes) and per-leg CSS-var fills so front legs
+       render white while back legs stay warm brown. Ponsu and Hedhom
+       don't set these vars — they use the shared radial fallback. */
+    --fur-base:      #c5a572;
+    --fur-shadow:    #8b6a3f;
     --fur-side:      #8b6a3f;
     --fur-side-flat: #8b6a3f;
-    /* Radial gradient endpoints for the cat-longhair SVG. Coco reads as
-       a light-brown-shaded-to-cream cat — inverse of Ponsu's dark-headed
-       look. */
-    --body-radial-center: #c5a572;   /* light centre of belly area */
-    --body-radial-edge:   #8b6a3f;   /* darker outer body */
-    --head-radial-center: #a48453;   /* medium-brown centre */
-    --head-radial-edge:   #c5a572;   /* light-brown outer head */
-    --ear-dark:       #4a3520;   /* deep-brown ear */
+    /* Point body/head at Coco-specific gradient defs (3-stop white-
+       belly radial for body, subtle dark-centre radial for head). */
+    --body-fill:      url(#cocoBody);
+    --head-fill:      url(#cocoHead);
+    /* Front legs solid cream, back legs solid warm-brown, all four
+       paws cream — the "white socks" pattern. */
+    --front-leg-fill: #FFF7DF;
+    --back-leg-fill:  #99794C;
+    --paw:            #FFF7DF;
+    --ear-dark:       #4A3520;
     --stripe-color:   #5a3f24;
     --stripe-opacity: 0;
     --eye-sclera:    #1a120a;
@@ -358,23 +366,9 @@
     --eye-pupil:     #1a120a;
     --eye-shine:     #faf3e3;
     --inner-ear:     #f0a89a;
-    --nose:          #e8a59a;
+    --nose:          #E8A59A;
     --whisker:       #faf3e3;
-    --mouth-stroke:  #4a3520;
-    --paw:           #4a3520;
-    /* Legacy — still declared so if we roll back the SVG refactor, Coco
-       comes back with her bib/M/brow intact. Currently no-ops.
-    --belly-light:   #fffbf0;
-    --belly-dark:    #f4e5c8;
-    --front-leg-base:   #fffbf0;
-    --front-leg-shadow: #f4e5c8;
-    --mark-opacity:   0.85;
-    --bib-color:     #fffbf0;
-    --bib-opacity:   1;
-    --chest-opacity: 0;
-    --belly-opacity: 1;
-    --brow-opacity:  1;
-    */
+    --mouth-stroke:  #E8A59A;   /* pink mouth line matching the nose */
   }
 
   /* Ponsu (near-black longhair cat with yellow eyes) — Amie's shadow-
@@ -2746,6 +2740,27 @@
             <stop offset="0%"   stop-color="var(--head-radial-center, var(--fur-shadow))"/>
             <stop offset="100%" stop-color="var(--head-radial-edge,   var(--fur-base))"/>
           </radialGradient>
+
+          <!-- Coco-specific body radial (3-stop, from Assests/Coco.svg).
+               Centre at (147.5, 168) — down-left of the body's true centre —
+               so the WHITE stop sits under the belly and fades up-and-out
+               through cream to warm brown at the rear. Only Coco's palette
+               points --body-fill at this; Ponsu/Hedhom keep the default. -->
+          <radialGradient id="cocoBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                          gradientTransform="translate(147.5 168) rotate(-138.24) scale(93.8416 93.8416)">
+            <stop offset="0"        stop-color="#FFF7DF"/>
+            <stop offset="0.692904" stop-color="#C5A572"/>
+            <stop offset="1"        stop-color="#8B6A3F"/>
+          </radialGradient>
+          <!-- Coco-specific head radial. Same transform as the default
+               longhair-head gradient, but colours hardcoded so Coco's
+               subtle brown-to-cream look isn't overridable by future
+               palette tweaks intended for Ponsu/Hedhom. -->
+          <radialGradient id="cocoHead" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                          gradientTransform="translate(185 106.5) rotate(-90) scale(40 58.9377)">
+            <stop offset="0"   stop-color="#A48453"/>
+            <stop offset="1"   stop-color="#C5A572"/>
+          </radialGradient>
         </defs>
 
         <g class="cat-body">
@@ -2756,31 +2771,36 @@
           <path class="tail" d="M55 130C31.6667 116.667 23.3333 98.3333 30 75C33.3333 65 40 61.6667 50 65"
                 stroke="url(#longhairTail)" stroke-width="14" stroke-linecap="round" fill="none"/>
 
-          <!-- Back legs — each leg keeps the same coordinates as the
-               shorthair cat SVG so the walk animation aligns.
-               Optional stripe lines respect --stripe-opacity. -->
+          <!-- Back legs — same coordinates as the shorthair cat SVG so
+               the walk animation aligns. Fill routes through --back-leg-
+               fill so Coco can render solid warm-brown while Ponsu/Hedhom
+               fall back to the shared longhair gradient. Optional stripe
+               lines respect --stripe-opacity. -->
           <g class="leg-bl">
-            <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <rect x="68" y="138" width="13" height="42" rx="6" fill="var(--back-leg-fill, url(#longhairLeg))"/>
             <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
             <line x1="68" y1="148" x2="81" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
           <g class="leg-br">
-            <rect x="87" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="var(--back-leg-fill, url(#longhairLeg))"/>
             <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
             <line x1="87" y1="148" x2="100" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
             <line x1="87" y1="158" x2="100" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
           </g>
 
-          <!-- Body — radial-shaded ellipse (matches Ponsu.svg dimensions) -->
-          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#longhairBody)"/>
+          <!-- Body — --body-fill lets a character point at its own gradient
+               def (e.g. Coco's 3-stop white-belly radial); default falls
+               back to the shared longhair body radial. -->
+          <ellipse cx="120" cy="130" rx="68" ry="38" fill="var(--body-fill, url(#longhairBody))"/>
 
-          <!-- Front legs -->
+          <!-- Front legs — --front-leg-fill controls these independently
+               of the back legs (Coco's "white socks" pattern needs this). -->
           <g class="leg-fl">
-            <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <rect x="148" y="138" width="13" height="42" rx="6" fill="var(--front-leg-fill, url(#longhairLeg))"/>
             <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
           </g>
           <g class="leg-fr">
-            <rect x="167" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="var(--front-leg-fill, url(#longhairLeg))"/>
             <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
           </g>
 
@@ -2791,7 +2811,17 @@
                left/right) rather than a smooth oval. That's the
                signature Ponsu head-shape — preserving it 1:1. -->
           <path d="M185 131C204.882 131 226.5 122.882 226.5 103C226.5 83.1177 204.882 59 185 59C165.118 59 143.5 83.1177 143.5 103C143.5 122.882 165.118 131 185 131Z"
-                fill="url(#longhairHead)"/>
+                fill="var(--head-fill, url(#longhairHead))"/>
+
+          <!-- Coco-only: white blaze + bib (vertical stripe from the chin
+               up through the forehead). Sits above the head fill so it
+               reads on top of the shaded face, but below the ears/eyes so
+               those still render cleanly. Hidden for Ponsu/Hedhom via
+               .coco-only CSS toggle. -->
+          <g class="coco-only">
+            <path d="M185 131C172.594 131 165.5 128.5 163.5 127.5C165.5 116.7 173.667 104.333 180 99L183.973 81.517C184.212 80.4675 185.713 80.4838 185.928 81.5382L189.5 99C203.1 111.4 204.333 123.667 205 128C202.167 129.667 192.098 131 185 131Z"
+                  fill="#FFF7DF"/>
+          </g>
 
           <!-- Ears — deep-brown triangles with pink inner triangles.
                Coordinates from Ponsu.svg. -->
@@ -2824,6 +2854,21 @@
           <line x1="195" y1="111" x2="220" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
           <line x1="175" y1="108" x2="152" y2="105" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
           <line x1="175" y1="111" x2="150" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+
+          <!-- Coco-only: fierce brow. Two copper wedges cover the upper
+               half of each eye, and four dark strokes draw the brow line
+               + inner slash — same "focus" mood the shorthair Coco used
+               to have via --brow-opacity, now baked into shapes so it
+               survives on the longhair SVG. Drawn last so it wins over
+               the eyes' own shine dots. Hidden for Ponsu/Hedhom. -->
+          <g class="coco-only">
+            <path d="M203.5 89L192.5 92.5C192.5 90 192.5 84 197.5 84C201.5 84 203.167 87.3333 203.5 89Z" fill="#BB9B69"/>
+            <path d="M168 89.2941L179 93C179 90.3529 179 84 174 84C170 84 168.333 87.5294 168 89.2941Z" fill="#BB9B69"/>
+            <path d="M192.5 92.5L204 89"       stroke="#1A120A" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M178.848 92.475L168.152 88.5251" stroke="#1A120A" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M190 84C191.5 82.6667 194.7 79.5 195.5 77.5" stroke="#1A120A" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+            <path d="M179 84C177.909 82.7692 175.582 79.8462 175 78"  stroke="#1A120A" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+          </g>
         </g>
       </svg>
       </div><!-- /species: cat-longhair -->
