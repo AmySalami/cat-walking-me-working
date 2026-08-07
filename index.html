@@ -285,12 +285,17 @@
     --mouth-stroke:  #1a120a;
   }
 
-  /* Species visibility — only the active species' SVGs render.
-     `display: contents` keeps the existing PiP/fullscreen rules for
-     .cat-simple/.cat-detailed working without the wrapper interfering. */
-  .species-svg { display: contents; }
-  body[data-species="cat"] .species-svg[data-species="dog"],
-  body[data-species="dog"] .species-svg[data-species="cat"] { display: none; }
+  /* Species visibility — opt-in pattern. Every .species-svg is hidden
+     by default; only the block whose `data-species` matches the body's
+     effective art-variant renders. Cats route by subspecies: shorthair
+     cats use the default cat SVG; longhair cats use the shaded
+     radial-gradient cat-longhair SVG. `display: contents` keeps the
+     existing PiP/fullscreen rules for .cat-simple/.cat-detailed working
+     without the wrapper interfering. */
+  .species-svg { display: none; }
+  body[data-species="cat"][data-subspecies="shorthair"] .species-svg[data-species="cat"],
+  body[data-species="cat"][data-subspecies="longhair"]  .species-svg[data-species="cat-longhair"],
+  body[data-species="dog"]                              .species-svg[data-species="dog"] { display: contents; }
 
   /* Subspecies — controls opt-in flair like longhair fluff (ear tufts,
      neck ruff, tail puff). Shorthair cats and small/large dogs use 0. */
@@ -328,28 +333,26 @@
      - All body/leg/tail stripes hidden; only the forehead M marking stays
      - White belly + chin */
   [data-character="coco"] {
-    /* Warm brown gradient — used for head / body / tail / back legs */
-    --fur-base:      #c5a572;
-    --fur-shadow:    #8b6a3f;
+    /* NOTE: Coco was refactored to share the cat-longhair SVG with Ponsu.
+       That SVG is a radial-gradient shaded form (no bib / no M marking /
+       no brow wedge / no separate front-leg gradient), so several vars
+       that used to be visible on the old shared cat SVG are now dormant
+       for Coco. They're kept below (commented) as a paper trail — safe
+       to delete once we're sure Coco doesn't move back. */
+    --fur-base:      #c5a572;   /* warm-brown body / edge of head radial */
+    --fur-shadow:    #8b6a3f;   /* deeper brown / center of head radial */
     --fur-side:      #8b6a3f;
     --fur-side-flat: #8b6a3f;
-    /* Belly: subtle white gradient (keeps depth, not flat) */
-    --belly-light:   #fffbf0;
-    --belly-dark:    #f4e5c8;
-    /* Front legs: subtle white→cream gradient (their own coordinate space) */
-    --front-leg-base:   #fffbf0;
-    --front-leg-shadow: #f4e5c8;
-    /* Head / body / tail / back legs inherit --fur-base / --fur-shadow via
-       the per-part gradient fallback chain — no override needed */
-    /* Stripes off (body/legs/tail/cheek) — M stays via --mark-opacity */
+    /* Radial gradient endpoints for the cat-longhair SVG. Coco reads as
+       a light-brown-shaded-to-cream cat — inverse of Ponsu's dark-headed
+       look. */
+    --body-radial-center: #c5a572;   /* light centre of belly area */
+    --body-radial-edge:   #8b6a3f;   /* darker outer body */
+    --head-radial-center: #a48453;   /* medium-brown centre */
+    --head-radial-edge:   #c5a572;   /* light-brown outer head */
+    --ear-dark:       #4a3520;   /* deep-brown ear */
     --stripe-color:   #5a3f24;
     --stripe-opacity: 0;
-    --mark-opacity:   0.85;
-    --bib-color:     #fffbf0;
-    --bib-opacity:   1;          /* chin patch on the face */
-    --chest-opacity: 0;          /* hide the body chest patch — belly does the white */
-    --belly-opacity: 1;          /* white belly is fully opaque, not faded */
-    --brow-opacity:  1;          /* "focus" eye style — brow wedge + slash for the fierce look */
     --eye-sclera:    #1a120a;
     --eye-iris:      #a8c574;
     --eye-pupil:     #1a120a;
@@ -358,6 +361,91 @@
     --nose:          #e8a59a;
     --whisker:       #faf3e3;
     --mouth-stroke:  #4a3520;
+    --paw:           #4a3520;
+    /* Legacy — still declared so if we roll back the SVG refactor, Coco
+       comes back with her bib/M/brow intact. Currently no-ops.
+    --belly-light:   #fffbf0;
+    --belly-dark:    #f4e5c8;
+    --front-leg-base:   #fffbf0;
+    --front-leg-shadow: #f4e5c8;
+    --mark-opacity:   0.85;
+    --bib-color:     #fffbf0;
+    --bib-opacity:   1;
+    --chest-opacity: 0;
+    --belly-opacity: 1;
+    --brow-opacity:  1;
+    */
+  }
+
+  /* Ponsu (near-black longhair cat with yellow eyes) — Amie's shadow-
+     cat. Redesigned from the original warm-brown look into a proper
+     black cat with an amber gaze. Shares the cat-longhair SVG with
+     Coco and Hedhom; only the palette differs. */
+  [data-character="ponsu"] {
+    --fur-base:      #7e6756;   /* muted cool brown — body-radial edge */
+    --fur-shadow:    #0a0a0c;   /* near-black — body-radial centre */
+    --fur-side:      #0d0c0e;
+    --fur-side-flat: #0d0c0e;
+    /* Body radial: DARK centre → brown edge (opposite of the warm-brown
+       longhair look — Ponsu reads as a shadowed black cat with just a
+       hint of warmth at the extremities). */
+    --body-radial-center: #0a0a0c;
+    --body-radial-edge:   #483631;
+    /* Head radial: near-absolute black centre → cool brown edge. */
+    --head-radial-center: #000000;
+    --head-radial-edge:   #7e6756;
+    /* Tail — a shade lighter than the head at the base, still very dark. */
+    --tail-base:      #483631;
+    --tail-shadow:    #130601;
+    /* Legs — both stops set to the same near-black so the linear
+       gradient renders as a flat solid, matching Ponsu.svg's opaque
+       #0d0c0e leg overlay. */
+    --leg-base:       #0d0c0e;
+    --leg-shadow:     #0d0c0e;
+    --ear-dark:       #190b04;
+    --stripe-color:   #1f1410;
+    --stripe-opacity: 0.85;       /* stripes barely visible on the black legs */
+    --eye-sclera:    #1a120a;
+    --eye-iris:      #d4b664;     /* amber-yellow — Ponsu's new signature */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #43352c;     /* dark brown (was pink) — Ponsu is dark */
+    --nose:          #000000;     /* pure black nose */
+    --whisker:       #beb7a7;     /* muted grey-cream whiskers */
+    --mouth-stroke:  #303030;     /* dark grey mouth line */
+    --paw:           #1f1410;
+  }
+
+  /* Hedhom (warm-brown shaded longhair cat) — the "cozy old-soul" cat.
+     Same silhouette as Ponsu but with the classic warm-brown Siamese-
+     style shading + green eyes + pink inner ears (essentially what the
+     first Ponsu iteration looked like before Ponsu was redesigned into
+     a black cat). Shiitake-mushroom vibes — hence the name. */
+  [data-character="hedhom"] {
+    --fur-base:      #95774f;
+    --fur-shadow:    #2f1807;
+    --fur-side:      #6e5c44;
+    --fur-side-flat: #6e5c44;
+    --body-radial-center: #95774f;
+    --body-radial-edge:   #2f1807;
+    --head-radial-center: #020202;   /* dark centre — shadowed face */
+    --head-radial-edge:   #95774f;
+    --tail-base:      #5a3e23;
+    --tail-shadow:    #130601;
+    --leg-base:       #8c6f49;
+    --leg-shadow:     #2f1807;
+    --ear-dark:       #190b04;
+    --stripe-color:   #1f1410;
+    --stripe-opacity: 0.85;
+    --eye-sclera:    #1a120a;
+    --eye-iris:      #a8c574;     /* classic green iris */
+    --eye-pupil:     #1a120a;
+    --eye-shine:     #faf3e3;
+    --inner-ear:     #d97757;     /* warm pink inner ears */
+    --nose:          #151716;
+    --whisker:       #faf3e3;
+    --mouth-stroke:  #755837;
+    --paw:           #1f1410;
   }
 
   /* Bubble (golden cream shorthair) — plush British-style cat:
@@ -2588,6 +2676,158 @@
       </svg>
       </div><!-- /species: cat -->
 
+      <!-- ===== SPECIES: cat-longhair =====
+           Shared SVG for longhair cats (Coco, Ponsu). Structurally almost
+           identical to the shorthair cat SVG (same viewBox, same leg
+           coordinates, same walk-animation classes) but the head + body
+           swap linear gradients for RADIAL gradients — that "vignette
+           shading" is what sells the long-fur look without needing extra
+           fluff paths. The palette drives everything via CSS vars, so
+           adding another longhair cat is just a new palette block. -->
+      <div class="species-svg" data-species="cat-longhair">
+      <!-- Compact longhair cat for PiP/small widget — reuses the same
+           shorthair silhouette; the radial shading only kicks in at
+           detailed size where it actually reads. Palette vars pipe
+           through so Coco vs Ponsu still look distinct in PiP. -->
+      <svg class="cat-simple" viewBox="0 0 60 50" width="50" height="42">
+        <g class="cat-body">
+          <path class="tail" d="M 12 30 Q 4 25, 6 18" stroke="var(--fur-side)" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <rect class="leg-bl" x="16" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-br" x="21" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
+          <ellipse cx="28" cy="30" rx="16" ry="9" fill="var(--fur-side-flat)"/>
+          <line x1="16" y1="36" x2="19" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <line x1="21" y1="36" x2="24" y2="36" stroke="var(--stripe-color)" stroke-width="0.8" style="opacity: var(--stripe-opacity)"/>
+          <rect class="leg-fl" x="36" y="33" width="3" height="10" rx="1.5" fill="var(--fur-side-flat)"/>
+          <rect class="leg-fr" x="41" y="33" width="3" height="10" rx="1.5" fill="var(--fur-shadow)"/>
+          <circle cx="44" cy="22" r="8" fill="var(--fur-side-flat)"/>
+          <path d="M 38 17 L 39 11 L 42 16 Z" fill="var(--ear-dark, var(--fur-side))"/>
+          <path d="M 46 16 L 49 11 L 50 17 Z" fill="var(--ear-dark, var(--fur-side))"/>
+          <path d="M 39 14 L 40 12 L 41 14 Z" fill="var(--inner-ear)"/>
+          <path d="M 47 14 L 48 12 L 49 14 Z" fill="var(--inner-ear)"/>
+          <circle cx="47" cy="22" r="1" fill="var(--eye-iris)"/>
+          <circle cx="42" cy="22" r="1" fill="var(--eye-iris)"/>
+          <circle cx="47" cy="22" r="0.4" fill="var(--eye-pupil)"/>
+          <circle cx="42" cy="22" r="0.4" fill="var(--eye-pupil)"/>
+          <path d="M 44 25 L 45 26 L 46 25" stroke="var(--mouth-stroke)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="24" x2="52" y2="23" stroke="var(--whisker)" stroke-width="0.4"/>
+          <line x1="48" y1="25" x2="52" y2="25" stroke="var(--whisker)" stroke-width="0.4"/>
+        </g>
+      </svg>
+
+      <!-- Detailed longhair cat for fullscreen — derived from the
+           user-authored Ponsu.svg (Assests/Ponsu.svg). All hardcoded
+           Figma-export colours are hoisted to CSS variables so the same
+           SVG renders Coco, Ponsu, or any future longhair with just a
+           palette block. -->
+      <svg class="cat-detailed" viewBox="0 0 240 200" width="240" height="200">
+        <defs>
+          <linearGradient id="longhairTail" x1="27.78" y1="63.75" x2="27.78" y2="130" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="var(--tail-base,   var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--tail-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <linearGradient id="longhairLeg" x1="0" y1="138" x2="0" y2="180" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="var(--leg-base,   var(--fur-side))"/>
+            <stop offset="100%" stop-color="var(--leg-shadow, var(--fur-shadow))"/>
+          </linearGradient>
+          <!-- BODY radial: light in the centre, darker toward the edges.
+               Transform copied verbatim from Ponsu.svg so the vignette
+               feels identical. -->
+          <radialGradient id="longhairBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                          gradientTransform="translate(154 121.5) rotate(171.209) scale(98.1529 175.642)">
+            <stop offset="0%"   stop-color="var(--body-radial-center, var(--fur-base))"/>
+            <stop offset="100%" stop-color="var(--body-radial-edge,   var(--fur-shadow))"/>
+          </radialGradient>
+          <!-- HEAD radial: DARK in the centre, lighter at the edges — this
+               is what gives Ponsu her signature shadowed-face look.
+               Palette can neutralise it (Coco's stops are closer together
+               so the effect stays subtle). -->
+          <radialGradient id="longhairHead" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                          gradientTransform="translate(185 106.5) rotate(-90) scale(40 58.9377)">
+            <stop offset="0%"   stop-color="var(--head-radial-center, var(--fur-shadow))"/>
+            <stop offset="100%" stop-color="var(--head-radial-edge,   var(--fur-base))"/>
+          </radialGradient>
+        </defs>
+
+        <g class="cat-body">
+          <!-- Shadow under cat -->
+          <ellipse cx="120" cy="180" rx="70" ry="6" fill="rgba(0,0,0,0.15)"/>
+
+          <!-- Tail — matches Ponsu.svg's stroke path -->
+          <path class="tail" d="M55 130C31.6667 116.667 23.3333 98.3333 30 75C33.3333 65 40 61.6667 50 65"
+                stroke="url(#longhairTail)" stroke-width="14" stroke-linecap="round" fill="none"/>
+
+          <!-- Back legs — each leg keeps the same coordinates as the
+               shorthair cat SVG so the walk animation aligns.
+               Optional stripe lines respect --stripe-opacity. -->
+          <g class="leg-bl">
+            <rect x="68" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <ellipse cx="74.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="68" y1="148" x2="81" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+          </g>
+          <g class="leg-br">
+            <rect x="87" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <ellipse cx="93.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+            <line x1="87" y1="148" x2="100" y2="148" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+            <line x1="87" y1="158" x2="100" y2="158" stroke="var(--stripe-color)" stroke-width="2.2" style="opacity: var(--stripe-opacity)"/>
+          </g>
+
+          <!-- Body — radial-shaded ellipse (matches Ponsu.svg dimensions) -->
+          <ellipse cx="120" cy="130" rx="68" ry="38" fill="url(#longhairBody)"/>
+
+          <!-- Front legs -->
+          <g class="leg-fl">
+            <rect x="148" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <ellipse cx="154.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+          </g>
+          <g class="leg-fr">
+            <rect x="167" y="138" width="13" height="42" rx="6" fill="url(#longhairLeg)"/>
+            <ellipse cx="173.5" cy="178" rx="9" ry="4" fill="var(--paw)"/>
+          </g>
+
+          <!-- Head — exact bezier path lifted from Assests/Ponsu.svg.
+               NOT a plain <ellipse>: the Figma-exported bezier's control
+               points sit slightly inside the perfect-ellipse ratio, so
+               the shape reads as a soft diamond (subtly pointier at
+               left/right) rather than a smooth oval. That's the
+               signature Ponsu head-shape — preserving it 1:1. -->
+          <path d="M185 131C204.882 131 226.5 122.882 226.5 103C226.5 83.1177 204.882 59 185 59C165.118 59 143.5 83.1177 143.5 103C143.5 122.882 165.118 131 185 131Z"
+                fill="url(#longhairHead)"/>
+
+          <!-- Ears — deep-brown triangles with pink inner triangles.
+               Coordinates from Ponsu.svg. -->
+          <path d="M 162 75 L 164 48 L 178 70 Z" fill="var(--ear-dark, var(--fur-shadow))"/>
+          <path d="M 195 70 L 209 48 L 211 75 Z" fill="var(--ear-dark, var(--fur-shadow))"/>
+          <path opacity="0.85" d="M 166 70 L 169 55 L 174 68 Z" fill="var(--inner-ear)"/>
+          <path opacity="0.85" d="M 199 68 L 206 55 L 209 72 Z" fill="var(--inner-ear)"/>
+
+          <!-- Eyes — sclera + green iris + slit pupil + shine.
+               Coordinates from Ponsu.svg. -->
+          <ellipse cx="174" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
+          <ellipse cx="198" cy="92" rx="4.5" ry="6" fill="var(--eye-sclera)"/>
+          <ellipse cx="174" cy="92" rx="3"   ry="5" fill="var(--eye-iris)"/>
+          <ellipse cx="198" cy="92" rx="3"   ry="5" fill="var(--eye-iris)"/>
+          <ellipse cx="174" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
+          <ellipse cx="198" cy="92" rx="0.8" ry="4.5" fill="var(--eye-pupil)"/>
+          <circle  cx="175" cy="89" r="1" fill="var(--eye-shine)"/>
+          <circle  cx="199" cy="89" r="1" fill="var(--eye-shine)"/>
+
+          <!-- Nose -->
+          <path d="M 182 103 L 188 103 L 185 108 Z" fill="var(--nose)"/>
+
+          <!-- Mouth — vertical stroke + two curves -->
+          <path d="M 185 108 L 185 112" stroke="var(--mouth-stroke)" stroke-width="1" stroke-linecap="round"/>
+          <path d="M 185 112 Q 181 115, 178 113" stroke="var(--mouth-stroke)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M 185 112 Q 189 115, 192 113" stroke="var(--mouth-stroke)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+          <!-- Whiskers -->
+          <line x1="195" y1="108" x2="218" y2="105" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="195" y1="111" x2="220" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="108" x2="152" y2="105" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+          <line x1="175" y1="111" x2="150" y2="112" stroke="var(--whisker)" stroke-width="0.8" opacity="0.8"/>
+        </g>
+      </svg>
+      </div><!-- /species: cat-longhair -->
+
       <!-- ===== SPECIES: dog ===== -->
       <div class="species-svg" data-species="dog">
       <!-- Compact dog for PiP/small widget -->
@@ -2962,9 +3202,20 @@
     { id: 'khuntong', species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khuntong', owner: 'Amie', bio: "A tiny mischievous black cat — Amie's pocket-sized troublemaker." },
     { id: 'khonloy',  species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Khonloy',  owner: 'Amie', bio: "A wary brown tabby who guards his quiet — Amie's private soul." },
     { id: 'coco',     species: 'cat', subspecies: 'longhair',  eyeStyle: 'focus',  name: 'Coco',     owner: 'Maya', bio: "A fluffy little loner who keeps to himself — Maya's quiet companion." },
+    { id: 'ponsu',    species: 'cat', subspecies: 'longhair',  eyeStyle: 'round',  name: 'Ponsu',    owner: 'Amie', bio: "A near-black longhair with amber-yellow eyes — Amie's little shadow." },
+    { id: 'hedhom',   species: 'cat', subspecies: 'longhair',  eyeStyle: 'round',  name: 'Hedhom',   owner: 'Amie', bio: "A warm-brown shaded longhair with soft green eyes — Amie's cozy old soul." },
     { id: 'bubble',   species: 'cat', subspecies: 'shorthair', eyeStyle: 'round',  name: 'Bubble',   owner: 'Muay', bio: "A plush little princess in golden cream — Muay's chubby darling." },
     { id: 'merlin',   species: 'dog', subspecies: 'small',     eyeStyle: 'button', name: 'Merlin',   owner: 'J',    bio: "A joyful little pup who's always smiling — J's pocket of sunshine." },
   ];
+
+  // Longhair cats share a distinct SVG art variant (radial-gradient
+  // shaded body/head, no forehead M, no bib layer). This helper maps a
+  // character to its SVG-block key so the preview-thumb clone knows
+  // which .species-svg[data-species="..."] to look up.
+  function svgVariant(char) {
+    if (char.species === 'cat' && char.subspecies === 'longhair') return 'cat-longhair';
+    return char.species;
+  }
 
   // Capitalises subspecies + species into a one-line label, e.g.
   // {subspecies: 'shorthair', species: 'cat'}  →  "Shorthair cat"
@@ -4469,10 +4720,11 @@
       charPreviewThumb.setAttribute('data-character',  activeChar.id);
       charPreviewThumb.setAttribute('data-species',    activeChar.species);
       charPreviewThumb.setAttribute('data-subspecies', activeChar.subspecies);
-      // Clone the matching species' compact SVG into the thumb so we
-      // see an actual portrait of the companion, not a flat colour.
+      // Clone the matching art variant's compact SVG into the thumb so
+      // we see an actual portrait of the companion, not a flat colour.
+      // svgVariant() maps longhair cats to the shared cat-longhair SVG.
       const source = document.querySelector(
-        `.species-svg[data-species="${activeChar.species}"] .cat-simple`
+        `.species-svg[data-species="${svgVariant(activeChar)}"] .cat-simple`
       );
       if (source) {
         const clone = source.cloneNode(true);
